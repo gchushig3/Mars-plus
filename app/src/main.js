@@ -18,6 +18,8 @@ import { createWebGLGlobe, isWebGL2Supported } from './infrastructure/globe/webg
 import { createGlobeView } from './ui/views/globe-view.js';
 import { createDustMaps } from './application/dust-maps.js';
 import { createContingencyPanel } from './ui/panels/contingency-panel.js';
+import { createGravityPanel } from './ui/panels/gravity-panel.js';
+import { createProfileDrawer } from './ui/views/profile-drawer.js';
 import { headingDeg } from './domain/contingency/contingency.js';
 import { fetchDustCatalog, fetchGzipBytes, productSpec } from './infrastructure/dust/load-dust.js';
 import { createDustFlatMap } from './infrastructure/map/dust-flat-map.js';
@@ -97,7 +99,7 @@ async function main() {
     paceKey: 'normal', planOptions: firstPlan.evaluation.options, dustInfo: firstPlan.dustInfo,
     evaluation: firstPlan.evaluation, explanation: firstPlan.explanation,
     sensitivity: { status: 'idle', rows: null }, sensitivityView: null, traverseValidation: null, routingReady: false,
-    emergency: { status: 'idle', show: false, alerts: { sep: true, dust: false }, minute: 0, prepared: null, rows: null, result: null, farthest: null, astronautView: false, key: null },
+    emergency: { status: 'idle', show: false, trigger: null, alerts: { sep: true, dust: false }, minute: 0, prepared: null, rows: null, result: null, farthest: null, astronautView: false, key: null },
   });
 
   // Sensitivity rows (leg times per sand factor) -> view with the recommended plan under the current options
@@ -142,6 +144,7 @@ async function main() {
         evaluation: result.evaluation, explanation: result.explanation,
         sensitivityView: sensitivityView(store.get().sensitivity.rows, result.evaluation.options),
       });
+      followPlanAlerts(prev, result.evaluation.options);
     },
     runSensitivity: async () => {
       if (store.get().sensitivity.status === 'running') return;
@@ -177,6 +180,17 @@ async function main() {
     },
   };
   let emergencySeq = 0;
+  /**
+   * A dust-storm or solar-event alert switched on in the plan proposes the way back to the habitat at once
+   * (same alerts, route drawn on the map). Switching every alert off hides it again if the plan had shown it.
+   */
+  function followPlanAlerts(prev, next) {
+    const was = { dust: Boolean(prev.dustStormAlert), sep: Boolean(prev.solarEventAlert) };
+    const now = { dust: Boolean(next.dustStormAlert), sep: Boolean(next.solarEventAlert) };
+    if (was.dust === now.dust && was.sep === now.sep) return;
+    if (now.dust || now.sep) actions.setEmergency({ show: true, trigger: 'plan', alerts: now });
+    else if (store.get().emergency.trigger === 'plan') actions.setEmergency({ show: false, trigger: null });
+  }
   /** Prepares the return plan for the plan in effect (recommended, or the closest one when the EVA is postponed). */
   async function prepareEmergency() {
     const s = store.get();
@@ -197,6 +211,24 @@ async function main() {
       store.set((st) => ({ emergency: { ...st.emergency, status: 'error', key: null } }));
     }
   }
+  // Elevation profile under the map, its red point shared with the map.
+  const profileDrawer = createProfileDrawer(document.getElementById('map-wrap'), {
+    i18n, getProfile: (id) => service.routeProfile(id), onProbe: (p) => map.showProbe(p), onToggle: () => setTimeout(() => map.invalidate(), 0),
+  });
+  map.onRouteHover((legId, p) => profileDrawer.followMap(legId, p));
+  // Optional detours to places with signs of water alteration (recomputed when the plan changes).
+  let waterSites = [];
+  let waterSeq = 0;
+  async function refreshWater() {
+    const s = store.get();
+    if (!s.routingReady || s.routingReady === 'error') return;
+    const id = ++waterSeq;
+    try {
+      const list = await service.waterDetours(s.evaluation);
+      if (id !== waterSeq) return;
+      waterSites = list; map.setWaterSites(list);
+    } catch (err) { console.error(err); }
+  }
   map.onClick((p) => {
     const { pick } = store.get();
     if (!pick) return;
@@ -206,14 +238,14 @@ async function main() {
 
   // --- panels: the answer first (GO / NO-GO), then mission, plans, own route and details ---
   const sidebar = document.getElementById('sidebar');
-  const ctx = { i18n, data, store, actions };
+  const ctx = { i18n, data, store, actions, gravity: service.gravityFacts() };
   const summaryEl = document.createElement('div');
   sidebar.append(summaryEl);
   const panels = [createSummaryBar(summaryEl, ctx)];
   // What the crew acts on stays open; background and reference details start folded (less to read at once).
   // Rover photos now open from the Issole point on the map.
   const sections = [['mission', createMissionPanel], ['plans', createPlansPanel], ['emergency', createContingencyPanel], ['route', createRoutePanel]];
-  const folded = [['weather', createWeatherPanel], ['radiation', createRadiationPanel], ['geology', createGeologyPanel], ['assumptions', createAssumptionsPanel], ['sources', createSourcesPanel]];
+  const folded = [['weather', createWeatherPanel], ['radiation', createRadiationPanel], ['geology', createGeologyPanel], ['gravity', createGravityPanel], ['assumptions', createAssumptionsPanel], ['sources', createSourcesPanel]];
   for (const [id, factory] of sections) {
     const el = document.createElement('section'); el.className = 'section'; el.id = `panel-${id}`; sidebar.append(el); panels.push(factory(el, ctx));
   }
@@ -236,6 +268,8 @@ async function main() {
     helpBtn.setAttribute('aria-label', t('welcome.help')); helpBtn.title = t('welcome.help');
     document.getElementById('skip').textContent = t('app.skip');
     map.setLabels(i18n.html);
+    map.setWaterSites(waterSites);
+    profileDrawer.build();
     foldTitles.forEach(([el, key]) => { el.textContent = t(key); });
     panels.forEach((p) => p.build(store.get()));
     panels.forEach((p) => p.update(store.get()));
@@ -266,9 +300,9 @@ async function main() {
     if (s.userRoute !== last.userRoute) map.showUserRoute(s.userRoute?.coords ?? null);
     if (s.emergency.result !== last.emergency?.result || s.emergency.show !== last.emergency?.show) {
       const r = s.emergency.result;
-      map.showEmergencyReturn(s.emergency.show && r && { position: r.position, coords: r.choice?.coords, policy: r.choice?.policy, label: i18n.t('emergency.crewHere') });
+      map.showEmergencyReturn(s.emergency.show && r && { position: r.position, coords: r.choice?.coords, policy: r.choice?.policy, alt: r.alt, label: i18n.t('emergency.crewHere') });
     }
-    if (s.evaluation !== last.evaluation || s.routingReady !== last.routingReady) prepareEmergency();
+    if (s.evaluation !== last.evaluation || s.routingReady !== last.routingReady) { prepareEmergency(); refreshWater(); }
     map.setPickCursor(Boolean(s.pick));
     last = s;
   });

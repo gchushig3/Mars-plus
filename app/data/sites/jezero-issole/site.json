@@ -16,7 +16,12 @@
     { "source": "sol286_NAVCAM_LEFT_NLF_0286_0692337518_300ECM_N0090000NCAM0.jpg", "file": "issole-arrival-navcam-sol286.jpg", "stop": "observation", "sol": 286, "camera": "Navcam", "credit": "NASA/JPL-Caltech", "caption": "photo.arrival" },
     { "source": "sol337_MCZ_LEFT_ZL0_0337_0696855807_331EBY_N0090276ZCAM0.jpg", "file": "issole-drill-hole-mastcamz-sol337.jpg", "stop": "sampling", "sol": 337, "camera": "Mastcam-Z", "credit": "NASA/JPL-Caltech/ASU", "caption": "photo.drillHole" },
     { "source": "sol286_FRONT_HAZCAM_LEFT_A_FLE_0286_0692336761_756ECM_N0090000FHAZ0.jpg", "file": "issole-ground-hazcam-sol286.jpg", "stop": "sampling", "sol": 286, "camera": "Front Hazcam", "credit": "NASA/JPL-Caltech", "caption": "photo.ground" },
-    { "source": "sol293_SHERLOC_WATSON_SIF_0293_0692957875_390EBY_N0090000SRLC0.jpg", "file": "issole-rock-watson-sol293.jpg", "stop": "observation", "sol": 293, "camera": "SHERLOC WATSON", "credit": "NASA/JPL-Caltech", "caption": "photo.rock" }
+    { "source": "sol293_SHERLOC_WATSON_SIF_0293_0692957875_390EBY_N0090000SRLC0.jpg", "file": "issole-rock-watson-sol293.jpg", "stop": "observation", "sol": 293, "camera": "SHERLOC WATSON", "credit": "NASA/JPL-Caltech", "caption": "photo.rock" },
+    { "source": "sol013_NAVCAM_LEFT_NLF_0013_0668101832_912ECM_N0030028NCAM0.jpg", "file": "landing-ground-navcam-sol13.jpg", "stop": "landing", "sol": 13, "camera": "Navcam", "credit": "NASA/JPL-Caltech", "caption": "photo.landingGround", "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00013/ids/edr/browse/ncam/NLF_0013_0668101832_912ECM_N0030028NCAM00104_01_295J01_800.jpg" },
+    { "source": "sol013_FRONT_HAZCAM_LEFT_A_FLF_0013_0668101758_836ECM_N0030028FHAZ0.jpg", "file": "landing-plain-hazcam-sol13.jpg", "stop": "landing", "sol": 13, "camera": "Front Hazcam", "credit": "NASA/JPL-Caltech", "caption": "photo.landingPlain", "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00013/ids/edr/browse/fcam/FLF_0013_0668101758_836ECM_N0030028FHAZ02002_01_295J01_800.jpg" }
+  ],
+  "waterSites": [
+    { "id": "brac", "name": "Brac", "lon": 77.44301922, "lat": 18.43396406, "sol": 248, "waypoint": "site 8, drive 0", "unit": "Séítah formation (olivine-rich igneous rock)", "evidence": "photo.bracEvidence", "source": "NASA MMGIS M20 waypoint 8/0 (sol 248); Dourbes abrasion (sol 253) and samples Salette and Coulettes; aqueous alteration of Séítah rocks: Farley et al. 2022, Science 377, eabo2196. To be confirmed by the science team." }
   ],
   "trekLayers": {
     "hirise": "JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd",

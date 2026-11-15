@@ -30,10 +30,11 @@ test('map points: the official route crosses a few hundred metres of large dunes
   assert(rings.some((r) => pointInRing(s.middle[0], s.middle[1], r)), 'the dune point is inside a dune polygon');
 });
 
-test('map points: every rover photo belongs to an Issole stop, so the Issole point shows them all', async () => {
+test('map points: every rover photo is at the start or at Issole, where Perseverance stopped next to the route', async () => {
   const site = await json('../app/data/sites/jezero-issole/site.json');
   assert(site.photos.length >= 2, 'photos configured');
-  for (const p of site.photos) assert(['sampling', 'observation'].includes(p.stop), `${p.file}: stop ${p.stop}`);
+  for (const p of site.photos) assert(['landing', 'sampling', 'observation'].includes(p.stop), `${p.file}: stop ${p.stop}`);
+  assert(site.photos.some((p) => p.stop === 'landing'), 'the start of the walk has photos too');
   const en = await json('../app/i18n/en.json');
   for (const p of site.photos) assertEqual(typeof en[p.caption], 'string', `caption ${p.caption}`);
 });

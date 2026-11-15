@@ -21,6 +21,12 @@ function segmentM([lon0, lat0], [lon1, lat1]) {
   return Math.hypot(dx, dy);
 }
 
+/** Per point of the route: is it inside a polygon of the given map class? */
+export function classMask(coords, features, cls = 'largeDunes') {
+  const rings = features.filter((f) => f.properties.class === cls).map((f) => f.geometry.coordinates[0]);
+  return coords.map(([lon, lat]) => rings.some((r) => pointInRing(lon, lat, r)));
+}
+
 /**
  * Stretch of a route inside the given map class.
  * @param {number[][]} coords route [lon, lat, …]

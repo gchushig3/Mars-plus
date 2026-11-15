@@ -118,7 +118,7 @@ martian-map/                       (repositorio: mars-plus)
 │   ├── 02-process/                ← process-geology · summarize-meda · extract-rad · build-traverse
 │   ├── 03-model/RouteEngine.cs    ← motor oficial de rutas + ImageWriter
 │   └── 04-export/                 ← export-web-data.ps1 (app/data + manifest; copia config/) · export-globe-assets.ps1 (app/assets/globe)
-├── tests/   index.html · run.mjs (Node, CI) · harness.js · fixtures.js · 14 archivos *.test.js (85 pruebas: dominio, escenarios, paridad, validez, UI y capas, globo, polvo, regreso de emergencia…)
+├── tests/   index.html · run.mjs (Node, CI) · harness.js · fixtures.js · 15 archivos *.test.js (89 pruebas: dominio, escenarios, paridad, validez, UI y capas, globo, polvo, regreso de emergencia…)
 ├── tools/   dev-server.ps1 · dust/build_dust_products.py (Python, opcional: regenera app/data/dust)
 ├── data/                          ← FUERA de git
 │   ├── raw/                       ← descargas originales: dtm, ortho, meda, rad, geology, thermal, rover, globe (~1,7 GB)

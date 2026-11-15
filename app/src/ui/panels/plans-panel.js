@@ -39,6 +39,7 @@ export function createPlansPanel(el, { i18n, data, actions }) {
       ctl.follow,
       h('label', { class: 'field' }, t('plans.dustSol'), ctl.sol),
       h('label', { class: 'check' }, ctl.solar, t('plans.alertSolar')),
+      (ctl.wayBack = h('a', { class: 'callout way-back', href: '#panel-emergency', hidden: true }, t('plans.wayBack'))),
       h('div', { class: 'field' }, h('label', {}, t('plans.limit'), ' ', ctl.limit), h('label', {}, t('plans.pace'), ' ', ctl.pace)),
       verdict, explainList,
       h('div', { class: 'note' }, t('plans.grid')), grid,
@@ -84,6 +85,7 @@ export function createPlansPanel(el, { i18n, data, actions }) {
       ctl.dustLabel.textContent = t(state.planOptions.dustAlertOverride == null ? 'plans.alertDustAuto' : 'plans.alertDustManual');
       ctl.note.textContent = dustText(i18n, state.dustInfo, data.params);
       ctl.follow.hidden = state.planOptions.dustAlertOverride == null;
+      ctl.wayBack.hidden = !(state.planOptions.dustStormAlert || state.planOptions.solarEventAlert);
     }
     updateSensitivity(state);
     if (!evaluation) return;

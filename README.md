@@ -11,7 +11,10 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 ## What it does
 
 - **3D Mars globe as the entry screen:** a WebGL2 globe built by the MARS+ team. It has four global layers (Viking colour mosaic, MOLA elevation, USGS geologic map with all 44 units, and seasonal dust: column optical depth and where storms happen) and a guided flight to Jezero that opens the local planner. Without WebGL2, or with `?view=local`, the app starts directly on the local map.
-- **Hyper-local map (≈1 km², 2 m grid), kept simple:** HiRISE 25 cm imagery and the official EVA route (out and back). Three points to click: the habitat, the dune crossing (zooms into the sand ripples) and Issole, which opens the real Perseverance photos of what the crew will see at the stops. Walking effort, slope, sand dunes and the rover’s real drive are optional layers; coarser imagery (CTX 6 m, THEMIS 100 m) is not offered because it shows nothing at walking scale.
+- **Hyper-local map (≈1 km², 2 m grid), kept simple:** HiRISE 25 cm imagery and the official EVA route (out and back). Points to click: the habitat and Issole open the real Perseverance photos taken there (the rover stopped next to our route only at these two ends); the dune crossing zooms into the sand ripples. Optional layers: walking effort, slope, sand dunes and rock units (with a legend), the rover’s real drive. Coarser imagery (CTX 6 m, THEMIS 100 m) is not offered because it shows nothing at walking scale.
+- **Elevation profile under the map:** one button opens it; a red point marks the same place on the profile and on the route, in both directions (and with the keyboard).
+- **Detour for signs of water:** Brac (Séítah rock with alteration minerals, where Perseverance cored Salette and Coulettes) is shown with the least-effort detour on the way out and whether it fits the time budget with a photo stop.
+- **Mars gravity explained:** 0.38 g, what it changes for loads, walking speed, slopes and falls, with a weight converter. It explains the model; the cost formula is unchanged.
 - **Least-effort route A → B:** click two points and an A* search runs in your browser (Web Worker) over the 2 m terrain grid. Cost = time to cross each cell, from directional slope, roughness, sand (aeolian bedforms) and rocks detected in HiRISE.
 - **EVA plan chain:** plans **A** (photo + sample), **C** (sample only) and **B** (documentation only) × every departure hour → **terrain → science → time → weather → radiation**. A plan that fails one filter is rejected with its reason; nothing compensates for a safety failure.
 - **Real conditions:** Perseverance MEDA weather at Issole (sols 286–339, including the January 2022 regional dust storm) and Curiosity RAD dosimetry around the **28 Oct 2021 solar particle event**.
@@ -19,7 +22,7 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
   - **Sand sensitivity:** routes and plans are recomputed with sand ×1.5 / ×2 / ×3.
   - **Obstacle model vs. ground truth:** only 0.8% of the cells along Perseverance's real ~1 km drive inside the area are flagged as blocked.
   - **Real rover photos** of what the crew will see at Issole.
-- **Emergency return during the EVA:** a dust storm or a solar particle event cannot be dodged inside a 1 km² area, so MARS+ prepares the way back to the habitat before leaving. Pick the minute and the alert: solar particles → fastest route, with the extra dose at the 28 Oct 2021 event rate; dust storm → dust-safe route (gentler slopes, fewer dunes, habitat in view, slower pace); both → the dust-safe route and what it costs against the fastest. An "astronaut view" shows the minimum the crew would get on a suit display (concept).
+- **Emergency return during the EVA:** switching on a dust-storm or solar-event alert in the plan proposes the way back to the habitat at once. A dust storm or a solar particle event cannot be dodged inside a 1 km² area, so MARS+ prepares the way back to the habitat before leaving. Pick the minute and the alert: solar particles → fastest route, with the extra dose at the 28 Oct 2021 event rate; dust storm → dust-safe route (gentler slopes, fewer dunes, habitat in view, slower pace); both → the dust-safe route and what it costs against the fastest. An "astronaut view" shows the minimum the crew would get on a suit display (concept).
 - **Explains itself:** "Recommended: Plan C, depart 09:00, back 11:39 … Plan A is out — Time: exceeds the 180-min limit by 5 min."
 - **Bilingual:** English / Spanish.
 
@@ -57,7 +60,7 @@ pipeline/ (PowerShell + C#, offline)          app/ (static site, no build)
 - **Clean architecture:** `domain/` is pure JavaScript (no DOM). `infrastructure/` adapts Leaflet, the Web Worker and the static data; `ui/` only talks to `application/`.
 - **Parity:** the browser engine and the pipeline engine (C#) read the same parameters. `tests/` checks that their route times differ by **<1%**.
 - **Emergency return:** the Web Worker builds two "time to the habitat" fields once (fastest, and dust-safe); the way home from any point of the plan is then read in milliseconds.
-- **Tests:** 85 browser tests (domain, the six plan scenarios plus the measured dust alert, JS↔C# parity, validity, UI and layer rules, globe, dust, emergency return). An architecture test fails if `ui/` imports `domain/` or `infrastructure/`.
+- **Tests:** 89 browser tests (domain, the six plan scenarios plus the measured dust alert, JS↔C# parity, validity, UI and layer rules, globe, dust, emergency return). An architecture test fails if `ui/` imports `domain/` or `infrastructure/`.
 - See `STACK_Y_ARQUITECTURA.md` (Spanish) for the full stack and architecture.
 
 ## Run locally (Windows)
@@ -76,7 +79,7 @@ node tests/run.mjs
 ## Deploy
 
 `app/` is a static site with no build step:
-- **GitHub Pages:** on every push to `main`, `.github/workflows/pages.yml` runs the full test suite (Node 22, 85 tests) and publishes `app/` only if every test passes (Settings → Pages → Source: GitHub Actions).
+- **GitHub Pages:** on every push to `main`, `.github/workflows/pages.yml` runs the full test suite (Node 22, 89 tests) and publishes `app/` only if every test passes (Settings → Pages → Source: GitHub Actions).
 - **Netlify:** `netlify.toml` publishes `app/`.
 
 ## Assumptions and limits (stated in the app)

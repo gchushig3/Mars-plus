@@ -3,7 +3,7 @@
 import { h, clear } from '../../shared/dom.js';
 
 const GEO = [
-  ['largeDunes', '#cc8e37'], ['smallDunes', '#e0a98b'], ['seitah', '#a2453e'], ['maaz', '#7d6d6d'], ['other', '#4a3f3a'],
+  ['largeDunes', '#cc8e37'], ['smallDunes', '#e0a98b'], ['seitah', '#a2453e'], ['maaz', '#7d6d6d'], ['other', '#c2a198'],
 ];
 
 export function createGeologyPanel(el, { i18n }) {

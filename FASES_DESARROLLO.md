@@ -337,6 +337,15 @@
 - La ruta de emergencia solo se dibuja cuando alguien usa ese panel.
 - 85/85 pruebas (3 nuevas: cruce de dunas y galería de Issole).
 
+**Segundo ajuste (15-nov, pedido por el equipo)**
+- Geología con sus colores reales (paleta MARS+), sin borde, y leyenda legible abajo a la izquierda mientras la capa está activa.
+- Perfil de elevación bajo el mapa (botón): un punto rojo marca el mismo lugar en el perfil y en la ruta, en las dos direcciones.
+- Fotos solo donde el rover se detuvo junto a la ruta: inicio (Navcam y Hazcam del sol 13, nuevas) e Issole. En el tramo de dunas el rover nunca pasó, así que no hay punto. Los íconos van al costado de la ruta, con un punto pequeño en el lugar exacto.
+- Desvío a Brac (indicios de agua, sol 248): ruta de menor esfuerzo y si entra en el tiempo con la foto. Hoy: +1 min de caminata + 25 min de foto, el Plan C pasa a 185 de 180 min, así que no entra salvo en una EVA más larga. Fuente a confirmar por el equipo de ciencia.
+- Gravedad de Marte (0,38 g) explicada en un panel plegado, con conversor de peso. No cambia la fórmula del costo.
+- Si en el plan se activa la alerta de tormenta o de evento solar, se propone sola la vuelta al hábitat (con tormenta, la ruta segura y la más rápida para comparar).
+- 89/89 pruebas (4 nuevas).
+
 ---
 
 ## Fase 6 — Demo (7 diapositivas en inglés)

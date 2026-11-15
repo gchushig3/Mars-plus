@@ -5,24 +5,26 @@ import { h, clear } from '../../shared/dom.js';
 import { fmt } from '../../shared/format.js';
 
 export function createContingencyPanel(el, { i18n, actions }) {
-  let sep, dust, slider, where, status, result, farthest, table, astroBtn, overlay;
+  let sep, dust, slider, where, status, result, farthest, table, astroBtn, overlay, banner;
 
   function build() {
     const { t } = i18n;
     clear(el);
-    sep = h('input', { type: 'checkbox', onchange: () => actions.setEmergency({ show: true, alerts: { sep: sep.checked, dust: dust.checked } }) });
-    dust = h('input', { type: 'checkbox', onchange: () => actions.setEmergency({ show: true, alerts: { sep: sep.checked, dust: dust.checked } }) });
+    sep = h('input', { type: 'checkbox', onchange: () => actions.setEmergency({ show: true, trigger: 'user', alerts: { sep: sep.checked, dust: dust.checked } }) });
+    dust = h('input', { type: 'checkbox', onchange: () => actions.setEmergency({ show: true, trigger: 'user', alerts: { sep: sep.checked, dust: dust.checked } }) });
     slider = h('input', { type: 'range', min: '0', max: '1', step: '1', value: '0', 'aria-label': t('emergency.minuteLabel'),
-      oninput: () => actions.setEmergency({ show: true, minute: Number(slider.value) }) });
+      oninput: () => actions.setEmergency({ show: true, trigger: 'user', minute: Number(slider.value) }) });
     where = h('p', { class: 'note', 'aria-live': 'polite' });
+    banner = h('p', { class: 'callout warn', role: 'status', hidden: true });
     status = h('div', { class: 'status', role: 'status', 'aria-live': 'polite' });
     result = h('div', { class: 'emergency-result', 'aria-live': 'polite' });
     farthest = h('p', { class: 'note' });
     table = h('table', { class: 'table emergency-table' });
-    astroBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: () => actions.setEmergency({ show: true, astronautView: true }) }, t('emergency.astronautOpen'));
+    astroBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: () => actions.setEmergency({ show: true, trigger: 'user', astronautView: true }) }, t('emergency.astronautOpen'));
     el.append(
       h('h2', {}, t('emergency.title')),
       h('p', { class: 'lead' }, t('emergency.lead')),
+      banner,
       h('fieldset', { class: 'emergency-alerts' },
         h('legend', {}, t('emergency.alerts')),
         h('label', {}, sep, ' ', t('emergency.sep')),
@@ -47,6 +49,8 @@ export function createContingencyPanel(el, { i18n, actions }) {
     slider.disabled = !prepared;
     astroBtn.disabled = !e.result?.choice || e.result.choice.noRoute;
     status.className = `status${e.status === 'error' ? ' bad' : ''}`;
+    banner.hidden = e.trigger !== 'plan';
+    banner.textContent = e.trigger === 'plan' ? t('emergency.fromPlan', { alerts: [e.alerts.dust && t('emergency.dustShort'), e.alerts.sep && t('emergency.sepShort')].filter(Boolean).join(' + ') }) : '';
     status.textContent = e.status === 'preparing' ? t('emergency.preparing') : e.status === 'error' ? t('emergency.error') : '';
     clear(result); clear(table); farthest.textContent = ''; where.textContent = '';
     if (!prepared) { renderOverlay(state); return; }

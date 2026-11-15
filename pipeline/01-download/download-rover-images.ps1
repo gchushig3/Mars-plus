@@ -34,4 +34,8 @@ foreach ($group in ($index | Group-Object sol)) {
     }
   }
 }
+# Photos chosen in config from other sols (e.g. the landing site, sol 13) carry their official URL.
+foreach ($ph in @($cfg.Site.photos | Where-Object { $_.PSObject.Properties.Name -contains 'url' })) {
+  try { if (Save-Url $ph.url (Join-Path $out $ph.source)) { $new++ } } catch { Write-Step "failed: $($ph.source)" }
+}
 Write-Step ("Rover images: {0} indexed (EDL excluded), {1} new downloads" -f $index.Count, $new)

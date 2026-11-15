@@ -81,6 +81,13 @@
     "crewEyeHeightM": 1.5,
     "source": "Scenario assumption for geometric line of sight only, not a radio model. The habitat antenna is 3 m above the local surface and the crew eye is 1.5 m (values from Henry's line-of-sight prototype). Used to prefer return routes that keep the habitat in view during a dust storm."
   },
+  "gravity": {
+    "marsMs2": 3.71,
+    "earthMs2": 9.81,
+    "legLengthM": 0.9,
+    "walkRunFroude": 0.5,
+    "source": "Surface gravity of Mars 3.71 m/s2 (0.38 g; NASA Mars fact sheet). Walk-run transition near Froude number 0.5 in reduced gravity (Kram, Domingo & Ferris 1997, J. Exp. Biol. 200: 821-826); leg length 0.9 m is an assumption for an adult. Explanatory only: the walking-cost model is not changed."
+  },
   "contingency": {
     "stepMin": 5,
     "solarEventRate": "maxUGyH",

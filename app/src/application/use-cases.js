@@ -8,6 +8,12 @@ import { withLargeDuneFactor, largeDuneFactor } from '../domain/terrain/params.j
 import { legsOfPlan } from '../domain/plans/tasks.js';
 import { buildTimeline, positionAt, checkpoints, chooseReturn, farthestPoint } from '../domain/contingency/contingency.js';
 import { dustPolicy, eventRateUGyH } from '../domain/contingency/return-policy.js';
+import { profileOf, indexAtDistance, nearestIndex, gradeAt } from '../domain/routing/profile.js';
+import { classMask } from '../domain/routing/route-highlights.js';
+import { detourCost } from '../domain/plans/detour.js';
+import { gravityFacts, earthEquivalentKg } from '../domain/physics/gravity.js';
+import { walkingSpeed } from '../domain/terrain/cost.js';
+import { taskMinutes } from '../domain/plans/tasks.js';
 
 /**
  * @param {{repository: import('./ports.js').SiteRepository, solver: import('./ports.js').RouteSolver}} deps
@@ -16,6 +22,7 @@ export function createMissionService({ repository, solver }) {
   let site = null;
   let solverReady = null;
   let returnReady = null;
+  const detourCache = {};
 
   const planInput = (legs) => ({ params: site.params, legs, stops: site.stops, weather: site.weather, radiation: site.radiation });
 
@@ -111,7 +118,56 @@ export function createMissionService({ repository, solver }) {
       if (position.atHome) return { position, atHome: true };
       const res = await solver.returnsFrom([position]);
       if (!res.ok) throw new Error(`returnsFrom: ${res.code}`);
-      return { position, choice: chooseReturn(alerts, res.results[0], this.returnConstants(prepared.paceFactor)) };
+      const routes = res.results[0];
+      const choice = chooseReturn(alerts, routes, this.returnConstants(prepared.paceFactor));
+      // With a dust alert the safe route is proposed; the fastest one is shown beside it for comparison.
+      const alt = choice.policy === 'dust' && routes.fast ? { coords: routes.fast.coords, policy: 'fast' } : null;
+      return { position, choice, alt };
+    },
+
+    /** Elevation profile of an official leg, with its large-dune stretches (for the drawer under the map). */
+    routeProfile(legId) {
+      const leg = this.officialLegs()[legId];
+      if (!leg) return null;
+      const p = profileOf(leg.coords, classMask(leg.coords, site.geology.features, 'largeDunes'));
+      return {
+        legId, coords: leg.coords, ...p,
+        indexAt: (d) => indexAtDistance(p, d),
+        nearest: (lon, lat) => nearestIndex(leg.coords, lon, lat),
+        grade: (i) => gradeAt(p, i),
+      };
+    },
+
+    /**
+     * Optional detours to places with signs of water alteration (config: site.waterSites), checked against the
+     * time budget of the plan in effect. Routes are least-effort routes computed in the Worker.
+     */
+    async waterDetours(evaluation) {
+      await solverReady;
+      const sites = site.site.waterSites ?? [];
+      const landing = site.site.points.landing;
+      const stop = { lon: site.stops.sampling.lon, lat: site.stops.sampling.lat };
+      const direct = this.officialLegs().landing_sampling;
+      const o = evaluation.options;
+      const plan = evaluation.recommended ?? evaluation.closest;
+      const out = [];
+      for (const ws of sites) {
+        detourCache[ws.id] ??= await Promise.all([solver.route(landing, ws), solver.route(ws, stop)]);
+        const [a, b] = detourCache[ws.id];
+        if (!a.ok || !b.ok) { out.push({ ...ws, reachable: false }); continue; }
+        const cost = detourCost({
+          direct, toSite: a.stats, fromSite: b.stats, taskMin: taskMinutes(site.params, 'photo'),
+          paceFactor: o.paceFactor, planTotalMin: plan?.totalMin ?? null, limitMin: o.limitMin,
+        });
+        out.push({ ...ws, reachable: true, coords: [...a.stats.coords, ...b.stats.coords.slice(1)], planId: plan?.planId ?? null, ...cost });
+      }
+      return out;
+    },
+
+    /** Mars gravity facts for the explanation panel, plus a weight converter. */
+    gravityFacts() {
+      const g = site.params.gravity;
+      return { ...gravityFacts(g, walkingSpeed(0, site.params) * 3.6), earthEquivalentKg: (kg) => earthEquivalentKg(kg, g), source: g.source };
     },
 
     /** One row per stop (arrival): return minutes by the fast and the dust-safe route. */
