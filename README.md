@@ -56,6 +56,8 @@ pipeline/ (PowerShell + C#, offline)          app/ (static site, no build)
 
 - **Clean architecture:** `domain/` is pure JavaScript (no DOM). `infrastructure/` adapts Leaflet, the Web Worker and the static data; `ui/` only talks to `application/`.
 - **Parity:** the browser engine and the pipeline engine (C#) read the same parameters. `tests/` checks that their route times differ by **<1%**.
+- **Emergency return:** the Web Worker builds two "time to the habitat" fields once (fastest, and dust-safe); the way home from any point of the plan is then read in milliseconds.
+- **Tests:** 82 browser tests (domain, the six plan scenarios plus the measured dust alert, JS↔C# parity, validity, UI and layer rules, globe, dust, emergency return). An architecture test fails if `ui/` imports `domain/` or `infrastructure/`.
 - See `STACK_Y_ARQUITECTURA.md` (Spanish) for the full stack and architecture.
 
 ## Run locally (Windows)
@@ -74,7 +76,7 @@ node tests/run.mjs
 ## Deploy
 
 `app/` is a static site with no build step:
-- **GitHub Pages:** `.github/workflows/pages.yml` publishes `app/` on every push to `main` (Settings → Pages → Source: GitHub Actions).
+- **GitHub Pages:** on every push to `main`, `.github/workflows/pages.yml` runs the full test suite (Node 22, 82 tests) and publishes `app/` only if every test passes (Settings → Pages → Source: GitHub Actions).
 - **Netlify:** `netlify.toml` publishes `app/`.
 
 ## Assumptions and limits (stated in the app)
@@ -94,9 +96,10 @@ node tests/run.mjs
 - **What the AI did:** this project used **Claude (Anthropic)** as a development assistant to:
   - research and locate NASA datasets;
   - write the data-processing pipeline (PowerShell/C#), the route engine, the web application code and the tests;
-  - integrate the team's globe into the app;
+  - integrate the team's globe and Henry's Cursor-made changes into the app;
+  - build the emergency return during the EVA;
   - draft documentation.
-- **Cursor:** a team member (Henry) used the **Cursor** agent to add the CI test run before publishing, the corrected surface dose (walking + tasks only), configurable workspace limits, route-calculation robustness, the measured dust alert and the globe dust maps (with their Python builder, `tools/dust/`). Those commits keep Cursor as author in the git history.
+- **Cursor:** a team member (Henry) used the **Cursor** agent to add the CI test run before publishing, the corrected surface dose (walking + tasks only), configurable workspace limits, route-calculation robustness, the measured dust alert, the globe dust maps (with their Python builder, `tools/dust/`), and the time-field and line-of-sight prototypes the emergency return builds on. Those commits keep Cursor as author in the git history.
 - **AI-generated image:** the MARS+ logo was generated with AI. It is shown with a visible "AI-generated image" label, and `app/assets/globe/globe.json` declares it (`logo.aiGenerated`). No other AI-generated images, audio or video are used.
 - **Marking:** every AI-assisted source file carries a header naming the tool, e.g. `AI-assisted (Claude). Reviewed by the MARS+ team.` or `AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.`
 

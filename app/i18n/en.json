@@ -288,7 +288,7 @@
   "emergency.sep": "Solar particle event (time outside matters: fastest way back)",
   "emergency.dust": "Dust storm (low visibility: safest way back)",
   "emergency.minuteLabel": "Minute of the walk when the alert arrives",
-  "emergency.minuteOf": "Minute {minute} of {total} outside.",
+  "emergency.minuteOf": "Minute {minute} of {total} outside",
   "emergency.forPlan": "Plan {plan} ({total} min outside).",
   "emergency.atStop": "at the {stop}",
   "emergency.onLeg": "walking {leg}",

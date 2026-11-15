@@ -86,17 +86,21 @@ martian-map/                       (repositorio: mars-plus)
 │   └── src/
 │       ├── main.js
 │       ├── domain/
-│       │   ├── terrain/   grid.js · cost.js
-│       │   ├── routing/   min-heap.js · astar.js · route-stats.js
+│       │   ├── terrain/   grid.js · cost.js · params.js · workspace.js · viewshed.js (línea de vista, de Henry)
+│       │   ├── routing/   min-heap.js · astar.js · route-stats.js · time-field.js (campos de tiempo y de regreso)
 │       │   ├── plans/     tasks.js · filters.js · evaluate.js
 │       │   ├── weather/   window.js
 │       │   ├── radiation/ dose.js
+│       │   ├── dust/      dust.js (alerta medida con Mastcam-Z, pintado de mapas de polvo)
+│       │   ├── contingency/ contingency.js · return-policy.js (regreso de emergencia)
+│       │   ├── validation/ traverse-check.js
 │       │   └── explain/   explain.js
-│       ├── application/   ports.js · store.js · use-cases.js
+│       ├── application/   ports.js · store.js · use-cases.js · route-session.js · dust-maps.js
 │       ├── infrastructure/
 │       │   ├── data/      static-site-repository.js
+│       │   ├── dust/      load-dust.js
 │       │   ├── routing/   route-core.js · route-worker.js · worker-route-solver.js (con respaldo sin Worker)
-│       │   ├── map/       leaflet-map-view.js · mars-trek-layers.js
+│       │   ├── map/       leaflet-map-view.js · mars-trek-layers.js · dust-flat-map.js
 │       │   └── globe/     webgl-globe.js (renderizador del equipo: esfera trazada por rayos, cámara, vuelo)
 │       ├── ui/
 │       │   ├── i18n.js
@@ -104,7 +108,7 @@ martian-map/                       (repositorio: mars-plus)
 │       │   ├── charts/    elevation-profile.js · weather-chart.js · dose-chart.js
 │       │   └── panels/    common.js (textos de motivos y explicación) · mission-panel.js · route-panel.js
 │       │                  plans-panel.js (veredicto + explicación + grilla) · conditions-panels.js (clima, radiación)
-│       │                  info-panels.js (geología, supuestos, fuentes)
+│       │                  info-panels.js (geología, supuestos, fuentes) · contingency-panel.js (regreso de emergencia + vista del astronauta)
 │       └── shared/        format.js · dom.js
 ├── pipeline/                      ← PowerShell 5.1 + C#, todo lee config/
 │   ├── run-pipeline.ps1           ← orquestador: -Step download | process | export | all  [-IncludeRoverImages]
@@ -114,7 +118,7 @@ martian-map/                       (repositorio: mars-plus)
 │   ├── 02-process/                ← process-geology · summarize-meda · extract-rad · build-traverse
 │   ├── 03-model/RouteEngine.cs    ← motor oficial de rutas + ImageWriter
 │   └── 04-export/                 ← export-web-data.ps1 (app/data + manifest; copia config/) · export-globe-assets.ps1 (app/assets/globe)
-├── tests/   index.html · run.mjs · harness.js · fixtures.js · domain/scenarios/parity/validity/ui/globe/criteria/session/assets.test.js
+├── tests/   index.html · run.mjs (Node, CI) · harness.js · fixtures.js · 13 archivos *.test.js (82 pruebas: dominio, escenarios, paridad, validez, UI y capas, globo, polvo, regreso de emergencia…)
 ├── tools/   dev-server.ps1 · dust/build_dust_products.py (Python, opcional: regenera app/data/dust)
 ├── data/                          ← FUERA de git
 │   ├── raw/                       ← descargas originales: dtm, ortho, meda, rad, geology, thermal, rover, globe (~1,7 GB)

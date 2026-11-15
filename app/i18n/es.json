@@ -288,7 +288,7 @@
   "emergency.sep": "Evento de partículas solares (importa el tiempo afuera: la vuelta más rápida)",
   "emergency.dust": "Tormenta de polvo (poca visibilidad: la vuelta más segura)",
   "emergency.minuteLabel": "Minuto de la caminata en que llega la alerta",
-  "emergency.minuteOf": "Minuto {minute} de {total} afuera.",
+  "emergency.minuteOf": "Minuto {minute} de {total} afuera",
   "emergency.forPlan": "Plan {plan} ({total} min afuera).",
   "emergency.atStop": "en la {stop}",
   "emergency.onLeg": "caminando {leg}",

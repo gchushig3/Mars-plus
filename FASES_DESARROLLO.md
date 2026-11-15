@@ -20,7 +20,7 @@
 | 5A | Correcciones traídas de la copia de Henry | **Must** | 1 h | Claude + Henry (confirma) | ✅ Hecha · 61/61 pruebas |
 | 5B | Alerta de polvo medida (Mastcam-Z) + mapas de polvo en el globo | Should | 1,5 h | Claude | ✅ Hecha · 71/71 pruebas |
 | 5C | Regreso de emergencia (alerta en plena EVA) | Should | 2,5 h | Claude + equipo de ciencia (supuestos) | ✅ Hecha · 82/82 pruebas · supuestos pendientes del equipo de ciencia |
-| 5D | Congelamiento de funcionalidades y verificación pública | **Must** | 0,5 h | Claude | ⏳ |
+| 5D | Congelamiento de funcionalidades y verificación pública | **Must** | 0,5 h | Claude | ✅ Hecha · funcionalidades congeladas |
 | 6 | Demo (7 diapositivas en inglés) | **Must** | 3 h | Equipo de pitch + Claude | ⏳ |
 | 7 | Formulario de envío y entrega | **Must** | 1,5 h | Equipo + Claude | ⏳ |
 | 8 | Congelamiento y respaldo | Must | 0,5 h | Equipo + Claude | ⏳ |
@@ -322,8 +322,10 @@
 3. Mirar en el móvil que el panel de regreso y la vista del astronauta se lean bien.
 
 **✅ Se considera terminada cuando**
-- [ ] GitHub Actions en verde y el sitio público actualizado antes de las 15:00.
-- [ ] Consola sin errores de la app.
+- [x] GitHub Actions en verde y el sitio público actualizado (domingo de madrugada, mucho antes de las 15:00).
+- [x] Consola sin errores de la app. Prueba de punta a punta en la URL pública: globo → Jezero → Plan C a las 09:00 → tormenta: NO SALIR → alerta en plena EVA: volver en 38 min. En el móvil (375 px) no hay desplazamiento horizontal.
+
+**Desde aquí no entra código nuevo.** Solo correcciones de errores o de textos, y los supuestos que confirme el equipo de ciencia (se cambian en `config/model-parameters.json`).
 
 **Commit:** `docs: README for the final feature set`
 
