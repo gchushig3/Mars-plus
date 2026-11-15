@@ -3,7 +3,7 @@
 **Plazo:** domingo 15-nov-2026, 23:59 hora local · **Punto de partida:** sábado 14-nov, ~21:00
 **Cómo se usa:** se ejecuta **una fase a la vez**, en orden. Para arrancar una, escribe: **«Ejecuta la Fase N»**.
 **Regla de avance:** cada fase termina con su verificación (✅) y un commit. Si algo no pasa, no se avanza.
-**Referencias:** [`STACK_Y_ARQUITECTURA.md`](STACK_Y_ARQUITECTURA.md) (cómo está construido) · [`auditoria-proyecto.md`](auditoria-proyecto.md) (riesgos y requisitos)
+**Referencias:** [`STACK_Y_ARQUITECTURA.md`](STACK_Y_ARQUITECTURA.md) (cómo está construido) · [`docs/es/auditoria-proyecto.md`](docs/es/auditoria-proyecto.md) (riesgos y requisitos) · [`docs/es/adr/`](docs/es/adr/) (decisiones)
 
 ---
 
@@ -104,7 +104,7 @@
 
 **Pasos**
 1. **Fotos en las paradas** *(el equipo de ciencia elige; Claude integra)*:
-   - Elegir 2–4 imágenes Navcam/Mastcam-Z de los sols 286, 293, 298 y 337 del índice en `data/imagenes_issole/`.
+   - Elegir 2–4 imágenes Navcam/Mastcam-Z de los sols 286, 293, 298 y 337 del índice en `data/raw/rover/images/`.
    - Copiarlas a `app/assets/rover/`, con crédito NASA/JPL-Caltech.
    - Mostrarlas en las ventanas de las paradas y en un bloque "Qué verás al llegar".
 2. **Confirmar las paradas** *(equipo de ciencia)* con esas fotos. Si hace falta mover un punto, se ajusta en `config/site.jezero-issole.json` y se regenera.

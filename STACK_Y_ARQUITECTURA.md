@@ -1,6 +1,6 @@
 ﻿# MARS+ — Stack tecnológico y arquitectura (documento base de desarrollo)
 
-> Este es el documento de referencia para programar el MVP. Si una decisión no aparece aquí, se sigue lo que dice [`arquitectura-mvp.md`](arquitectura-mvp.md), donde están las fases, los ADR y la migración.
+> Este es el documento de referencia para programar el MVP. Si una decisión no aparece aquí, se sigue lo que dice [`docs/es/arquitectura-mvp.md`](docs/es/arquitectura-mvp.md). Las decisiones están en [`docs/es/adr/`](docs/es/adr/) y las fases, en [`FASES_DESARROLLO.md`](FASES_DESARROLLO.md).
 > **Objetivo del MVP:** un sitio **publicado y funcional** que planifique una EVA entre Octavia E. Butler Landing e Issole (Jezero). Debe calcular rutas de menor esfuerzo, evaluar qué plan es viable según el terreno, el tiempo, el clima y la radiación, y **explicar por qué**.
 
 ---
@@ -100,16 +100,23 @@ martian-map/                       (repositorio: mars-plus)
 │       │                  plans-panel.js (veredicto + explicación + grilla) · conditions-panels.js (clima, radiación)
 │       │                  info-panels.js (geología, supuestos, fuentes)
 │       └── shared/        format.js · dom.js
-├── pipeline/
-│   ├── run-pipeline.ps1           ← orquestador
-│   ├── common/config.ps1          ← lee config/ y .env
-│   ├── 03-model/RouteEngine.cs    ← motor oficial (lee los parámetros del config)
+├── pipeline/                      ← PowerShell 5.1 + C#, todo lee config/
+│   ├── run-pipeline.ps1           ← orquestador: -Step download | process | export | all  [-IncludeRoverImages]
+│   ├── common/config.ps1          ← config, rutas, logs, carga de C#, descargas idempotentes
+│   ├── lib/                       ← TiffRange.cs (lectura parcial de GeoTIFF remotos) · Geology.cs · MedaHourly.cs
+│   ├── 01-download/               ← download-terrain · download-meda · download-rad · download-references · download-rover-images
+│   ├── 02-process/                ← process-geology · summarize-meda · extract-rad · build-traverse
+│   ├── 03-model/RouteEngine.cs    ← motor oficial de rutas + ImageWriter
 │   └── 04-export/export-web-data.ps1   (genera app/data + manifest; copia config/ a app/data)
 ├── tests/   index.html · harness.js · fixtures.js · domain/scenarios/parity.test.js   (18 pruebas)
 ├── tools/   dev-server.ps1
-├── data/    raw · interim             ← FUERA de git (~2 GB)
-├── docs/    es/ (equipo) · en/ (jueces)
-├── web/ · scripts/                    ← LEGADO (prototipo v1). No se modifican; se archivan al terminar la migración
+├── data/                          ← FUERA de git
+│   ├── raw/                       ← descargas originales: dtm, ortho, meda, rad, geology, thermal, rover (~1,7 GB)
+│   └── interim/                   ← productos intermedios: geology, meda, rad, rover
+├── docs/
+│   ├── es/                        ← equipo: LEEME (índice), arquitectura, auditoría, informe, catálogo, adr/ (001–010)
+│   │   └── historico/             ← documentos superados + prototipo v1 (web/, scripts/) como referencia
+│   └── en/                        ← material para jueces
 └── demo/
 ```
 
@@ -148,13 +155,18 @@ martian-map/                       (repositorio: mars-plus)
 ## 6. Cómo se trabaja
 
 ```powershell
-# 1. Regenerar los datos de la app (después de cambiar config/ o data/)
-powershell -ExecutionPolicy Bypass -File martian-map\pipeline\run-pipeline.ps1
+# Desde la raíz del repositorio (martian-map\)
+# 1a. Regenerar los datos de la app tras cambiar config/ (usa data/ ya descargado)
+powershell -ExecutionPolicy Bypass -File pipeline\run-pipeline.ps1 -Step export
+# 1b. Desde cero en otra computadora: descarga (~1,7 GB, omite lo existente) + proceso + export
+powershell -ExecutionPolicy Bypass -File pipeline\run-pipeline.ps1 -Step all
 
 # 2. Servidor local (sirve app/ y tests/)
-powershell -ExecutionPolicy Bypass -File martian-map\tools\dev-server.ps1
-#    App:     http://localhost:8765/app/
-#    Pruebas: http://localhost:8765/tests/
+powershell -ExecutionPolicy Bypass -File tools\dev-server.ps1
+#    App:     http://localhost:8770/app/
+#    Pruebas: http://localhost:8770/tests/
+
+# 3. Publicar: commit + push a main → GitHub Pages se actualiza solo (~1 min)
 ```
 
 **Puerta de calidad antes de cada publicación:**

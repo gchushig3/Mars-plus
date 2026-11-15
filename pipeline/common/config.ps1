@@ -1,4 +1,4 @@
-# Shared configuration loader for the MARS+ pipeline.
+# Shared helpers for the MARS+ pipeline: configuration, paths, logging and C# loading.
 # AI-assisted (Claude). Reviewed by the MARS+ team.
 Set-StrictMode -Version Latest
 
@@ -17,3 +17,19 @@ function Get-MarsConfig {
 function Resolve-RepoPath([string]$repoRoot, [string]$relative) { Join-Path $repoRoot ($relative -replace '/', '\') }
 
 function Write-Step([string]$text) { Write-Host ("[{0:HH:mm:ss}] {1}" -f (Get-Date), $text) }
+
+# Loads a C# file from pipeline/ once per PowerShell session.
+function Use-CSharp([string]$relativeFile, [string]$typeName, [string[]]$references = @()) {
+  if (-not ([System.Management.Automation.PSTypeName]$typeName).Type) {
+    $path = Join-Path (Join-Path $PSScriptRoot '..') $relativeFile
+    if ($references.Count -gt 0) { Add-Type -Path $path -ReferencedAssemblies $references } else { Add-Type -Path $path }
+  }
+}
+
+# Downloads a URL to a file unless it already exists (use -Force to refresh).
+function Save-Url([string]$url, [string]$dest, [switch]$Force) {
+  if ((Test-Path $dest) -and -not $Force) { return $false }
+  New-Item -ItemType Directory -Force (Split-Path $dest) | Out-Null
+  Invoke-WebRequest $url -OutFile $dest -UseBasicParsing -TimeoutSec 600 -UserAgent 'mars-plus-pipeline'
+  return $true
+}
