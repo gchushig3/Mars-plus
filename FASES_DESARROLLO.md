@@ -21,7 +21,7 @@
 | 5B | Alerta de polvo medida (Mastcam-Z) + mapas de polvo en el globo | Should | 1,5 h | Claude | ✅ Hecha · 71/71 pruebas |
 | 5C | Regreso de emergencia (alerta en plena EVA) | Should | 2,5 h | Claude + equipo de ciencia (supuestos) | ✅ Hecha · 82/82 pruebas · supuestos pendientes del equipo de ciencia |
 | 5D | Congelamiento de funcionalidades y verificación pública | **Must** | 0,5 h | Claude | ✅ Hecha · funcionalidades congeladas |
-| 6 | Demo (7 diapositivas en inglés) | **Must** | 3 h | Equipo de pitch + Claude | ⏳ |
+| 6 | Demo (7 diapositivas en inglés) | **Must** | 3 h | Equipo de pitch + Claude | 🔄 Textos y notas listos ([demo/demo-slides.md](demo/demo-slides.md)); falta que el equipo arme Google Slides |
 | 7 | Formulario de envío y entrega | **Must** | 1,5 h | Equipo + Claude | ⏳ |
 | 8 | Congelamiento y respaldo | Must | 0,5 h | Equipo + Claude | ⏳ |
 
@@ -345,7 +345,7 @@
 7. **Impacto y siguientes pasos:** cualquier sitio de Marte o la Luna; capas ya prototipadas por Henry (sombras por hora, línea de vista, corredores, rugosidad, inercia térmica); equipo; uso de IA declarado.
 
 **Pasos**
-1. *(Claude)* Textos de cada diapositiva y notas del orador.
+1. *(Claude)* ✅ Textos de cada diapositiva, notas del orador (≈2,7 min), lista de capturas y guion del video de 30 s: [`demo/demo-slides.md`](demo/demo-slides.md).
 2. *(Equipo)* Capturas en alta resolución desde la URL pública.
 3. *(Equipo)* Armar la presentación en **Google Slides** con la paleta MARS+, **sin logos NASA**. Si hay imágenes generadas con IA, llevan marca de agua.
 4. *(Equipo)* Compartir como "Cualquier persona con el enlace puede ver" y probar el enlace en una ventana privada.
