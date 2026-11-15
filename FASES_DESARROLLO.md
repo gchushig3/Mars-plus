@@ -17,19 +17,24 @@
 | 3 | Validez científica | Should | 3 h | Claude + equipo de ciencia | ✅ Hecha · falta que el equipo de ciencia confirme fotos y paradas (3.1–3.2) |
 | 4 | Pulido de UX, accesibilidad y robustez | Should | 2 h | Claude | ✅ Hecha · falta la prueba con una persona nueva del equipo (4.1) |
 | 5 | Globo 3D y transición | Could | 2 h | Equipo (globo) + Claude (integración) | ✅ Hecha · globo WebGL2 del equipo ([ADR-011](docs/es/adr/011-globo-webgl2-del-equipo.md)) |
+| 5A | Correcciones traídas de la copia de Henry | **Must** | 1 h | Claude + Henry (confirma) | ⏳ |
+| 5B | Alerta de polvo medida (Mastcam-Z) + mapas de polvo en el globo | Should | 1,5 h | Claude | ⏳ |
+| 5C | Regreso de emergencia (alerta en plena EVA) | Should | 2,5 h | Claude + equipo de ciencia (supuestos) | ⏳ |
+| 5D | Congelamiento de funcionalidades y verificación pública | **Must** | 0,5 h | Claude | ⏳ |
 | 6 | Demo (7 diapositivas en inglés) | **Must** | 3 h | Equipo de pitch + Claude | ⏳ |
 | 7 | Formulario de envío y entrega | **Must** | 1,5 h | Equipo + Claude | ⏳ |
 | 8 | Congelamiento y respaldo | Must | 0,5 h | Equipo + Claude | ⏳ |
 
-**Total pendiente:** ~5 h (fases 6–8).
+**Total pendiente:** ~10,5 h (5A–5D: 5,5 h · 6–8: 5 h).
 
 ### Calendario sugerido y puntos de decisión
 | Cuándo | Fases | Punto de decisión |
 |---|---|---|
-| Sábado 21:00–23:30 | 1 → 2 | **Al final del sábado, la URL pública tiene que funcionar.** Si no hay cuentas, se publica con Netlify Drop |
-| Domingo 08:00–11:00 | 3 | — |
-| Domingo 11:00–13:00 | 4 | **13:00 · ¿Fase 5?** Solo si las fases 1–4 están ✅. Si no, se salta |
-| Domingo 13:00–15:00 | 5 (opcional) | **15:00 · se congelan las funcionalidades** |
+| Sábado 21:00 – domingo 02:00 | 1 → 5 | ✅ Hechas |
+| Domingo 08:00–09:00 | 5A | Henry confirma que se puede usar su rama |
+| Domingo 09:00–10:30 | 5B | **10:30 · ¿5B completa?** Si se atrasa, solo la alerta de Jezero; los mapas del globo pasan a trabajo futuro |
+| Domingo 10:30–13:30 | 5C | **12:00 · el equipo de ciencia fija los supuestos** (minutos máximos al hábitat, ritmo con poca visibilidad) |
+| Domingo 13:30–14:30 | 5D | **15:00 · se congelan las funcionalidades.** Lo que no esté en verde, no entra |
 | Domingo 15:00–18:00 | 6 | — |
 | Domingo 18:00–19:30 | 7 | **Envío antes de las 21:00** (3 h de margen) |
 | Domingo 19:30–20:00 | 8 | Nada de código nuevo después del envío |
@@ -165,6 +170,163 @@
 
 ---
 
+## Mejoras 5A–5D: lo que se trae de Henry y el regreso de emergencia
+
+**De dónde salen:**
+- La copia de Henry (<https://github.com/henryconteron/Mars-plus>) parte de nuestro commit `540b283`. Sus 10 commits nuevos, hechos con Cursor, están en la rama `cursor/dust-heatmap-alert-2ed9`.
+- La pregunta del equipo: ¿qué hace el plan si llega una alerta de polvo o de partículas solares?
+
+**Idea central:** una tormenta de polvo cubre cientos de kilómetros y las partículas llegan desde todo el cielo. Ninguna ruta dentro de 1 km² las esquiva. Por eso:
+- **antes de salir**, la alerta pospone la EVA (ya funciona así);
+- **en plena EVA**, MARS+ da **la mejor ruta de regreso al hábitat**, calculada de antemano.
+
+**Qué se trae de Henry y qué no**
+
+| Commit de Henry | Qué es | Decisión |
+|---|---|---|
+| `2db0488` | Pruebas en GitHub antes de publicar, dosis correcta, límites de la zona de trabajo en `config/`, Worker de rutas que no se cuelga | **Se trae entero (5A)** |
+| `23a55f1` | Alerta de polvo medida con Mastcam-Z + mapas de polvo en el globo | **Se trae con arreglos (5B)** |
+| `b89c433` (solo `time-field.js` + su prueba) | Tiempo desde cada celda hasta el hábitat, en la dirección de regreso | **Base del regreso de emergencia (5C)** |
+| `682ed09` (solo `viewshed.js` + su prueba) | Línea de vista al hábitat | **Para la ruta segura con polvo (5C)** |
+| `286a09f`, `4f8ebab`, `0b0bf7f`, `d7996e5`, `dade4e6`, `7ee69be` y la parte visual de `b89c433` | Rugosidad, sombras por hora, tramos empinados, ruta coloreada, corredores, zona alcanzable, inercia térmica | **No entra en esta entrega.** Quedan como trabajo futuro (diapositiva 7) |
+
+**Reglas para todo lo que se trae:**
+- Se usa `git cherry-pick`, que conserva a Henry como autor en el historial.
+- Los archivos hechos con Cursor llevan `AI-assisted (Cursor). Reviewed by the MARS+ team.`. Hoy algunos dicen "Claude" y otros no dicen nada.
+- Ningún archivo de `ui/` importa de `domain/` ni de `infrastructure/`.
+
+---
+
+## Fase 5A — Correcciones traídas de la copia de Henry
+**Objetivo:** que el MVP publicado no tenga errores que un juez pueda encontrar.
+
+**Pasos**
+1. *(Equipo)* Henry confirma que se puede usar su rama.
+2. *(Claude)* Agregar su repositorio como remoto `henry` y traer `2db0488` en una rama `integracion-henry`.
+3. *(Claude)* Corregir la atribución de IA:
+   - encabezados de los archivos nuevos;
+   - sección "AI assistance" del README: Henry usó Cursor para las pruebas en GitHub, la dosis y la robustez.
+4. *(Claude)* Corregir el texto "opacidad ~2" de la tormenta donde aparezca. La tabla de Mastcam-Z da 1,38 como pico de las medianas diarias.
+5. *(Claude)* Regenerar los datos (`run-pipeline.ps1 -Step export`). Comprobar que solo cambian la fecha del manifest y lo que el cambio explica.
+6. *(Claude)* Correr las pruebas en `/tests/`, unir la rama a `main` y comprobar que GitHub Actions corre las pruebas y publica.
+
+**Riesgo:** ahora la publicación depende de que las pruebas pasen en GitHub, con Node. Si fallan por algo del entorno, el sitio no se actualiza.
+**Plan B:** volver al workflow anterior en un commit, o publicar en Netlify.
+
+**✅ Se considera terminada cuando**
+- [ ] Todas las pruebas pasan en el navegador y en GitHub Actions.
+- [ ] La dosis cuenta solo caminata + tareas, y la recomendación del escenario típico sigue siendo Plan C a las 09:00.
+- [ ] Cambiar A/B rápido no deja una ruta vieja, y un Worker caído muestra un error en vez de quedarse esperando.
+- [ ] Ningún archivo nuevo queda sin encabezado de IA.
+
+**Commit:** `fix: surface dose, CI tests and route robustness (from Henry's branch)`
+
+---
+
+## Fase 5B — Alerta de polvo medida y mapas de polvo en el globo
+**Objetivo:** que la alerta de tormenta salga de una medición (Mastcam-Z, 880 nm) y no de una casilla.
+
+**Pasos**
+1. *(Claude)* Traer `23a55f1` (`domain/dust/`, `app/data/dust/`, ADR-012, `docs/es/datos-polvo.md`).
+2. *(Claude)* **Arreglar la regla de capas.** La carga de los mapas y el pintado salen de `ui/views/globe-view.js` y pasan a:
+   - `main.js`, que inyecta un adaptador de polvo;
+   - o un caso de uso en `application/`.
+
+   La vista solo recibe "dame la capa X para Ls Y".
+3. *(Claude)* Actualizar la prueba "scenario 4" para que pase por la alerta. Con Mastcam-Z, el día de tormenta (τ 1,38 ≥ 1,0) da **posponer** solo; el Plan A a las 10:00 solo aparece si la tripulación apaga la alerta a mano.
+4. *(Claude)* Documentar `tools/dust/build_dust_products.py` como herramienta aparte del pipeline. Usa Python, `netCDF4` y `numpy`, y el producto ya va publicado en `app/data/dust/`. Agregarlo a `STACK_Y_ARQUITECTURA.md` y `ATTRIBUTION.md`, con estas licencias:
+   - Montabone: CC BY-SA 3.0;
+   - MDAD: CC BY 4.0;
+   - Mastcam-Z: CC BY 4.0, con su marca PRELIMINARY.
+
+**Puerta de las 10:30:** si no está listo, se entrega solo la alerta de Jezero (pasos 1 sin mapas, 3 y 4) y los mapas del globo pasan a trabajo futuro.
+
+**✅ Se considera terminada cuando**
+- [ ] La alerta muestra el τ medido, el umbral y el sol. La tripulación puede forzarla o apagarla.
+- [ ] El globo muestra polvo por estación (o el mapa plano, si no hay WebGL2).
+- [ ] Ningún archivo de `ui/` importa de `domain/` o `infrastructure/`; la prueba de arquitectura lo verifica.
+- [ ] Todas las pruebas en verde.
+
+**Commit:** `feat: measured dust alert from Mastcam-Z and dust maps on the globe`
+
+---
+
+## Fase 5C — Regreso de emergencia (alerta en plena EVA)
+**Objetivo:** responder "si me llega una alerta en plena caminata, ¿cómo vuelvo?". Se prepara **antes de salir** y se usa **durante** la EVA.
+
+**Quién lo ve:**
+- **La persona que queda en el hábitat** usa MARS+ y guía por radio.
+- **El astronauta** recibe lo mínimo: ruta, minutos y próximo punto. Se muestra como concepto de lo que vería en el traje.
+
+**Las tres rutas de regreso**
+
+| Alerta | Prioridad | Cómo se calcula |
+|---|---|---|
+| Partículas solares | Tiempo expuesto | La ruta más rápida al hábitat, más la dosis extra con la tasa del evento del 28-oct-2021 (RAD) |
+| Tormenta de polvo | Seguridad con poca visibilidad | Sin dunas grandes, pendiente máxima más baja, preferencia por tramos con vista al hábitat y ritmo más lento (supuesto) |
+| Las dos | Lo más rápido entre lo seguro | La ruta de polvo, mostrando cuánto cuesta frente a la más rápida ("+4 min, +12 µGy"). Ninguna regla de seguridad se compensa |
+
+**Pasos**
+1. *(Claude)* **Dominio:**
+   - traer `time-field.js` y `viewshed.js` de Henry con sus pruebas;
+   - agregar el camino de regreso (predecesores) al campo de tiempo, que hoy solo da tiempos;
+   - un campo por política (rápida, polvo), en dirección de regreso (`reverse = true`).
+2. *(Claude)* **Aplicación:** dos casos de uso.
+   - `planContingency(plan)`: puntos de regreso (salida, cada parada, cada 5 min de caminata y el punto más lejano), con las tres rutas desde cada uno.
+   - `alertDuringEva(minuto o punto, alertas)`: el regreso desde la posición estimada.
+3. *(Claude)* **Mapa y panel "Plan de regreso":**
+   - en el mapa, los puntos de regreso y las rutas en colores distintos;
+   - en el panel, minutos, distancia y dosis extra de cada regreso;
+   - "a X min del hábitat" en el punto más lejano.
+4. *(Claude)* **"Simular alerta en plena EVA":** se elige el minuto, o se hace clic en la ruta, y el tipo de alerta (polvo, partículas o las dos). La app dibuja el regreso y explica por qué eligió esa ruta.
+5. *(Claude)* **"Vista del astronauta"** (concepto): pantalla de alto contraste con letra grande.
+   - "VUELVE AHORA · ruta azul · 22 min · 410 m"
+   - flecha hacia el próximo punto
+   - minutos restantes
+6. *(Equipo de ciencia, 12:00)* Fijar los supuestos en `config/model-parameters.json`, cada uno con su fuente o marcado como "supuesto":
+   - ritmo con poca visibilidad;
+   - pendiente máxima con polvo;
+   - minutos máximos al hábitat.
+7. *(Claude)* **Criterio previo (aviso, no filtro):** si en algún punto el plan deja a la tripulación más lejos que los minutos máximos al hábitat, se avisa. No cambia la recomendación del día.
+8. *(Claude)* ADR-013 "Ante una alerta no se esquiva, se vuelve", textos ES/EN y panel de supuestos:
+   - no se sabe cuánto aviso da una alerta de partículas en Marte;
+   - en Marte no hay GPS: la posición se estima por el avance en la ruta;
+   - el único refugio es el hábitat.
+
+**Pruebas nuevas**
+- Volver desde la parada de muestreo nunca tarda más que el viaje de vuelta oficial (5 % de tolerancia).
+- La ruta de polvo no pisa dunas grandes ni celdas por encima de su pendiente máxima.
+- Con las dos alertas, la ruta elegida es la más rápida entre las seguras para el polvo.
+- Dosis extra = tasa del evento × minutos de regreso.
+- Con la alerta en el minuto 0 no hay regreso: es posponer.
+
+**✅ Se considera terminada cuando**
+- [ ] Desde cualquier punto de la ruta oficial hay un regreso para cada alerta, con minutos y dosis.
+- [ ] La simulación funciona con teclado y en ES/EN.
+- [ ] El cálculo tarda menos de 1 s y no bloquea la pantalla (se hace en el Worker).
+- [ ] Todas las pruebas en verde.
+
+**Commit:** `feat: emergency return routes for dust and solar particle alerts during the EVA`
+
+---
+
+## Fase 5D — Congelamiento de funcionalidades y verificación pública
+**Pasos**
+1. Actualizar el README: qué hace (regreso de emergencia, alerta medida), supuestos nuevos, referencias de polvo y la parte de Henry en "AI assistance".
+2. Publicar y probar la URL pública en una ventana privada:
+   - globo → Jezero → plan;
+   - escenario de tormenta → posponer;
+   - alerta en plena EVA → regreso.
+3. Mirar en el móvil que el panel de regreso y la vista del astronauta se lean bien.
+
+**✅ Se considera terminada cuando**
+- [ ] GitHub Actions en verde y el sitio público actualizado antes de las 15:00.
+- [ ] Consola sin errores de la app.
+
+**Commit:** `docs: README for the final feature set`
+
+---
+
 ## Fase 6 — Demo (7 diapositivas en inglés)
 **Objetivo:** subir el criterio **Presentation** (hoy en 1/5).
 **Entrada:** funcionalidades congeladas (15:00).
@@ -174,9 +336,9 @@
 2. **El problema:** los datos de Marte están dispersos; la primera tripulación necesita decidir *si* sale, *cuándo* y *qué* alcanza a hacer.
 3. **La misión piloto:** Landing → Issole (886 m), indicios de agua, muestras Robine y Malay.
 4. **Cómo funciona:** capas de datos NASA → mapa de costo → cadena de 5 filtros → GO / NO-GO con explicación.
-5. **Demo:** capturas de la ruta, la grilla de planes y el escenario de tormenta → NO SALIR.
+5. **Demo:** capturas de la ruta, la grilla de planes y la tormenta medida → NO SALIR. Luego, una alerta de partículas llega en las dunas → MARS+ da el regreso (ruta, minutos, dosis) y la vista del astronauta.
 6. **Validez:** paridad <1%, estabilidad a 1–5 m, casos reales (tormenta en los sols 313–317, evento solar del 28-oct-2021), supuestos declarados.
-7. **Impacto y siguientes pasos:** cualquier sitio de Marte o la Luna; equipo; uso de IA declarado.
+7. **Impacto y siguientes pasos:** cualquier sitio de Marte o la Luna; capas ya prototipadas por Henry (sombras por hora, línea de vista, corredores, rugosidad, inercia térmica); equipo; uso de IA declarado.
 
 **Pasos**
 1. *(Claude)* Textos de cada diapositiva y notas del orador.
@@ -217,7 +379,7 @@
 **Pasos**
 1. Etiqueta `v1.0-envio` y no se publica nada nuevo después.
 2. Respaldo local: `.zip` del repositorio (sin `data/`) + capturas + video corto de la app funcionando, por si falla la red durante la presentación.
-3. Anotar en `docs/es/` lo aprendido y los pasos posteriores al hackathon: Python, otros sitios, revisión de la ruta a mitad de camino, DONKI en vivo.
+3. Anotar en `docs/es/` lo aprendido y los pasos posteriores al hackathon: otros sitios, posición real del astronauta (no solo la estimada), DONKI en vivo para las alertas, y las capas de Henry que no entraron (sombras, línea de vista como regla, corredores, rugosidad, inercia térmica).
 
 **✅ Se considera terminada cuando**
 - [ ] Existe la etiqueta `v1.0-envio`.
@@ -229,5 +391,5 @@
 - **Una fase a la vez.** No se empieza la siguiente sin los ✅ de la anterior.
 - **Después de cada fase:** pruebas en `/tests/` → app sin errores → commit → URL pública actualizada.
 - **Ante un bloqueo** (cuentas, decisiones científicas), Claude avisa y propone un plan B. No se queda esperando sin decirlo.
-- **Lo que nunca se recorta:** fases 1, 6, 7 y 8.
-- **Orden de recorte si falta tiempo:** 5 → 3.3/3.5 (sensibilidad, validación de rocas) → 4.1 (bienvenida) → 3.1 (fotos).
+- **Lo que nunca se recorta:** fases 5A, 5D, 6, 7 y 8.
+- **Orden de recorte si falta tiempo:** mapas de polvo del globo (5B) → vista del astronauta (5C.5) → criterio previo de minutos al hábitat (5C.7) → regreso con las dos alertas a la vez (dejar solo polvo y partículas por separado) → resto de 5B.
