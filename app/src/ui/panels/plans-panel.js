@@ -3,9 +3,10 @@
 import { h, clear } from '../../shared/dom.js';
 import { fmtHour } from '../../shared/format.js';
 import { reasonText, planName, filterName, statementText } from './common.js';
+import { createDustObservations } from './dust-observations.js';
 
 export function createPlansPanel(el, { i18n, data, actions }) {
-  let ctl = {}, verdict, explainList, grid, sensBtn, sensStatus, sensTable, sensNote;
+  let ctl = {}, verdict, explainList, grid, sensBtn, sensStatus, sensTable, sensNote, dustObservations;
   const params = data.params;
 
   function build(state) {
@@ -19,6 +20,10 @@ export function createPlansPanel(el, { i18n, data, actions }) {
       type: 'number', min: 0, max: 4000, step: 1, value: o.dustSol ?? '', inputmode: 'numeric',
       'aria-label': t('plans.dustSol'),
       onchange: (e) => { const raw = e.target.value.trim(); actions.setOption({ dustSol: raw === '' ? null : Number(raw) }); },
+    });
+    dustObservations = createDustObservations({
+      i18n, catalog: data.dust, threshold: params.dust.alertTau880,
+      onSelect: (sol) => actions.setOption({ dustSol: sol }),
     });
     const days = [...new Set(data.radiation.series.map(([utc]) => utc.split(' ')[0]))];
     const dateFormat = new Intl.DateTimeFormat(i18n.lang, { dateStyle: 'medium', timeZone: 'UTC' });
@@ -41,7 +46,7 @@ export function createPlansPanel(el, { i18n, data, actions }) {
       h('p', { class: 'lead' }, t('plans.lead')),
       h('label', { class: 'field' }, t('plans.scenario'), ctl.scenario),
       h('label', { class: 'field' }, t('plans.dustSol'), ctl.sol),
-      ctl.dust, ctl.note,
+      ctl.dust, ctl.note, dustObservations.el,
       h('label', { class: 'field' }, t('plans.radDay'), ctl.solar),
       ctl.radNote,
       (ctl.wayBack = h('a', { class: 'callout way-back', href: '#panel-emergency', hidden: true }, t('plans.wayBack'))),
@@ -86,6 +91,8 @@ export function createPlansPanel(el, { i18n, data, actions }) {
     const { t } = i18n;
     const { evaluation, explanation } = state;
     if (ctl.dust) {
+      ctl.sol.value = state.planOptions.dustSol ?? '';
+      dustObservations.select(state.planOptions.dustSol);
       ctl.dust.textContent = t(state.dustInfo?.tau == null ? 'plans.dustStatusUnknown' : state.planOptions.dustStormAlert ? 'plans.dustStatusActive' : 'plans.dustStatusBelow');
       ctl.note.textContent = dustText(i18n, state.dustInfo, data.params);
       const solar = state.solarInfo;
@@ -122,13 +129,13 @@ export function createPlansPanel(el, { i18n, data, actions }) {
 }
 
 function dustText(i18n, dust, params) {
-  const { t } = i18n;
-  const threshold = params.dust.alertTau880;
+  const { t, lang } = i18n;
+  const threshold = params.dust.alertTau880.toLocaleString(lang);
   if (!dust || dust.tau == null) {
     if (dust?.basis === 'sol-missing') return t('plans.dustMissing', { sol: dust.sol, threshold });
     return t('plans.dustUnavailable', { threshold });
   }
-  const tau = dust.tau.toFixed(2);
+  const tau = dust.tau.toLocaleString(lang, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   if (dust.basis === 'sol') return t('plans.dustSolValue', { tau, sol: dust.sol, ls: dust.ls, n: dust.n, threshold });
   if (dust.basis === 'storm-sols') return t('plans.dustStormValue', { tau, from: params.dust.stormSols[0], to: params.dust.stormSols[1], threshold });
   return t('plans.dustBackgroundValue', { tau, from: params.dust.backgroundSols[0], to: params.dust.backgroundSols[1], threshold });

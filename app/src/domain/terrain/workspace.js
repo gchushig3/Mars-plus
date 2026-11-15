@@ -35,3 +35,35 @@ export function workspaceRejects(criteria, params) {
   if (Number.isFinite(criteria.rockFraction) && Number.isFinite(rockLimit) && criteria.rockFraction > rockLimit) return true;
   return false;
 }
+
+/** Select a walking destination near a mapped outcrop using the pipeline's workspace criteria. */
+export function nearbyWorkspace(model, target, searchRadiusM, platformRadiusM) {
+  const { grid, blocked, params } = model;
+  const r0 = grid.rowOfLat(target.lat), c0 = grid.colOfLon(target.lon);
+  const radius = Math.ceil(searchRadiusM / (grid.res * grid.cosLat));
+  const platform = Math.max(1, Math.ceil(platformRadiusM / grid.res));
+  let best = null, bestScore = Infinity;
+  for (let r = r0 - radius; r <= r0 + radius; r++) {
+    for (let c = c0 - radius; c <= c0 + radius; c++) {
+      if (r < platform || c < platform || r >= grid.rows - platform || c >= grid.cols - platform) continue;
+      const distanceToTargetM = Math.hypot((r - r0) * grid.res, (c - c0) * grid.res * grid.cosLat);
+      if (distanceToTargetM > searchRadiusM) continue;
+      const criteria = { maxSlopeDeg: 0, largeDuneFraction: 0, rockFraction: 0, distanceToTargetM };
+      for (let dr = -platform; dr <= platform; dr++) {
+        for (let dc = -platform; dc <= platform; dc++) {
+          const cell = (r + dr) * grid.cols + c + dc;
+          criteria.maxSlopeDeg = Math.max(criteria.maxSlopeDeg, blocked[cell] ? Infinity : grid.slope[cell]);
+          criteria.largeDuneFraction = Math.max(criteria.largeDuneFraction, grid.duneLarge[cell]);
+          criteria.rockFraction = Math.max(criteria.rockFraction, grid.rock[cell]);
+        }
+      }
+      if (!isAcceptableWorkspace(criteria.maxSlopeDeg, criteria.largeDuneFraction, params)) continue;
+      const score = criteria.maxSlopeDeg + 50 * criteria.rockFraction + 0.5 * distanceToTargetM;
+      if (score < bestScore) {
+        bestScore = score;
+        best = { lon: grid.lonOfCol(c), lat: grid.latOfRow(r), ok: true, criteria };
+      }
+    }
+  }
+  return best;
+}

@@ -98,7 +98,7 @@ async function main() {
     paceKey: 'normal', planOptions: firstPlan.evaluation.options, dustInfo: firstPlan.dustInfo, solarInfo: firstPlan.solarInfo, waterSites: [],
     evaluation: firstPlan.evaluation, explanation: firstPlan.explanation,
     sensitivity: { status: 'idle', rows: null }, sensitivityView: null, traverseValidation: null, routingReady: false,
-    emergency: { status: 'idle', show: false, trigger: null, alerts: { sep: false, dust: false }, routeId: '', distanceM: 0,
+    emergency: { status: 'idle', show: false, trigger: null, alerts: { sep: false, dust: false }, routeId: '', distanceM: 0, marginView: 'off',
       prepared: null, rows: null, result: null, farthest: null, astronautView: false },
   });
 
@@ -168,7 +168,8 @@ async function main() {
       }
       const routeChanged = next.routeId !== prev.routeId;
       if (routeChanged && patch.trigger !== 'plan') next.distanceM = 0;
-      const recalculate = routeChanged || 'distanceM' in patch || 'alerts' in patch || next.show !== prev.show;
+      const recalculate = routeChanged || 'distanceM' in patch || 'alerts' in patch ||
+        next.show !== prev.show || next.marginView !== prev.marginView;
       if (recalculate) {
         next.result = null;
         next.farthest = null;
@@ -181,13 +182,14 @@ async function main() {
   let emergencySeq = 0, preparationSeq = 0, preparationInput;
   async function refreshEmergencyReturn() {
     const e = store.get().emergency;
-    if (!e.prepared || !e.show || !(e.alerts.sep || e.alerts.dust)) return;
+    if (!e.prepared || (!e.show && e.marginView === 'off')) return;
+    const alerts = e.show ? e.alerts : { dust: e.marginView === 'dust', sep: false };
     const id = ++emergencySeq;
     try {
-      const result = await service.emergencyReturn(e.prepared, e.distanceM, e.alerts);
+      const result = await service.emergencyReturn(e.prepared, e.distanceM, alerts);
       if (id !== emergencySeq) return;
       const heading = result.choice && !result.choice.noRoute ? headingDeg(result.choice.coords) : null;
-      const farthest = service.farthestFromHabitat(e.prepared, e.alerts);
+      const farthest = e.show ? service.farthestFromHabitat(e.prepared, alerts) : null;
       store.set((s) => ({ emergency: { ...s.emergency, status: 'ready', result: { ...result, heading }, farthest } }));
     } catch (err) {
       if (id !== emergencySeq) return;
@@ -205,7 +207,7 @@ async function main() {
     if (was.dust === now.dust && was.sep === now.sep && prev.solarRateUGyH === now.solarRateUGyH) return;
     if (now.dust || now.sep) {
       const routeId = store.get().emergency.routeId || (previousEvaluation.recommended ?? previousEvaluation.closest)?.planId || '';
-      actions.setEmergency({ show: true, trigger: 'plan', alerts: now, routeId });
+      actions.setEmergency({ show: true, trigger: 'plan', alerts: now, routeId, marginView: 'auto' });
     } else if (store.get().emergency.trigger === 'plan') actions.setEmergency({ show: false, trigger: null, alerts: now });
   }
   /** Prepares the return plan for the plan in effect (recommended, or the closest one when the EVA is postponed). */
@@ -214,10 +216,13 @@ async function main() {
     if (!s.routingReady || s.routingReady === 'error') return;
     const routeId = s.emergency.routeId || (s.evaluation.recommended ?? s.evaluation.closest)?.planId;
     const customCoords = routeId === 'custom' ? s.userRoute?.coords : undefined;
-    const detour = routeId === 'brac' ? s.waterSites.find((site) => site.id === 'brac' && site.reachable) : undefined;
+    const waterId = routeId?.replace(/-round$/, '');
+    const isWater = data.site.waterSites?.some(({ id }) => id === waterId);
+    const water = isWater ? s.waterSites.find(({ id }) => id === waterId) : null;
+    const detour = routeId?.endsWith('-round') ? water?.roundTrip : water?.detour;
     const paceFactor = s.planOptions.paceFactor;
     const resM = s.officialRes;
-    const input = [routeId, paceFactor, resM, customCoords, detour?.outboundLegs[0]];
+    const input = [routeId, paceFactor, resM, customCoords, detour?.legs];
     if (preparationInput?.every((value, i) => value === input[i])) {
       if (!s.emergency.result) await refreshEmergencyReturn();
       return;
@@ -225,7 +230,7 @@ async function main() {
     preparationInput = input;
     const id = ++preparationSeq;
     ++emergencySeq;
-    const ready = routeId && (routeId !== 'custom' || customCoords?.length > 1) && (routeId !== 'brac' || detour);
+    const ready = routeId && (routeId !== 'custom' || customCoords?.length > 1) && (!isWater || detour);
     store.set((st) => ({ emergency: { ...st.emergency, prepared: null, result: null, farthest: null, rows: null,
       status: ready ? 'preparing' : 'unavailable' } }));
     if (!ready) return;
@@ -244,9 +249,10 @@ async function main() {
   }
   // Elevation profile under the map, its red point shared with the map.
   const profileDrawer = createProfileDrawer(document.getElementById('map-wrap'), {
-    i18n, getProfile: (id) => service.routeProfile(id), onProbe: (p) => map.showProbe(p), onToggle: () => setTimeout(() => map.invalidate(), 0),
+    i18n, getProfile: (coords) => service.routeProfile(coords), onProbe: (p) => map.showProbe(p), onToggle: () => setTimeout(() => map.invalidate(), 0),
   });
-  map.onRouteHover((legId, p) => profileDrawer.followMap(legId, p));
+  map.onProfileRoutes((routes) => profileDrawer.setRoutes(routes));
+  map.onRouteHover((routeId, p) => profileDrawer.followMap(routeId, p));
   // Optional detours to places with signs of water alteration (recomputed when the plan changes).
   let waterSeq = 0;
   async function refreshWater() {
@@ -297,6 +303,7 @@ async function main() {
     helpBtn.setAttribute('aria-label', t('welcome.help')); helpBtn.title = t('welcome.help');
     document.getElementById('skip').textContent = t('app.skip');
     map.setLabels(i18n.html);
+    renderReturnMargin(store.get().emergency);
     renderEmergency(store.get().emergency);
     map.setWaterSites(store.get().waterSites);
     profileDrawer.build();
@@ -321,10 +328,23 @@ async function main() {
     if (!onGlobe) map.invalidate();
   }
 
+  function renderReturnMargin(e) {
+    const policy = e.marginView === 'dust' || (e.marginView === 'auto' && e.alerts.dust) ? 'dust' : 'fast';
+    map.showReturnMargin(e.prepared && e.marginView !== 'off' ? {
+      bands: e.prepared.bands[policy], policy, limit: e.prepared.limit,
+      itinerary: e.prepared.timeline.segments.filter(({ kind }) => kind === 'walk'),
+      onSelect: (distanceM) => {
+        actions.setEmergency({ distanceM: Math.round(distanceM) });
+        document.getElementById('emergency-position').scrollIntoView({ block: 'nearest' });
+      },
+    } : null);
+  }
+
   function renderEmergency(e) {
-    map.showEmergencyReturn(e.show && e.result && {
+    map.showEmergencyReturn((e.show || e.marginView !== 'off') && e.result && {
       position: e.result.position, coords: e.result.choice?.coords, policy: e.result.choice?.policy, alt: e.result.alt,
-      itinerary: e.prepared.timeline.segments.filter((segment) => segment.kind === 'walk').map((segment) => segment.coords),
+      itinerary: e.marginView === 'off'
+        ? e.prepared.timeline.segments.filter(({ kind }) => kind === 'walk') : [],
       label: i18n.t('emergency.crewHere'),
     });
   }
@@ -338,7 +358,10 @@ async function main() {
     if (s.pointB !== last.pointB) map.setPoint('B', s.pointB);
     if (s.userRoute !== last.userRoute) map.showUserRoute(s.userRoute?.coords ?? null);
     if (s.waterSites !== last.waterSites) map.setWaterSites(s.waterSites);
-    if (s.emergency.result !== last.emergency?.result || s.emergency.show !== last.emergency?.show) {
+    if (s.emergency.prepared !== last.emergency?.prepared || s.emergency.marginView !== last.emergency?.marginView ||
+        s.emergency.alerts.dust !== last.emergency?.alerts.dust) renderReturnMargin(s.emergency);
+    if (s.emergency.result !== last.emergency?.result || s.emergency.show !== last.emergency?.show ||
+        s.emergency.marginView !== last.emergency?.marginView) {
       renderEmergency(s.emergency);
     }
     if (s.evaluation !== last.evaluation || s.routingReady !== last.routingReady) refreshWater();

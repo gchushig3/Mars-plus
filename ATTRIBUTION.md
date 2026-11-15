@@ -5,6 +5,7 @@
 |---|---|---|
 | HiRISE imagery (Mars Trek tiles and USGS orthomosaic) | NASA/JPL-Caltech/University of Arizona; mosaics by USGS Astrogeology | NASA/USGS public domain; credit requested |
 | HiRISE DTM mosaic (Mars 2020 TRN) | USGS Astrogeology / NASA | Public domain (USGS) |
+| CRISM CAR, scene FRT00005C5E, 2007-05-19 | NASA/MRO, CRISM Science Team led by JHU/APL, Murchie and Hash, NASA PDS Geosciences, [MTRDR archive](https://doi.org/10.17189/2bd6-cs64) | Public PDS data |
 | CTX and THEMIS tiles | NASA/JPL/MSSS; NASA/JPL/Arizona State University, via Mars Trek | NASA public domain; credit requested |
 | MEDA derived data | NASA/JPL-Caltech, CAB (INTA-CSIC), MEDA team; NASA PDS Atmospheres | PDS public data |
 | RAD RDR | NASA/JPL-Caltech/SwRI; NASA PDS PPI | PDS public data |
@@ -31,6 +32,8 @@
 
 ## Branding
 MARS+ does **not** use NASA insignia, logotypes or mission logos. "NASA" is mentioned only factually, to credit data sources.
+
+The optional Jezero CRISM layer uses the unmodified [CAR browse PNG](https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_4001/browse/2007/2007_139/frt00005c5e/frt00005c5e_07_brcarj_mtr3.png), including its transparency mask. The displayed bounds come from the outer pixel edges and equirectangular projection in its [PDS4 label](https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_4001/browse/2007/2007_139/frt00005c5e/frt00005c5e_07_brcarj_mtr3.xml). CAR combines D2300, BD2500_2 and BD1900_2. The colors guide interpretation of orbital signatures and are independent of walking cost. Local PNG SHA-256 is `6505c7835894cc20ba6425656037def7baac9d8793c5ed74a55d58308db1a51d`.
 
 ## AI assistance
 Source files marked `AI-assisted (Claude). Reviewed by the MARS+ team.` were written with the help of Claude (Anthropic). See README → "AI assistance".

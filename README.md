@@ -12,8 +12,8 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 
 - **3D Mars globe as the entry screen:** a WebGL2 globe built by the MARS+ team. It has four global layers (Viking, MOLA, USGS geology and seasonal dust). The highlighted footprint follows the bounds of the Jezero terrain dataset. Select it or zoom in near it to open the local map with geology enabled. Use `?view=local` to open the EVA map directly.
 - **Hyper-local map (≈1 km², 2 m grid):** HiRISE 25 cm imagery and the official EVA route (out and back). The habitat and Issole points open Perseverance photos. The layer control offers the Brac detour, walking effort, slope, Jezero geology and the rover traverse. The bottom-left legends follow the visible layers.
-- **Elevation profile under the map:** one button opens it; a red point marks the same place on the profile and on the route, in both directions (and with the keyboard).
-- **Detour for signs of water:** Brac (Séítah rock with alteration minerals, where Perseverance cored Salette and Coulettes) is shown with the least-effort detour on the way out and whether it fits the time budget with a photo stop.
+- **Elevation profile under the map:** choose any displayed route. The probe is shared with the map. The Perseverance line uses elevations sampled from HiRISE, with gaps outside the pilot terrain.
+- **Science stops:** Issole links the annotated Quartier workspace, its mineral measurements and NASA's sample records. Other documented sites have routes and separate results for photography and photography plus sampling, as a detour on the Issole EVA or a dedicated round trip. The planner rechecks the workspace, time, weather and radiation for each option.
 - **Mars gravity explained:** 0.38 g, what it changes for loads, walking speed, slopes and falls, with a weight converter. It explains the model; the cost formula is unchanged.
 - **Least-effort route A → B:** click two points and an A* search runs in your browser (Web Worker) over the 2 m terrain grid. Cost = time to cross each cell, from directional slope, roughness, sand (aeolian bedforms) and rocks detected in HiRISE.
 - **EVA plan chain:** plans **A** (photo + sample), **C** (sample only) and **B** (documentation only) × every departure hour → **terrain → science → time → weather → radiation**. A plan that fails one filter is rejected with its reason; nothing compensates for a safety failure.
@@ -22,7 +22,7 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
   - **Sand sensitivity:** routes and plans are recomputed with sand ×1.5 / ×2 / ×3.
   - **Obstacle model vs. ground truth:** only 0.8% of the cells along Perseverance's real ~1 km drive inside the area are flagged as blocked.
   - **Real rover photos** of what the crew will see at Issole.
-- **Emergency return during the EVA:** choose an itinerary (plan A, B or C, the Brac detour, or a calculated A → B route) and the metres walked. The planner activates the dust alert from Mastcam-Z opacity at Jezero and the solar alert from a selected date of the documented October 2021 event in Curiosity RAD data. It plots the estimated position and the way back to the habitat. Solar only uses the fastest route and the selected day's peak dose rate. Dust applies a slope cap, penalties for dunes and loss of line of sight, and a slower walking pace. Both alerts apply dust constraints and the solar dose rate. These are historical replays, with a combined test scenario available from the two records.
+- **Emergency return during the EVA:** select an itinerary and show estimated minutes to the habitat along it. Select a section or enter the metres walked to compare normal, dust and solar-event returns from the same point. Solar uses the fastest route and the selected historical RAD day's peak rate. Dust applies a slope cap, penalties for dunes and loss of line of sight, and a slower walking pace. The plans panel compares measured Mastcam-Z opacity during the 2022 and 2024 dust episodes at Jezero. Combining a Jezero dust observation with the Gale RAD event is a prototype scenario.
 - **Explains itself:** "Recommended: Plan C, depart 09:00, back 11:39 … Plan A is out — Time: exceeds the 180-min limit by 5 min."
 - **Bilingual:** English / Spanish.
 
@@ -38,13 +38,17 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 | Perseverance waypoints (MMGIS M20) | Rover traverse, Issole position | NASA/JPL |
 | Mars Perseverance raw images | Context for the stops | NASA/JPL-Caltech (challenge resource) |
 | Mars rock samples catalog | Robine and Malay samples | NASA |
+| Jezero crater floor campaign | Images, mineral measurements and site context for the science stops | [Sun et al.](https://doi.org/10.1029/2022JE007613), [Simon et al.](https://doi.org/10.1029/2022JE007474) |
 | Viking MDIM 2.1 colour mosaic | Globe base layer | NASA/JPL/USGS, via Mars Trek |
 | MOLA MEGDR (8 px/deg) | Globe elevation layer | NASA MGS, PDS Geosciences |
 | Geologic Map of Mars (SIM 3292) | Globe geology layer (44 units) | USGS for NASA |
+| MRO CRISM CAR browse image (FRT00005C5E, 18 m/pixel) | Optional orbital mineral indicators in Jezero | [NASA PDS](https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_4001/browse/2007/2007_139/frt00005c5e/) |
 | Star field (Deep Star Maps) | Globe background | NASA Goddard SVS, ESA/Gaia/DPAC |
 | Mastcam-Z 880 nm optical depth (Perseverance) | Dust-storm alert at Jezero (τ ≥ 1.0) | Lemmon, Mendeley Data doi:10.17632/gktjp9jptb.2 |
 | Column dust optical depth maps (MY24–MY36) | Globe dust layer by season | Montabone et al. 2015/2020 (CC BY-SA 3.0) |
 | Mars Dust Activity Database v1.1 | Globe storm-frequency layer | Battalio & Wang 2021, doi:10.5281/zenodo.7480334 |
+
+The CRISM layer is a false-color composite of spectral indicators. Use it to flag areas for review, then check geologic context and surface-scale imagery. An 18 m pixel can mix several materials. Walking costs still come from the local HiRISE terrain and geologic layers.
 
 ## How it works
 

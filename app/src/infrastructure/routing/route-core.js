@@ -10,6 +10,8 @@ import { edgeTime } from '../../domain/terrain/cost.js';
 import { returnField, pathHome } from '../../domain/routing/time-field.js';
 import { viewshedMask } from '../../domain/terrain/viewshed.js';
 import { dustReturnModel } from '../../domain/contingency/return-policy.js';
+import { nearbyWorkspace } from '../../domain/terrain/workspace.js';
+import { profileSamplePoints } from '../../domain/routing/profile.js';
 
 export function createRouteCore() {
   let grid = null, model = null, fields = null;
@@ -30,6 +32,10 @@ export function createRouteCore() {
 
   return {
     init(meta, buffer, params) { grid = new TerrainGrid(meta, buffer); model = buildCostModel(grid, params); fields = null; },
+
+    scienceWorkspace(point, radiusM, platformM) {
+      return nearbyWorkspace(model, point, radiusM, platformM);
+    },
 
     /** Cumulative walking minutes along each official leg (normal model), to place the crew in time. */
     legTimeline(legs) {
@@ -62,8 +68,18 @@ export function createRouteCore() {
       const sees = viewshedMask(grid.z, grid.rows, grid.cols, grid.res, grid.cosLat, homeCell, visibility.habitatHeightM, visibility.crewEyeHeightM);
       let visible = 0;
       for (let i = 0; i < sees.length; i++) visible += sees[i];
-      fields = { fast: returnField(model, homeCell), dust: returnField(dustReturnModel(model, sees), homeCell) };
+      fields = { fast: returnField(model, homeCell), dust: returnField(dustReturnModel(model, sees), homeCell, model) };
       return { ok: true, ms: Math.round(performance.now() - t0), visibleShare: visible / grid.size };
+    },
+
+    /** Batch lookup without reconstructing paths. Null = unknown terrain, Infinity = no path. */
+    returnTimes(points) {
+      if (!fields) return { ok: false, code: 'notReady' };
+      return { ok: true, results: points.map(({ lon, lat }) => {
+        const c = grid.cellOf(lon, lat);
+        if (c < 0 || !Number.isFinite(grid.z[c])) return { fast: null, dust: null };
+        return { fast: fields.fast.travelSeconds[c] / 60, dust: fields.dust.travelSeconds[c] / 60 };
+      }) };
     },
 
     /** Way home from each point under both policies (null when a policy has no route). */
@@ -94,6 +110,16 @@ export function createRouteCore() {
         out[leg.id] = r.ok ? { timeMin: r.stats.timeMin, distanceM: r.stats.distanceM, largeDuneM: r.stats.largeDuneM } : { timeMin: NaN, code: r.code };
       }
       return { ok: true, legs: out };
+    },
+
+    /** Sample recorded routes with no heights against the 2 m raster. NaN marks a gap. */
+    profileElevations(coords) {
+      if (!grid) return { ok: false, code: 'notReady' };
+      const sampled = profileSamplePoints(coords, grid.res * grid.cosLat).map(([lon, lat]) => {
+        const cell = grid.cellOf(lon, lat);
+        return [lon, lat, grid.z[cell] ?? NaN];
+      });
+      return { ok: true, coords: sampled };
     },
 
     /** Obstacle model checked against the rover's real traverse. */

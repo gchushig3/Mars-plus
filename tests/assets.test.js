@@ -1,6 +1,7 @@
 // AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // BOM-free JSON, the app copy of the parameters, and pipeline writers that no longer emit a BOM.
-import { test, assert, assertEqual } from './harness.js';
+import { test, assert, assertClose, assertEqual } from './harness.js';
+import { crismBounds } from '../app/src/infrastructure/map/leaflet-map-view.js';
 
 const JSON_ASSETS = [
   '../config/model-parameters.json',
@@ -61,6 +62,25 @@ test('params: the app copy matches config/model-parameters.json', async () => {
     fetch('../app/data/model-parameters.json').then((r) => r.json()),
   ]);
   assertEqual(JSON.stringify(config), JSON.stringify(app));
+});
+
+test('CRISM: the original transparent PNG matches its map projection metadata', async () => {
+  const [config, site] = await Promise.all([
+    fetch('../config/site.jezero-issole.json').then((r) => r.json()),
+    fetch('../app/data/sites/jezero-issole/site.json').then((r) => r.json()),
+  ]);
+  const scene = site.crism;
+  assertEqual(JSON.stringify(config.crism), JSON.stringify(scene));
+  const png = await bytes(`../app/${scene.file}`);
+  const ihdr = new DataView(png.buffer);
+  assertEqual(ihdr.getUint32(16), scene.cols);
+  assertEqual(ihdr.getUint32(20), scene.rows);
+  assertEqual(png[25], 6, 'RGBA keeps the original scene transparency');
+  const [[south, west], [north, east]] = crismBounds(scene);
+  assertClose(south, 18.3648237875, 1e-8);
+  assertClose(west, 77.2787224479, 1e-8);
+  assertClose(north, 18.6355021599, 1e-8);
+  assertClose(east, 77.5586348112, 1e-8);
 });
 
 test('pipeline: text writers use UTF-8 without a BOM', async () => {

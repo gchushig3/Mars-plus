@@ -11,9 +11,12 @@ self.onmessage = (e) => {
     else if (type === 'route') result = core.route(payload.a, payload.b);
     else if (type === 'legs') result = core.legs(payload.legs, payload.params);
     else if (type === 'validateTraverse') result = core.validateTraverse(payload.coords);
+    else if (type === 'profileElevations') result = core.profileElevations(payload.coords);
     else if (type === 'legTimeline') result = core.legTimeline(payload.legs);
     else if (type === 'prepareReturn') result = core.prepareReturn(payload.home, payload.visibility);
     else if (type === 'returnsFrom') result = core.returnsFrom(payload.points);
+    else if (type === 'returnTimes') result = core.returnTimes(payload.points);
+    else if (type === 'scienceWorkspace') result = core.scienceWorkspace(payload.point, payload.radiusM, payload.platformM);
     else result = { ok: false, code: 'unknownMessage' };
     self.postMessage({ id, result });
   } catch (err) {

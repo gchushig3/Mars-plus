@@ -11,6 +11,8 @@ import { dustPolicy, eventRateUGyH } from '../app/src/domain/contingency/return-
 import { evaluatePlans, defaultPlanOptions } from '../app/src/domain/plans/evaluate.js';
 import { legsOfPlan } from '../app/src/domain/plans/tasks.js';
 import { createRouteCore } from '../app/src/infrastructure/routing/route-core.js';
+import { createMissionService } from '../app/src/application/use-cases.js';
+import { returnBands, sampleItinerary } from '../app/src/domain/contingency/return-margin.js';
 import { loadSiteFixture } from './fixtures.js';
 
 let ready;
@@ -145,4 +147,37 @@ test('emergency: the solar alert follows recorded RAD event dates and each measu
   assertClose(event.peakUGyH, Math.max(...f.radiation.series.filter(([utc]) => utc.startsWith('2021-301 ')).map(([, dose]) => dose)), 1e-9);
   assert(!radDay(f.radiation, '2021-300').event);
   assertEqual(radDay(f.radiation, '2021-001').peakUGyH, null);
+});
+
+test('return margins use the walking time of each selected path and distinguish missing coverage', async () => {
+  const { f, core } = await setup();
+  const point = f.stops.sampling;
+  const routes = core.returnsFrom([point]).results[0];
+  const [times, missing] = core.returnTimes([point, { lon: 0, lat: 0 }]).results;
+  assertClose(times.fast, routes.fast.walkMin, 1e-9);
+  assertClose(times.dust, routes.dust.walkMin, 1e-9);
+  assertEqual(missing.fast, null);
+  const samples = sampleItinerary({ segments: [{ kind: 'walk', legId: 'test', startM: 0, dist: [0, 3], coords: [[0, 0], [0, 0.00005]] }] });
+  assertEqual(samples.length, 3);
+  assertEqual(samples.at(-1).endM, 3);
+  const bands = returnBands(samples, [{ fast: 46 }, missing, { fast: Infinity }], 'fast', 1, 45);
+  assertEqual(bands.map(({ key }) => key).join(','), 'over,unknown,unreachable');
+});
+
+test('science visits recompute terrain, work and alert filters for a detour and a dedicated EVA', async () => {
+  const { f, site, core } = await setup();
+  const service = createMissionService({
+    repository: { loadSite: async () => ({ ...f, site }), loadTerrainBinary: async () => f.terrainBin },
+    solver: core,
+  });
+  await service.loadSite();
+  const { evaluation } = service.evaluate(defaultPlanOptions(f.params));
+  const sites = await service.waterDetours(evaluation);
+  const bastide = sites.find(({ id }) => id === 'bastide');
+  const rochette = sites.find(({ id }) => id === 'rochette');
+  assert(bastide?.detour?.legs.length && rochette?.roundTrip?.legs.length, 'both documented locations have computed routes');
+  assertEqual(bastide.standalone.photoSample.closest.reason.code, 'samplingEvidence');
+  assert(rochette.standalone.photo.recommended, 'Rochette can be visited in the default scenario');
+  const alerted = await service.waterDetours({ ...evaluation, options: { ...evaluation.options, dustStormAlert: true } });
+  assertEqual(alerted.find(({ id }) => id === 'rochette').standalone.photo.closest.reason.code, 'dustStorm');
 });

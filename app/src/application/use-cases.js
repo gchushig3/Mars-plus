@@ -5,13 +5,13 @@ import { evaluatePlans, defaultPlanOptions } from '../domain/plans/evaluate.js';
 import { applyDustAlert } from '../domain/dust/dust.js';
 import { explainEvaluation } from '../domain/explain/explain.js';
 import { withLargeDuneFactor, largeDuneFactor } from '../domain/terrain/params.js';
-import { legsOfPlan } from '../domain/plans/tasks.js';
+import { legsOfPlan, stopOfTask } from '../domain/plans/tasks.js';
 import { buildTimeline, positionAt, positionAtDistance, checkpoints, chooseReturn, farthestPoint } from '../domain/contingency/contingency.js';
+import { returnBands, sampleItinerary } from '../domain/contingency/return-margin.js';
 import { dustPolicy, eventRateUGyH } from '../domain/contingency/return-policy.js';
 import { radDay } from '../domain/radiation/dose.js';
 import { profileOf, indexAtDistance, nearestIndex, gradeAt } from '../domain/routing/profile.js';
 import { classMask } from '../domain/routing/route-highlights.js';
-import { detourCost } from '../domain/plans/detour.js';
 import { gravityFacts, earthEquivalentKg } from '../domain/physics/gravity.js';
 import { walkingSpeed } from '../domain/terrain/cost.js';
 import { taskMinutes } from '../domain/plans/tasks.js';
@@ -90,15 +90,8 @@ export function createMissionService({ repository, solver }) {
       const plan = site.params.plans.find((p) => p.id === routeId);
       let legs, itinerary;
       if (detour) {
-        legs = [
-          { id: 'landing_brac', coords: detour.outboundLegs[0] },
-          { id: 'brac_sampling', coords: detour.outboundLegs[1] },
-          { id: 'sampling_landing', coords: official.sampling_landing.coords },
-        ];
-        itinerary = [
-          { legId: 'landing_brac', task: 'photo', stop: 'brac' },
-          { legId: 'brac_sampling', task: 'sample' }, { legId: 'sampling_landing' },
-        ];
+        legs = detour.legs;
+        itinerary = detour.itinerary;
       } else if (customCoords) {
         legs = [{ id: 'custom', coords: customCoords }];
         itinerary = [{ legId: 'custom' }];
@@ -119,7 +112,16 @@ export function createMissionService({ repository, solver }) {
       const res = await solver.returnsFrom(positions);
       if (!res.ok) throw new Error(`returnsFrom: ${res.code}`);
       const rows = positions.map((p, i) => ({ ...p, routes: res.results[i] }));
-      return { routeId, paceFactor, timeline, rows };
+      const samples = sampleItinerary(timeline);
+      const times = await solver.returnTimes(samples.map(({ lon, lat }) => ({ lon, lat })));
+      if (!times.ok) throw new Error(`returnTimes: ${times.code}`);
+      const limit = site.params.contingency.maxMinutesFromHabitat;
+      const dustFactor = dustPolicy(site.params).lowVisibilityPaceFactor;
+      const bands = {
+        fast: returnBands(samples, times.results, 'fast', paceFactor, limit),
+        dust: returnBands(samples, times.results, 'dust', paceFactor * dustFactor, limit),
+      };
+      return { routeId, paceFactor, timeline, rows, bands, limit };
     },
 
     /** Constants used to turn a route into minutes and dose. */
@@ -136,55 +138,100 @@ export function createMissionService({ repository, solver }) {
     async emergencyReturn(prepared, distanceM, alerts) {
       const position = positionAtDistance(prepared.timeline, distanceM);
       if (position.atHome) return { position, atHome: true };
-      const res = await solver.returnsFrom([position]);
+      const [res, lookup] = await Promise.all([solver.returnsFrom([position]), solver.returnTimes([position])]);
       if (!res.ok) throw new Error(`returnsFrom: ${res.code}`);
+      if (!lookup.ok) throw new Error(`returnTimes: ${lookup.code}`);
       const routes = res.results[0];
       if (routes.fast?.distanceM === 0) return { position: { ...position, atHome: true }, atHome: true };
-      const choice = chooseReturn(alerts, routes, this.returnConstants(prepared.paceFactor, alerts.solarRateUGyH));
+      const k = this.returnConstants(prepared.paceFactor, alerts.solarRateUGyH);
+      const choice = chooseReturn(alerts, routes, k);
+      const fastChoice = chooseReturn({ sep: true }, routes, k);
+      const comparison = {
+        fast: routes.fast ? routes.fast.walkMin * k.paceFactor : lookup.results[0].fast,
+        dust: routes.dust ? routes.dust.walkMin * k.paceFactor * k.lowVisibilityPaceFactor : lookup.results[0].dust,
+        solarDose: alerts.sep && !fastChoice.noRoute ? fastChoice.doseUGy : null,
+      };
       const fast = routes.fast?.coords, dust = routes.dust?.coords;
       const same = fast && dust && fast.length === dust.length && fast.every(([lon, lat], i) => lon === dust[i][0] && lat === dust[i][1]);
       const alt = choice.policy === 'dust' && fast && !same ? { coords: fast, policy: 'fast' } : null;
-      return { position, choice, alt };
+      return { position, choice, alt, comparison };
     },
 
-    /** Elevation profile of an official leg, with its large-dune stretches (for the drawer under the map). */
-    routeProfile(legId) {
-      const leg = this.officialLegs()[legId];
-      if (!leg) return null;
-      const p = profileOf(leg.coords, classMask(leg.coords, site.geology.features, 'largeDunes'));
+    /** Elevation profile of the displayed geometry, with large dunes and gaps in terrain coverage. */
+    async routeProfile(coords) {
+      if (coords.length < 2) return null;
+      const sampled = coords.some(([, , z]) => !Number.isFinite(z));
+      if (sampled) {
+        await solverReady;
+        const res = await solver.profileElevations(coords);
+        if (!res.ok) throw new Error(`profileElevations: ${res.code}`);
+        coords = res.coords;
+      }
+      const p = profileOf(coords, classMask(coords, site.geology.features, 'largeDunes'));
+      if (p.totalM === 0 || !Number.isFinite(p.minZ)) return null;
       return {
-        legId, coords: leg.coords, ...p,
+        coords, ...p, sampled, partial: p.elev.some((z) => !Number.isFinite(z)),
         indexAt: (d) => indexAtDistance(p, d),
-        nearest: (lon, lat) => nearestIndex(leg.coords, lon, lat),
+        nearest: (lon, lat) => nearestIndex(coords, lon, lat),
         grade: (i) => gradeAt(p, i),
       };
     },
 
-    /**
-     * Optional detours to places with signs of water alteration (config: site.waterSites), checked against the
-     * time budget of the plan in effect. Routes are least-effort routes computed in the Worker.
-     */
+    /** Assess visits to documented outcrops, both as a stop on the active plan and as a round trip. */
     async waterDetours(evaluation) {
       await solverReady;
-      const sites = site.site.waterSites ?? [];
       const landing = site.site.points.landing;
-      const stop = { lon: site.stops.sampling.lon, lat: site.stops.sampling.lat };
-      const direct = this.officialLegs().landing_sampling;
-      const o = evaluation.options;
-      const plan = evaluation.recommended ?? evaluation.closest;
-      const out = [];
-      for (const ws of sites) {
-        detourCache[ws.id] ??= await Promise.all([solver.route(landing, ws), solver.route(ws, stop)]);
-        const [a, b] = detourCache[ws.id];
-        if (!a.ok || !b.ok) { out.push({ ...ws, reachable: false }); continue; }
-        const cost = detourCost({
-          direct, toSite: a.stats, fromSite: b.stats, taskMin: taskMinutes(site.params, 'photo'),
-          paceFactor: o.paceFactor, planTotalMin: plan?.totalMin ?? null, limitMin: o.limitMin,
-        });
-        out.push({ ...ws, reachable: true, coords: [...a.stats.coords, ...b.stats.coords.slice(1)],
-          outboundLegs: [a.stats.coords, b.stats.coords], planId: plan?.planId ?? null, ...cost });
-      }
-      return out;
+      const planId = (evaluation.recommended ?? evaluation.closest)?.planId;
+      const base = site.params.plans.find(({ id }) => id === planId);
+      const official = this.officialLegs();
+      const radius = site.site.stopTargets.sampling;
+      return Promise.all((site.site.waterSites ?? []).map(async (ws) => {
+        detourCache[ws.id] ??= (async () => {
+          const workspace = await solver.scienceWorkspace(ws, radius.searchRadiusM, radius.platformRadiusM);
+          const point = workspace ?? ws;
+          const [out, landingBack, sampling, observation] = await Promise.all([
+            solver.route(landing, point), solver.route(point, landing),
+            solver.route(point, site.stops.sampling), solver.route(point, site.stops.observation),
+          ]);
+          return { workspace, out: out.stats, landing: landingBack.stats, sampling: sampling.stats, observation: observation.stats };
+        })().catch((error) => { delete detourCache[ws.id]; throw error; });
+        const { workspace, out, landing: back, sampling, observation } = await detourCache[ws.id];
+        if (!out) return { ...ws, reachable: false };
+        const first = base && stopOfTask(site.params, base.tasks[0]);
+        const next = { sampling, observation }[first];
+        const extraLegs = (base ? legsOfPlan(site.params, base) : []).slice(1).map((id) => ({ id, ...official[id] }));
+        const assess = (after, firstLeg, tasks, remainingLegs = {}) => {
+          const legs = { ...remainingLegs, landing_water: out, [`water_${after}`]: firstLeg };
+          const mode = (sample) => {
+            if (sample && ws.sampleDocumented === false) return { closest: { reason: { code: 'samplingEvidence' } } };
+            const stops = { ...site.stops, water: workspace };
+            const plan = { id: planId ?? 'water', tasks: [sample ? 'waterPhotoSample' : 'waterPhoto', ...tasks], scienceValue: 1 };
+            const photo = taskMinutes(site.params, 'photo');
+            const params = { ...site.params, plans: [plan],
+              tasks: { ...site.params.tasks, waterPhoto: { minutes: photo, stop: 'water' },
+                waterPhotoSample: { minutes: photo + taskMinutes(site.params, 'sample'), stop: 'water' } } };
+            const { recommended, closest } = evaluatePlans({ ...planInput(legs), params, stops }, evaluation.options);
+            return { recommended, closest };
+          };
+          return { photo: mode(false), photoSample: mode(true) };
+        };
+        const assessments = next ? assess(first, next, base.tasks, official) : null;
+        const standalone = back ? assess('landing', back, []) : null;
+        const route = (after, firstLeg, trailing, tasks) => {
+          const legs = [{ id: `landing_${ws.id}`, coords: out.coords }, { id: `${ws.id}_${after}`, coords: firstLeg.coords }, ...trailing];
+          return { legs, itinerary: legs.map(({ id }, i) => ({ legId: id, task: i === 0 ? 'photo' : tasks[i - 1],
+            stop: i === 0 ? ws.id : undefined })) };
+        };
+        const detour = next ? route(first, next, extraLegs, base.tasks) : null;
+        const roundTrip = back ? route('landing', back, [], []) : null;
+        const via = detour && (!standalone?.photo?.recommended || assessments.photo.recommended);
+        const displayed = (via ? detour : roundTrip) ?? detour;
+        return {
+          ...ws, workspace, reachable: Boolean(displayed), planId, assessments, standalone, detour, roundTrip,
+          displayMode: via ? 'detour' : 'roundTrip',
+          coords: displayed?.legs.flatMap(({ coords }, i) => i === 0 ? coords : coords.slice(1)),
+        };
+      }));
     },
 
     /** Mars gravity facts for the explanation panel, plus a weight converter. */

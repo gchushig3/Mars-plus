@@ -12,8 +12,49 @@
     "sampling": { "lon": 77.44137302, "lat": 18.43266059, "searchRadiusM": 6, "platformRadiusM": 1.5, "target": "Robine core (sol 298), rover site 9/0" },
     "observation": { "lon": 77.44131402, "lat": 18.43260907, "searchRadiusM": 10, "platformRadiusM": 1.0, "target": "Malay core (sol 337), rover site 9/276" }
   },
+  "scienceStops": {
+    "issole": {
+      "en": {
+        "title": "Issole · science stop",
+        "task": "Use the annotated view to locate Quartier, the rover’s abrasion patch. Photograph the outcrop with a scale and document grain texture and any pale material around the patch.",
+        "details": "Perseverance measurements and samples",
+        "evidence": "At Quartier, SHERLOC identified sulfate in the pale material. SuperCam detected signatures consistent with carbonate. These measurements support past water–rock interaction in the Séítah formation.",
+        "samples": "NASA’s catalog lists the Robine (sol 298) and Malay (sol 337) rock cores from Issole."
+      },
+      "es": {
+        "title": "Issole · parada científica",
+        "task": "Usa la vista anotada para localizar Quartier, la zona que desgastó el rover. Fotografía el afloramiento con una escala y registra la textura de los granos y el material claro que observes cerca de esa zona.",
+        "details": "Mediciones y muestras de Perseverance",
+        "evidence": "En Quartier, SHERLOC identificó sulfato en el material claro. SuperCam detectó señales compatibles con carbonatos. Estas mediciones aportan evidencia de interacción pasada entre el agua y la roca de la formación Séítah.",
+        "samples": "El catálogo de NASA registra los núcleos de roca Robine (sol 298) y Malay (sol 337) en Issole."
+      },
+      "sources": [
+        {
+          "url": "https://ntrs.nasa.gov/api/citations/20230016431/downloads/Sun%20et%20al%202023%20JGR%20Planets%20Jezero%20Campaign.pdf#page=35",
+          "en": "Annotated workspace and Quartier (Fig. 18)",
+          "es": "Vista anotada y ubicación de Quartier (Fig. 18)"
+        },
+        {
+          "url": "https://doi.org/10.1029/2022JE007474",
+          "en": "Quartier mineral measurements",
+          "es": "Mediciones minerales de Quartier"
+        },
+        {
+          "url": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples/",
+          "en": "NASA sample catalog",
+          "es": "Catálogo de muestras de NASA"
+        },
+        {
+          "url": "https://mars.nasa.gov/mars2020/multimedia/raw-images/ZL0_0320_0695346832_898ECM_N0090000ZCAM08341_0340LMJ",
+          "en": "NASA Mastcam-Z raw frame, sol 320",
+          "es": "Fotograma original de NASA Mastcam-Z, sol 320"
+        }
+      ]
+    }
+  },
   "photos": [
     { "source": "sol286_NAVCAM_LEFT_NLF_0286_0692337518_300ECM_N0090000NCAM0.jpg", "file": "issole-arrival-navcam-sol286.jpg", "stop": "observation", "sol": 286, "camera": "Navcam", "credit": "NASA/JPL-Caltech", "caption": "photo.arrival" },
+    { "source": "sol320_MCZ_LEFT_ZL0_0320_0695346832_898ECM_N0090000ZCAM0.jpg", "file": "issole-workspace-mastcamz-sol320.jpg", "stop": "observation", "sol": 320, "camera": "Mastcam-Z", "credit": "NASA/JPL-Caltech/ASU", "caption": "photo.issoleWorkspace", "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00320/ids/edr/browse/zcam/ZL0_0320_0695346832_898ECM_N0090000ZCAM08341_0340LMJ01_800.jpg" },
     { "source": "sol337_MCZ_LEFT_ZL0_0337_0696855807_331EBY_N0090276ZCAM0.jpg", "file": "issole-drill-hole-mastcamz-sol337.jpg", "stop": "sampling", "sol": 337, "camera": "Mastcam-Z", "credit": "NASA/JPL-Caltech/ASU", "caption": "photo.drillHole" },
     { "source": "sol286_FRONT_HAZCAM_LEFT_A_FLE_0286_0692336761_756ECM_N0090000FHAZ0.jpg", "file": "issole-ground-hazcam-sol286.jpg", "stop": "sampling", "sol": 286, "camera": "Front Hazcam", "credit": "NASA/JPL-Caltech", "caption": "photo.ground" },
     { "source": "sol293_SHERLOC_WATSON_SIF_0293_0692957875_390EBY_N0090000SRLC0.jpg", "file": "issole-rock-watson-sol293.jpg", "stop": "observation", "sol": 293, "camera": "SHERLOC WATSON", "credit": "NASA/JPL-Caltech", "caption": "photo.rock" },
@@ -21,8 +62,93 @@
     { "source": "sol013_FRONT_HAZCAM_LEFT_A_FLF_0013_0668101758_836ECM_N0030028FHAZ0.jpg", "file": "landing-plain-hazcam-sol13.jpg", "stop": "landing", "sol": 13, "camera": "Front Hazcam", "credit": "NASA/JPL-Caltech", "caption": "photo.landingPlain", "url": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00013/ids/edr/browse/fcam/FLF_0013_0668101758_836ECM_N0030028FHAZ02002_01_295J01_800.jpg" }
   ],
   "waterSites": [
-    { "id": "brac", "name": "Brac", "lon": 77.44301922, "lat": 18.43396406, "sol": 248, "waypoint": "site 8, drive 0", "unit": "Séítah formation (olivine-rich igneous rock)", "evidence": "photo.bracEvidence", "source": "NASA MMGIS M20 waypoint 8/0 (sol 248); Dourbes abrasion (sol 253) and samples Salette and Coulettes; aqueous alteration of Séítah rocks: Farley et al. 2022, Science 377, eabo2196. To be confirmed by the science team." }
+    {
+      "id": "brac",
+      "name": "Brac",
+      "lon": 77.44301922,
+      "lat": 18.43396406,
+      "sol": 248,
+      "waypoint": "site 8, drive 0",
+      "unit": "Séítah",
+      "evidence": "photo.bracEvidence",
+      "sampleDocumented": true,
+      "sources": [
+        { "url": "https://doi.org/10.1029/2022JE007474", "en": "Dourbes abrasion and cores", "es": "Abrasión Dourbes y núcleos" },
+        { "url": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples/", "en": "NASA sample catalog", "es": "Catálogo de muestras de NASA" },
+        { "url": "https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_waypoints.json", "en": "NASA waypoint, sol 248", "es": "Punto de paso de NASA, sol 248" }
+      ],
+      "source": "NASA MMGIS M20 waypoint 8/0 (sol 248); Dourbes abrasion and samples Salette and Coulettes (Simon et al. 2023)."
+    },
+    {
+      "id": "bastide",
+      "name": "Bastide · Garde",
+      "lon": 77.44241011,
+      "lat": 18.43339824,
+      "sol": 204,
+      "waypoint": "site 7, drive 1836",
+      "unit": "Séítah",
+      "evidence": "photo.bastideEvidence",
+      "sampleDocumented": false,
+      "samplingNote": "photo.bastideSamplingNote",
+      "sources": [
+        { "url": "https://science.nasa.gov/resource/sherlocs-view-of-garde/", "en": "NASA mineral map of Garde", "es": "Mapa mineral de Garde de NASA" },
+        { "url": "https://doi.org/10.1029/2022JE007455", "en": "SHERLOC study and WATSON image", "es": "Estudio de SHERLOC e imagen WATSON" },
+        { "url": "https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_waypoints.json", "en": "NASA waypoint, sol 204", "es": "Punto de paso de NASA, sol 204" }
+      ],
+      "source": "NASA MMGIS M20 waypoint 7/1836 (sol 204); Garde WATSON image at the same rover position (Corpolongo et al. 2023, Figure 2)."
+    },
+    {
+      "id": "rochette",
+      "name": "Rochette · Bellegarde",
+      "lon": 77.44436574,
+      "lat": 18.43073940,
+      "sol": 180,
+      "waypoint": "site 7, drive 0",
+      "unit": "Máaz",
+      "evidence": "photo.rochetteEvidence",
+      "sampleDocumented": true,
+      "samplingNote": "photo.rochetteSamplingNote",
+      "sources": [
+        { "url": "https://science.nasa.gov/resource/abrasion-patch-on-rochette/", "en": "NASA photo of Bellegarde", "es": "Foto de Bellegarde de NASA" },
+        { "url": "https://doi.org/10.1029/2023JE007989", "en": "Sulfate alteration study", "es": "Estudio de alteración con sulfatos" },
+        { "url": "https://doi.org/10.1029/2022JE007474", "en": "Sample coordinates and mineral analyses", "es": "Coordenadas de las muestras y análisis minerales" },
+        { "url": "https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_waypoints.json", "en": "NASA waypoint, sol 180", "es": "Punto de paso de NASA, sol 180" }
+      ],
+      "source": "NASA MMGIS M20 waypoint 7/0 (sol 180); Bellegarde abrasion and samples Montdenier and Montagnac (Simon et al. 2023)."
+    },
+    {
+      "id": "sid",
+      "name": "Sid · Alfalfa",
+      "lon": 77.45242,
+      "lat": 18.44386,
+      "sol": 362,
+      "waypoint": "site 11, drive 108",
+      "unit": "Máaz",
+      "comparison": true,
+      "evidence": "photo.sidEvidence",
+      "sampleDocumented": true,
+      "samplingNote": "photo.sidSamplingNote",
+      "sources": [
+        { "url": "https://doi.org/10.1029/2022JE007474", "en": "Published outcrop coordinates, rounded to 5 decimals (Table 2)", "es": "Coordenadas publicadas del afloramiento redondeadas a 5 decimales (tabla 2)" },
+        { "url": "https://doi.org/10.1029/2023JE007989", "en": "PIXL sulfate measurements at Alfalfa", "es": "Mediciones de sulfato de PIXL en Alfalfa" },
+        { "url": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples/#hahonih", "en": "NASA sample catalog", "es": "Catálogo de muestras de NASA" },
+        { "url": "https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_waypoints.json", "en": "Nearby NASA rover waypoint (sol 362)", "es": "Punto de paso cercano del rover de NASA (sol 362)" }
+      ],
+      "source": "Published outcrop coordinate (Simon et al. 2023, Table 2). Nearby NASA MMGIS M20 waypoint 11/108 (sol 362): 77.45243445°E, 18.44390163°N."
+    }
   ],
+  "crism": {
+    "file": "assets/crism/frt00005c5e_07_brcarj_mtr3.png",
+    "id": "FRT00005C5E",
+    "date": "2007-05-19",
+    "resolutionM": 18,
+    "rows": 891,
+    "cols": 890,
+    "upperLeftM": [4422831.1999992, 1104174.5999994],
+    "projectionRadiusM": 3394839.8,
+    "standardParallelDeg": 15,
+    "label": "https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_4001/browse/2007/2007_139/frt00005c5e/frt00005c5e_07_brcarj_mtr3.xml"
+  },
   "trekLayers": {
     "hirise": "JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd",
     "ctx": "JEZ_ctx_B_soc_008_orthoMosaic_6m_Eqc_latTs0_lon0",

@@ -1,7 +1,7 @@
 // AI-assisted (Claude). Reviewed by the MARS+ team.
 // Elevation profile, water-alteration detour and Mars gravity facts.
 import { test, assert, assertClose, assertEqual } from './harness.js';
-import { profileOf, indexAtDistance, nearestIndex } from '../app/src/domain/routing/profile.js';
+import { profileOf, indexAtDistance, nearestIndex, gradeAt } from '../app/src/domain/routing/profile.js';
 import { classMask } from '../app/src/domain/routing/route-highlights.js';
 import { detourCost } from '../app/src/domain/plans/detour.js';
 import { gravityFacts, earthEquivalentKg } from '../app/src/domain/physics/gravity.js';
@@ -22,6 +22,20 @@ test('profile: distances add up, climb and descent match the heights, dune spans
   assertEqual(indexAtDistance(p, p.totalM), coords.length - 1);
   const mid = Math.floor(coords.length / 2);
   assertEqual(nearestIndex(coords, coords[mid][0], coords[mid][1]), mid, 'a route point maps back to itself');
+});
+
+test('profile: sample the real rover line from HiRISE and preserve gaps outside the terrain grid', async () => {
+  const f = await loadSiteFixture();
+  const core = createRouteCore();
+  core.init(f.terrainMeta, f.terrainBin.slice(0), f.params);
+  const line = f.routes.roverPath.coords;
+  const { ok, coords } = core.profileElevations(line);
+  assert(ok && coords.length > line.length, 'sample between the recorded rover waypoints');
+  const p = profileOf(coords);
+  assertClose(p.totalM, profileOf(line).totalM, 0.01, 'keep the displayed rover geometry');
+  assert(p.elev.some(Number.isFinite) && p.elev.some((z) => !Number.isFinite(z)), 'the line crosses the coverage edge');
+  assert(p.minZ < p.maxZ && Number.isFinite(p.climbM) && Number.isFinite(p.descentM));
+  assertEqual(gradeAt(p, p.elev.findIndex((z) => !Number.isFinite(z))), null);
 });
 
 test('detour: extra time is the extra walk at the crew pace plus the photo, checked against the limit', () => {

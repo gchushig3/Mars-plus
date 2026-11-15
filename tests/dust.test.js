@@ -7,6 +7,7 @@ import {
   applyDustAlert, lsBinIndex, nearestCell, paintVolume, sampleVolume, scenarioTauMilli, solRecord,
 } from '../app/src/domain/dust/dust.js';
 import { productSpec } from '../app/src/infrastructure/dust/load-dust.js';
+import { dustObservations } from '../app/src/application/dust-observations.js';
 import { evaluatePlans, defaultPlanOptions } from '../app/src/domain/plans/evaluate.js';
 import { loadSiteFixture } from './fixtures.js';
 
@@ -149,4 +150,20 @@ test('dust: the alert follows τ880 unless the crew overrides it', async () => {
   assertEqual(postponed.recommended, null);
   assertEqual(postponed.closest.reason.code, 'dustStorm');
   assertEqual(postponed.closest.reason.values.tau, storm.dustInfo.tau);
+});
+
+test('dust: the 2024 storm image sol and the later observation have different alert states', async () => {
+  const [c, site] = await Promise.all([catalog(), loadSiteFixture()]);
+  const options = defaultPlanOptions(site.params);
+  const { episodes } = dustObservations(c, site.params.dust.alertTau880);
+  assertEqual(episodes[0].observations[0].status, 'missing');
+  assertEqual(episodes[1].observations[0].status, 'below');
+  assertEqual(episodes[1].observations[1].status, 'active');
+  const imageDay = applyDustAlert(site.params, c.jezeroTau, { ...options, dustSol: 1244 });
+  const laterDay = applyDustAlert(site.params, c.jezeroTau, { ...options, dustSol: 1255 });
+  assertEqual(imageDay.dustInfo.tauMilli, 636);
+  assertEqual(imageDay.options.dustStormAlert, false);
+  assertEqual(laterDay.dustInfo.tauMilli, 1027);
+  assertEqual(laterDay.options.dustStormAlert, true);
+  assertEqual(laterDay.options.weatherScenario, options.weatherScenario);
 });

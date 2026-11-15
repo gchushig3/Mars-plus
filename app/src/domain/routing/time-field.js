@@ -71,19 +71,21 @@ export function corridorMask(model, start, goal, factor) {
 /**
  * Return field to `home`: seconds from every cell back to home, plus the next cell to step to.
  * Following `next` from any reachable cell walks the least-time route home (same graph as A*).
- * @returns {{seconds: Float64Array, next: Int32Array}} next[home] = -1; unreachable cells keep -1.
+ * When the route uses additional penalties, travelSeconds records walking time without those
+ * penalties along the very same path. Unreachable cells have infinite times.
  */
-export function returnField(model, home) {
+export function returnField(model, home, walkingModel = model) {
   const { grid, blocked } = model;
   const { rows, cols, res, cosLat } = grid;
   const n = grid.size;
   const seconds = new Float64Array(n).fill(Infinity);
+  const travelSeconds = walkingModel === model ? seconds : new Float64Array(n).fill(Infinity);
   const next = new Int32Array(n).fill(-1);
-  if (home < 0 || home >= n || blocked[home]) return { seconds, next };
+  if (home < 0 || home >= n || blocked[home]) return { seconds, travelSeconds, next };
   const stepLen = DR.map((dr, q) => Math.hypot(DC[q] * res * cosLat, dr * res));
   const open = new MinHeap();
   const closed = new Uint8Array(n);
-  seconds[home] = 0;
+  travelSeconds[home] = seconds[home] = 0;
   open.push(0, home);
   while (open.size > 0) {
     const u = open.pop();
@@ -98,10 +100,15 @@ export function returnField(model, home) {
       if (DR[q] !== 0 && DC[q] !== 0 && (blocked[ur * cols + vc] || blocked[vr * cols + uc])) continue;
       const cost = edgeTime(model, v, u, stepLen[q]); // walked from v towards home
       const ng = seconds[u] + cost;
-      if (ng < seconds[v]) { seconds[v] = ng; next[v] = u; open.push(ng, v); }
+      if (ng < seconds[v]) {
+        seconds[v] = ng;
+        if (walkingModel !== model) travelSeconds[v] = travelSeconds[u] + edgeTime(walkingModel, v, u, stepLen[q]);
+        next[v] = u;
+        open.push(ng, v);
+      }
     }
   }
-  return { seconds, next };
+  return { seconds, travelSeconds, next };
 }
 
 /** Cells from `start` to home by following the return field; null when start cannot reach home. */

@@ -64,7 +64,10 @@ export function positionAtDistance(timeline, distanceM) {
   while (k < seg.dist.length - 1 && seg.dist[k] < localM) k++;
   const span = seg.dist[k] - seg.dist[k - 1];
   const f = span > 0 ? (localM - seg.dist[k - 1]) / span : 0;
-  return positionAt(timeline, seg.start + seg.cum[k - 1] + f * (seg.cum[k] - seg.cum[k - 1]));
+  const minute = seg.start + seg.cum[k - 1] + f * (seg.cum[k] - seg.cum[k - 1]);
+  const [lon0, lat0] = seg.coords[k - 1], [lon1, lat1] = seg.coords[k];
+  return { minute, distanceM: distance, atHome: false, kind: 'walk', legId: seg.legId,
+    lon: lon0 + (lon1 - lon0) * f, lat: lat0 + (lat1 - lat0) * f };
 }
 
 /** Minutes to check before leaving: every `stepMin`, each stop arrival, and the end of each task. */
