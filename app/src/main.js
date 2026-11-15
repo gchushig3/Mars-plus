@@ -12,7 +12,6 @@ import { createRoutePanel } from './ui/panels/route-panel.js';
 import { createPlansPanel } from './ui/panels/plans-panel.js';
 import { createWeatherPanel, createRadiationPanel } from './ui/panels/conditions-panels.js';
 import { createGeologyPanel, createAssumptionsPanel, createSourcesPanel } from './ui/panels/info-panels.js';
-import { createPhotosPanel } from './ui/panels/photos-panel.js';
 import { createSummaryBar } from './ui/panels/summary-bar.js';
 import { createWelcome } from './ui/panels/welcome.js';
 import { createWebGLGlobe, isWebGL2Supported } from './infrastructure/globe/webgl-globe.js';
@@ -98,7 +97,7 @@ async function main() {
     paceKey: 'normal', planOptions: firstPlan.evaluation.options, dustInfo: firstPlan.dustInfo,
     evaluation: firstPlan.evaluation, explanation: firstPlan.explanation,
     sensitivity: { status: 'idle', rows: null }, sensitivityView: null, traverseValidation: null, routingReady: false,
-    emergency: { status: 'idle', alerts: { sep: true, dust: false }, minute: 0, prepared: null, rows: null, result: null, farthest: null, astronautView: false, key: null },
+    emergency: { status: 'idle', show: false, alerts: { sep: true, dust: false }, minute: 0, prepared: null, rows: null, result: null, farthest: null, astronautView: false, key: null },
   });
 
   // Sensitivity rows (leg times per sand factor) -> view with the recommended plan under the current options
@@ -211,10 +210,19 @@ async function main() {
   const summaryEl = document.createElement('div');
   sidebar.append(summaryEl);
   const panels = [createSummaryBar(summaryEl, ctx)];
-  const sections = [['mission', createMissionPanel], ['plans', createPlansPanel], ['emergency', createContingencyPanel], ['route', createRoutePanel], ['photos', createPhotosPanel],
-    ['weather', createWeatherPanel], ['radiation', createRadiationPanel], ['geology', createGeologyPanel], ['assumptions', createAssumptionsPanel], ['sources', createSourcesPanel]];
+  // What the crew acts on stays open; background and reference details start folded (less to read at once).
+  // Rover photos now open from the Issole point on the map.
+  const sections = [['mission', createMissionPanel], ['plans', createPlansPanel], ['emergency', createContingencyPanel], ['route', createRoutePanel]];
+  const folded = [['weather', createWeatherPanel], ['radiation', createRadiationPanel], ['geology', createGeologyPanel], ['assumptions', createAssumptionsPanel], ['sources', createSourcesPanel]];
   for (const [id, factory] of sections) {
     const el = document.createElement('section'); el.className = 'section'; el.id = `panel-${id}`; sidebar.append(el); panels.push(factory(el, ctx));
+  }
+  const foldTitles = [];
+  for (const [id, factory] of folded) {
+    const box = document.createElement('details'); box.className = 'section fold'; box.id = `panel-${id}`;
+    const title = document.createElement('summary'); box.append(title); foldTitles.push([title, `${id}.title`]);
+    const el = document.createElement('div'); el.className = 'fold-body'; box.append(el);
+    sidebar.append(box); panels.push(factory(el, ctx));
   }
 
   const welcome = createWelcome(document.getElementById('welcome'), { i18n });
@@ -228,6 +236,7 @@ async function main() {
     helpBtn.setAttribute('aria-label', t('welcome.help')); helpBtn.title = t('welcome.help');
     document.getElementById('skip').textContent = t('app.skip');
     map.setLabels(i18n.html);
+    foldTitles.forEach(([el, key]) => { el.textContent = t(key); });
     panels.forEach((p) => p.build(store.get()));
     panels.forEach((p) => p.update(store.get()));
     welcome.rerender();
@@ -255,9 +264,9 @@ async function main() {
     if (s.pointA !== last.pointA) map.setPoint('A', s.pointA);
     if (s.pointB !== last.pointB) map.setPoint('B', s.pointB);
     if (s.userRoute !== last.userRoute) map.showUserRoute(s.userRoute?.coords ?? null);
-    if (s.emergency.result !== last.emergency?.result) {
+    if (s.emergency.result !== last.emergency?.result || s.emergency.show !== last.emergency?.show) {
       const r = s.emergency.result;
-      map.showEmergencyReturn(r && { position: r.position, coords: r.choice?.coords, policy: r.choice?.policy, label: i18n.t('emergency.crewHere') });
+      map.showEmergencyReturn(s.emergency.show && r && { position: r.position, coords: r.choice?.coords, policy: r.choice?.policy, label: i18n.t('emergency.crewHere') });
     }
     if (s.evaluation !== last.evaluation || s.routingReady !== last.routingReady) prepareEmergency();
     map.setPickCursor(Boolean(s.pick));

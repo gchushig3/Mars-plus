@@ -11,7 +11,7 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 ## What it does
 
 - **3D Mars globe as the entry screen:** a WebGL2 globe built by the MARS+ team. It has four global layers (Viking colour mosaic, MOLA elevation, USGS geologic map with all 44 units, and seasonal dust: column optical depth and where storms happen) and a guided flight to Jezero that opens the local planner. Without WebGL2, or with `?view=local`, the app starts directly on the local map.
-- **Hyper-local map (≈1 km², 2 m grid):** HiRISE 25 cm imagery, slope, walking-cost layer, geology units, the official EVA route (out and back), the real Perseverance traverse, and the sampling and observation stops.
+- **Hyper-local map (≈1 km², 2 m grid), kept simple:** HiRISE 25 cm imagery and the official EVA route (out and back). Three points to click: the habitat, the dune crossing (zooms into the sand ripples) and Issole, which opens the real Perseverance photos of what the crew will see at the stops. Walking effort, slope, sand dunes and the rover’s real drive are optional layers; coarser imagery (CTX 6 m, THEMIS 100 m) is not offered because it shows nothing at walking scale.
 - **Least-effort route A → B:** click two points and an A* search runs in your browser (Web Worker) over the 2 m terrain grid. Cost = time to cross each cell, from directional slope, roughness, sand (aeolian bedforms) and rocks detected in HiRISE.
 - **EVA plan chain:** plans **A** (photo + sample), **C** (sample only) and **B** (documentation only) × every departure hour → **terrain → science → time → weather → radiation**. A plan that fails one filter is rejected with its reason; nothing compensates for a safety failure.
 - **Real conditions:** Perseverance MEDA weather at Issole (sols 286–339, including the January 2022 regional dust storm) and Curiosity RAD dosimetry around the **28 Oct 2021 solar particle event**.
@@ -57,7 +57,7 @@ pipeline/ (PowerShell + C#, offline)          app/ (static site, no build)
 - **Clean architecture:** `domain/` is pure JavaScript (no DOM). `infrastructure/` adapts Leaflet, the Web Worker and the static data; `ui/` only talks to `application/`.
 - **Parity:** the browser engine and the pipeline engine (C#) read the same parameters. `tests/` checks that their route times differ by **<1%**.
 - **Emergency return:** the Web Worker builds two "time to the habitat" fields once (fastest, and dust-safe); the way home from any point of the plan is then read in milliseconds.
-- **Tests:** 82 browser tests (domain, the six plan scenarios plus the measured dust alert, JS↔C# parity, validity, UI and layer rules, globe, dust, emergency return). An architecture test fails if `ui/` imports `domain/` or `infrastructure/`.
+- **Tests:** 85 browser tests (domain, the six plan scenarios plus the measured dust alert, JS↔C# parity, validity, UI and layer rules, globe, dust, emergency return). An architecture test fails if `ui/` imports `domain/` or `infrastructure/`.
 - See `STACK_Y_ARQUITECTURA.md` (Spanish) for the full stack and architecture.
 
 ## Run locally (Windows)
@@ -76,7 +76,7 @@ node tests/run.mjs
 ## Deploy
 
 `app/` is a static site with no build step:
-- **GitHub Pages:** on every push to `main`, `.github/workflows/pages.yml` runs the full test suite (Node 22, 82 tests) and publishes `app/` only if every test passes (Settings → Pages → Source: GitHub Actions).
+- **GitHub Pages:** on every push to `main`, `.github/workflows/pages.yml` runs the full test suite (Node 22, 85 tests) and publishes `app/` only if every test passes (Settings → Pages → Source: GitHub Actions).
 - **Netlify:** `netlify.toml` publishes `app/`.
 
 ## Assumptions and limits (stated in the app)

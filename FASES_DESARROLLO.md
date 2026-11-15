@@ -329,6 +329,14 @@
 
 **Commit:** `docs: README for the final feature set`
 
+**Ajuste posterior al congelamiento (15-nov, pedido por el equipo): menos carga visual**
+- Mapa: solo HiRISE 25 cm como fondo visible. CTX 6 m queda como relleno silencioso alrededor; THEMIS IR nocturno (100 m) se quitó: a escala de caminata son unos 10 píxeles para todo el recorrido.
+- Capas opcionales y apagadas por defecto: esfuerzo de caminar, pendiente, dunas y tipos de roca, recorrido real del rover. Siempre visible: la ruta oficial.
+- Tres puntos para hacer clic: hábitat, cruce de dunas (acerca la imagen HiRISE a las ondulaciones de arena) e Issole (galería con las 4 fotos reales del rover de lo que verá la tripulación).
+- Las fotos salieron de la barra lateral. Clima, radiación, geología, supuestos y fuentes quedan plegados por defecto.
+- La ruta de emergencia solo se dibuja cuando alguien usa ese panel.
+- 85/85 pruebas (3 nuevas: cruce de dunas y galería de Issole).
+
 ---
 
 ## Fase 6 — Demo (7 diapositivas en inglés)

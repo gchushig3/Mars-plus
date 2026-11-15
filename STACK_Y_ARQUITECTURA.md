@@ -87,7 +87,7 @@ martian-map/                       (repositorio: mars-plus)
 │       ├── main.js
 │       ├── domain/
 │       │   ├── terrain/   grid.js · cost.js · params.js · workspace.js · viewshed.js (línea de vista, de Henry)
-│       │   ├── routing/   min-heap.js · astar.js · route-stats.js · time-field.js (campos de tiempo y de regreso)
+│       │   ├── routing/   min-heap.js · astar.js · route-stats.js · time-field.js (campos de tiempo y de regreso) · route-highlights.js (cruce de dunas)
 │       │   ├── plans/     tasks.js · filters.js · evaluate.js
 │       │   ├── weather/   window.js
 │       │   ├── radiation/ dose.js
@@ -107,7 +107,7 @@ martian-map/                       (repositorio: mars-plus)
 │       │   ├── views/     globe-view.js (controles, capas, leyenda y botón "Planificar la EVA en Jezero")
 │       │   ├── charts/    elevation-profile.js · weather-chart.js · dose-chart.js
 │       │   └── panels/    common.js (textos de motivos y explicación) · mission-panel.js · route-panel.js
-│       │                  plans-panel.js (veredicto + explicación + grilla) · conditions-panels.js (clima, radiación)
+│       │                  plans-panel.js (veredicto + explicación + grilla) · conditions-panels.js (clima, radiación; plegados por defecto)
 │       │                  info-panels.js (geología, supuestos, fuentes) · contingency-panel.js (regreso de emergencia + vista del astronauta)
 │       └── shared/        format.js · dom.js
 ├── pipeline/                      ← PowerShell 5.1 + C#, todo lee config/
@@ -118,7 +118,7 @@ martian-map/                       (repositorio: mars-plus)
 │   ├── 02-process/                ← process-geology · summarize-meda · extract-rad · build-traverse
 │   ├── 03-model/RouteEngine.cs    ← motor oficial de rutas + ImageWriter
 │   └── 04-export/                 ← export-web-data.ps1 (app/data + manifest; copia config/) · export-globe-assets.ps1 (app/assets/globe)
-├── tests/   index.html · run.mjs (Node, CI) · harness.js · fixtures.js · 13 archivos *.test.js (82 pruebas: dominio, escenarios, paridad, validez, UI y capas, globo, polvo, regreso de emergencia…)
+├── tests/   index.html · run.mjs (Node, CI) · harness.js · fixtures.js · 14 archivos *.test.js (85 pruebas: dominio, escenarios, paridad, validez, UI y capas, globo, polvo, regreso de emergencia…)
 ├── tools/   dev-server.ps1 · dust/build_dust_products.py (Python, opcional: regenera app/data/dust)
 ├── data/                          ← FUERA de git
 │   ├── raw/                       ← descargas originales: dtm, ortho, meda, rad, geology, thermal, rover, globe (~1,7 GB)

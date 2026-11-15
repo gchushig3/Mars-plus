@@ -102,11 +102,11 @@
   "layer.ctx": "CTX 6 m (Mars Trek)",
   "layer.themis": "THEMIS IR nocturno 100 m (Mars Trek)",
   "layer.backup": "HiRISE de respaldo (sin conexión)",
-  "layer.cost": "Costo de caminar (pendiente + arena + rocas)",
-  "layer.slope": "Pendiente",
-  "layer.geology": "Geología (Stack et al. 2020)",
+  "layer.cost": "Esfuerzo de caminar (verde fácil · rojo difícil · negro bloqueado)",
+  "layer.slope": "Pendiente (terreno empinado)",
+  "layer.geology": "Dunas de arena y tipos de roca",
   "layer.official": "Ruta oficial de la EVA",
-  "layer.rover": "Recorrido de Perseverance",
+  "layer.rover": "Recorrido real de Perseverance",
   "layer.user": "Tu ruta A → B",
 
   "point.landing": "<b>Octavia E. Butler Landing</b><br>Base de la tripulación · formación Máaz",
@@ -320,5 +320,14 @@
   "layer.emergency": "Regreso de emergencia",
   "stop.sampling": "parada de muestreo",
   "stop.observation": "parada de observación",
-  "assumptions.emergency": "<b>Regreso de emergencia:</b> ruta más rápida ante un evento de partículas (dosis a {rate} µGy/h, el máximo del 28-oct-2021); ruta segura ante una tormenta (pendiente ≤ {slope}°, evita dunas grandes y celdas sin vista al hábitat donde puede, a paso ×{pace} más lento). Aviso por encima de {max} min del hábitat. Supuestos de escenario pendientes del equipo de ciencia."
+  "assumptions.emergency": "<b>Regreso de emergencia:</b> ruta más rápida ante un evento de partículas (dosis a {rate} µGy/h, el máximo del 28-oct-2021); ruta segura ante una tormenta (pendiente ≤ {slope}°, evita dunas grandes y celdas sin vista al hábitat donde puede, a paso ×{pace} más lento). Aviso por encima de {max} min del hábitat. Supuestos de escenario pendientes del equipo de ciencia.",
+  "point.landingTip": "Hábitat · Octavia E. Butler Landing",
+  "point.issoleTip": "Issole · clic para ver lo que verá la tripulación",
+  "point.issoleStops": "<b>Afloramiento Issole · paradas de muestreo y observación</b><br>Rocas alteradas por agua (olivino con carbonatos y sulfatos hidratados). Espacio de trabajo plano: pendiente ≤ {slope}°, fracción de duna grande ≤ {dune}.",
+  "point.dunesTip": "Cruce de dunas · clic para ver de cerca",
+  "point.dunes": "<b>Cruce de dunas</b><br>Unos {m} m de la caminata pasan sobre ondulaciones grandes de arena: aquí se camina más lento y no se pueden evitar.",
+  "point.dunesZoom": "Acercar la imagen HiRISE",
+  "photos.prev": "Foto anterior",
+  "photos.next": "Foto siguiente",
+  "photos.full": "Tamaño completo ↗"
 }

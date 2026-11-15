@@ -10,16 +10,16 @@ export function createContingencyPanel(el, { i18n, actions }) {
   function build() {
     const { t } = i18n;
     clear(el);
-    sep = h('input', { type: 'checkbox', onchange: () => actions.setEmergency({ alerts: { sep: sep.checked, dust: dust.checked } }) });
-    dust = h('input', { type: 'checkbox', onchange: () => actions.setEmergency({ alerts: { sep: sep.checked, dust: dust.checked } }) });
+    sep = h('input', { type: 'checkbox', onchange: () => actions.setEmergency({ show: true, alerts: { sep: sep.checked, dust: dust.checked } }) });
+    dust = h('input', { type: 'checkbox', onchange: () => actions.setEmergency({ show: true, alerts: { sep: sep.checked, dust: dust.checked } }) });
     slider = h('input', { type: 'range', min: '0', max: '1', step: '1', value: '0', 'aria-label': t('emergency.minuteLabel'),
-      oninput: () => actions.setEmergency({ minute: Number(slider.value) }) });
+      oninput: () => actions.setEmergency({ show: true, minute: Number(slider.value) }) });
     where = h('p', { class: 'note', 'aria-live': 'polite' });
     status = h('div', { class: 'status', role: 'status', 'aria-live': 'polite' });
     result = h('div', { class: 'emergency-result', 'aria-live': 'polite' });
     farthest = h('p', { class: 'note' });
     table = h('table', { class: 'table emergency-table' });
-    astroBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: () => actions.setEmergency({ astronautView: true }) }, t('emergency.astronautOpen'));
+    astroBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: () => actions.setEmergency({ show: true, astronautView: true }) }, t('emergency.astronautOpen'));
     el.append(
       h('h2', {}, t('emergency.title')),
       h('p', { class: 'lead' }, t('emergency.lead')),

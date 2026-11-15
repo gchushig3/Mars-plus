@@ -102,11 +102,11 @@
   "layer.ctx": "CTX 6 m (Mars Trek)",
   "layer.themis": "THEMIS night IR 100 m (Mars Trek)",
   "layer.backup": "HiRISE backup (offline)",
-  "layer.cost": "Walking cost (slope + sand + rocks)",
-  "layer.slope": "Slope",
-  "layer.geology": "Geology (Stack et al. 2020)",
+  "layer.cost": "Walking effort (green easy · red hard · black blocked)",
+  "layer.slope": "Slope (steep ground)",
+  "layer.geology": "Sand dunes and rock units",
   "layer.official": "Official EVA route",
-  "layer.rover": "Perseverance traverse",
+  "layer.rover": "Perseverance’s real drive",
   "layer.user": "Your A → B route",
 
   "point.landing": "<b>Octavia E. Butler Landing</b><br>Crew base · Máaz formation",
@@ -320,5 +320,14 @@
   "layer.emergency": "Emergency return",
   "stop.sampling": "sampling stop",
   "stop.observation": "observation stop",
-  "assumptions.emergency": "<b>Emergency return:</b> fastest route for a solar particle event (dose at {rate} µGy/h, the peak of 28 Oct 2021); dust-safe route for a storm (slope ≤ {slope}°, large dunes and cells without view of the habitat avoided where possible, walked ×{pace} slower). Warning above {max} min from the habitat. Scenario assumptions pending the science team."
+  "assumptions.emergency": "<b>Emergency return:</b> fastest route for a solar particle event (dose at {rate} µGy/h, the peak of 28 Oct 2021); dust-safe route for a storm (slope ≤ {slope}°, large dunes and cells without view of the habitat avoided where possible, walked ×{pace} slower). Warning above {max} min from the habitat. Scenario assumptions pending the science team.",
+  "point.landingTip": "Habitat · Octavia E. Butler Landing",
+  "point.issoleTip": "Issole · click to see what the crew will see",
+  "point.issoleStops": "<b>Issole outcrop · sampling and observation stops</b><br>Rocks altered by water (olivine with carbonates and hydrated sulfates). Flat workspace: slope ≤ {slope}°, large-dune fraction ≤ {dune}.",
+  "point.dunesTip": "Dune crossing · click to look closer",
+  "point.dunes": "<b>Dune crossing</b><br>About {m} m of the walk goes over large sand ripples: walking is slower here and cannot be avoided.",
+  "point.dunesZoom": "Zoom in on the HiRISE image",
+  "photos.prev": "Previous photo",
+  "photos.next": "Next photo",
+  "photos.full": "Full size ↗"
 }

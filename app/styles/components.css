@@ -130,3 +130,23 @@ table.data th { color: var(--muted); font-weight: 500; font-size: 12px; }
 .astro-line { font-size: 18px; margin: 4px 0; }
 .astro-card .btn { margin-top: 12px; }
 @media (prefers-reduced-motion: no-preference) { .astro-arrow { transition: transform 0.3s ease; } }
+
+/* Folded reference sections (weather, radiation, geology, assumptions, sources) */
+.fold > summary { cursor: pointer; list-style: none; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--mars-taupe); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::before { content: "▸"; color: var(--muted); transition: transform .15s ease; }
+.fold[open] > summary::before { transform: rotate(90deg); }
+.fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+.fold-body { margin-top: 10px; }
+.fold-body > h2:first-child { display: none; }
+
+/* Map points: habitat, dune crossing, Issole (opens the rover photos) */
+.map-spot { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; line-height: 1; color: #14110f; background: var(--spot); border: 2px solid #14110f; box-shadow: 0 0 0 3px rgba(244, 241, 238, .55), 0 4px 10px rgba(0, 0, 0, .5); cursor: pointer; }
+.popup-gallery { display: grid; gap: 8px; }
+.popup-gallery .popup-photo { width: 100%; max-width: 320px; aspect-ratio: 4 / 3; object-fit: cover; margin-top: 2px; }
+.popup-caption { margin: 0; font-size: 13px; line-height: 1.4; }
+.popup-nav { display: flex; align-items: center; gap: 8px; }
+.popup-nav .btn { min-width: 34px; padding: 2px 10px; }
+.popup-count { font-size: 12px; color: var(--muted); }
+.popup-full { margin-left: auto; font-size: 12px; }
+.popup-caption::first-letter { text-transform: uppercase; }
