@@ -175,7 +175,7 @@
   "reason.noRoute": "no safe route for leg {leg}",
   "reason.noWorkspace": "no safe workspace for {task}",
   "reason.overLimit": "exceeds the {limitMin}-min limit by {overMin} min",
-  "reason.dustStorm": "dust storm in progress, visibility reduced (real case: sols 313–317, optical depth ~2)",
+  "reason.dustStorm": "dust storm in progress, visibility reduced (real case: sols 313–317, Mastcam-Z daily median optical depth up to 1.4 at 880 nm)",
   "reason.noWeatherData": "no weather measurements at {hour}",
   "reason.tooCold": "ground at {tempC} °C at {hour} (minimum {minC} °C)",
   "reason.tooWindy": "mean wind {windMs} m/s at {hour} (maximum {maxMs} m/s)",

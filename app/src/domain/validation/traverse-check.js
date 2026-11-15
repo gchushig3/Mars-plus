@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // Validation of the obstacle model against ground truth: Perseverance actually drove along its traverse,
 // so terrain cells along it were passable. The share of those cells our model blocks is an upper bound
 // on false obstacles. (Waypoints are end-of-drive positions joined by straight lines: approximate track.)

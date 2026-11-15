@@ -1,6 +1,6 @@
 # Extracts total dose rates (detectors B and E, microGy/h) from Curiosity RAD RDR files into one compact CSV.
 # MARS+ uses detector E (plastic, closer to tissue) — see docs/es/adr/007.
-# AI-assisted (Claude). Reviewed by the MARS+ team.
+# AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\common\config.ps1')

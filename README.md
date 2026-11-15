@@ -91,8 +91,9 @@ node tests/run.mjs
   - write the data-processing pipeline (PowerShell/C#), the route engine, the web application code and the tests;
   - integrate the team's globe into the app;
   - draft documentation.
+- **Cursor:** a team member (Henry) used the **Cursor** agent to add the CI test run before publishing, the corrected surface dose (walking + tasks only), configurable workspace limits and route-calculation robustness. Those commits keep Cursor as author in the git history.
 - **AI-generated image:** the MARS+ logo was generated with AI. It is shown with a visible "AI-generated image" label, and `app/assets/globe/globe.json` declares it (`logo.aiGenerated`). No other AI-generated images, audio or video are used.
-- **Marking:** every AI-assisted source file carries the header `AI-assisted (Claude). Reviewed by the MARS+ team.`
+- **Marking:** every AI-assisted source file carries a header naming the tool, e.g. `AI-assisted (Claude). Reviewed by the MARS+ team.` or `AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.`
 
 ## References
 

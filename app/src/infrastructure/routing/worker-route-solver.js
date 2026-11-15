@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // RouteSolver implementation backed by a module Web Worker, with a main-thread fallback.
 import { createRouteCore } from './route-core.js';
 

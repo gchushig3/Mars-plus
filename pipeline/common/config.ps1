@@ -1,5 +1,5 @@
 # Shared helpers for the MARS+ pipeline: configuration, paths, logging and C# loading.
-# AI-assisted (Claude). Reviewed by the MARS+ team.
+# AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 Set-StrictMode -Version Latest
 
 function Get-MarsConfig {
@@ -20,8 +20,11 @@ function Write-Step([string]$text) { Write-Host ("[{0:HH:mm:ss}] {1}" -f (Get-Da
 
 # Windows PowerShell 5.1 writes a UTF-8 BOM from its utf8 encoding name and from parameterless File.WriteAllText.
 # JSON consumers and the test suite expect BOM-free UTF-8. A leading U+FEFF in the string is stripped.
+# JSON is written with LF line endings: ConvertTo-Json emits CRLF on Windows, but git publishes LF
+# (.gitattributes), so manifest.json hashes must be computed on LF files to match the published site.
 function Write-Utf8NoBom([string]$path, [string]$text) {
   if ($text.Length -gt 0 -and [int]$text[0] -eq 0xFEFF) { $text = $text.Substring(1) }
+  if ($path -match '\.(geo)?json$') { $text = $text -replace "`r`n", "`n" }
   $utf8 = New-Object System.Text.UTF8Encoding $false
   [System.IO.File]::WriteAllText($path, $text, $utf8)
 }

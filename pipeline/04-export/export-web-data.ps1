@@ -1,6 +1,6 @@
 # Exports the site data consumed by app/ (see STACK_Y_ARQUITECTURA.md, section 4).
 # Inputs: data/ (raw + processed) and config/. Output: app/data/sites/jezero-issole/
-# AI-assisted (Claude). Reviewed by the MARS+ team.
+# AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\common\config.ps1')

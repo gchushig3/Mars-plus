@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // BOM-free JSON, the app copy of the parameters, and pipeline writers that no longer emit a BOM.
 import { test, assert, assertEqual } from './harness.js';
 

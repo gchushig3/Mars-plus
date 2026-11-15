@@ -1,6 +1,6 @@
 # Summarizes MEDA per sol and local solar hour, then builds the typical / worst / storm day at Issole.
 # The regional dust storm (sols 313-317) is excluded from typical and worst and reported separately.
-# AI-assisted (Claude). Reviewed by the MARS+ team.
+# AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\common\config.ps1')

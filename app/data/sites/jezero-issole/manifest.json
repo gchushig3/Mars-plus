@@ -1,6 +1,6 @@
 {
     "site":  "jezero-issole",
-    "generated":  "2026-11-14T22:45:09",
+    "generated":  "2026-11-15T02:53:57",
     "paramsVersion":  "2.0.0",
     "files":  [
                   {
@@ -11,8 +11,8 @@
                   },
                   {
                       "file":  "overlays.json",
-                      "bytes":  1226,
-                      "sha256":  "4612934fbefcb611d039638349ff5b2a382f0040f6d7b2e417d9d591e20fadfe",
+                      "bytes":  1225,
+                      "sha256":  "3b18e2fc66eb3b9a1e90d70ee9b72f4b1fbbe06cb24b9d334ecc4e3b889b08f5",
                       "source":  "Derived by MARS+ pipeline"
                   },
                   {
@@ -35,8 +35,8 @@
                   },
                   {
                       "file":  "stops.json",
-                      "bytes":  378,
-                      "sha256":  "0c518a13d5ff2b3a9d13daeac416ab2ddfa2bcf3f2f04c35a38e314049da95f8",
+                      "bytes":  430,
+                      "sha256":  "3cb0e7d6cf5f3b653f18746bf9f42ee4455fbd4f9ec26cb0e350e3b11ee69e4c",
                       "source":  "MARS+ workspace search around Robine/Malay rover positions (NASA MMGIS M20)"
                   },
                   {
@@ -47,8 +47,8 @@
                   },
                   {
                       "file":  "terrain-2m.json",
-                      "bytes":  2143,
-                      "sha256":  "bc88b9fb324553f8ea1beeb3701d1df85af31fff9e754fa00a95ce37ef6c3900",
+                      "bytes":  2142,
+                      "sha256":  "801601eb54fd690bfd7f98c3e5f8da9f37073c744b7d0be4149c7cc5d91c5782",
                       "source":  "Derived by MARS+ pipeline"
                   },
                   {

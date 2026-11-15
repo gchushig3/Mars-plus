@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // The five filters of the plan chain. Each returns null (pass) or {code, values} (fail).
 // They run in order and never compensate for each other.
 

@@ -1,6 +1,6 @@
 # Builds Perseverance's real traverse from the landing site to Issole (end-of-drive waypoints up to sol 286)
 # from the NASA MMGIS M20 waypoints file. Used as a reference line, not as a walking route.
-# AI-assisted (Claude). Reviewed by the MARS+ team.
+# AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\common\config.ps1')

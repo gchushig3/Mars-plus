@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // Generation counter for A→B route requests. A newer request, or an explicit
 // invalidate (clear), makes an in-flight result stale so it cannot overwrite the UI.
 // Compute failures resolve to a visible error status instead of leaving "computing" up.

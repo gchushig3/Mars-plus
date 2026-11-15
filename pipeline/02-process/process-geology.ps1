@@ -1,6 +1,6 @@
 # Clips the Stack et al. 2020 photogeologic map to the pilot area (+100 m) and rasterizes its unit classes
 # onto the 1 m DTM grid (1 = large aeolian bedforms, 2 = small bedforms, 3 = other unit, 0 = none).
-# AI-assisted (Claude). Reviewed by the MARS+ team.
+# AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\common\config.ps1')

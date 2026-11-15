@@ -224,7 +224,7 @@ Planes A (foto + muestra), C (solo muestra) y B (solo documentación) × horas d
 | **Tormenta de polvo activa** | **Posponer** (filtro 4: visibilidad reducida) |
 | **Evento solar activo** | **Posponer** (filtro 5: permanecer en el refugio) |
 
-**Decisión D13b:** la tormenta se modela como **alerta explícita**. La prueba mostró que la temperatura y el viento de MEDA no bastan: el peligro real fue la opacidad (~2), y ese dato no está en los productos derivados.
+**Decisión D13b:** la tormenta se modela como **alerta explícita**. La prueba mostró que la temperatura y el viento de MEDA no bastan: el peligro real fue la opacidad, y ese dato no está en los productos derivados. *(Corrección del 15-nov: antes decía "~2". La tabla de Mastcam-Z, doi:10.17632/gktjp9jptb.2, da como máximo una mediana diaria de 1,38 a 880 nm en los soles 314–317; el ~2 del artículo de Lemmon et al. 2022 mezcla otras estimaciones.)*
 
 ---
 

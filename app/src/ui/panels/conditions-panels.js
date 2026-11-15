@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // Weather (MEDA) and radiation (RAD) panels.
 import { h, s, clear } from '../../shared/dom.js';
 import { fmt } from '../../shared/format.js';

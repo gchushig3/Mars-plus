@@ -1,7 +1,7 @@
 # Indexes Perseverance raw images taken at Issole (official raw-images API, a challenge resource) and downloads
 # a curated 800 px selection per sol: context (Navcam, Mastcam-Z, front Hazcam) and proximity science (WATSON, PIXL).
 # Entry/descent cameras (EDL_*) are excluded: they were downlinked during these sols but do not show Issole.
-# AI-assisted (Claude). Reviewed by the MARS+ team.
+# AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\common\config.ps1')

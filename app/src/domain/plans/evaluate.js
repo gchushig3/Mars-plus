@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // Runs every candidate (plan x departure hour) through the filter chain and ranks the viable ones.
 
 import { planCatalog } from './tasks.js';

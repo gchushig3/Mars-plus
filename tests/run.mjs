@@ -1,6 +1,6 @@
 // Runs the same modules as tests/index.html under Node (no browser binary).
 // A local static server is the base URL so relative fetch() calls resolve like the page.
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';

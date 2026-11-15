@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // Science-workspace acceptance. Thresholds come only from config/model-parameters.json
 // (workspace.maxSlopeDeg, workspace.maxLargeDuneFraction). Bounds are inclusive:
 // a slope equal to the limit, and a large-dune fraction equal to the limit, are acceptable.

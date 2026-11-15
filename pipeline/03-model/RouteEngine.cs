@@ -2,7 +2,7 @@
 // Cost of a cell = time to cross it: directional slope (Tobler, scaled), roughness, sand (Stack et al. 2020)
 // and rocks (shadow fraction in 25 cm HiRISE). Blocked: no data, slope > SlopeBlockDeg, rocks > RockBlock.
 // Parameters are injected from config/model-parameters.json (single source of truth).
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 using System;
 using System.Collections.Generic;
 using System.Globalization;

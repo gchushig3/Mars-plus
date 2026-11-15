@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // Stale A→B results are discarded, and a worker failure becomes a visible error.
 import { test, assert, assertEqual } from './harness.js';
 import { createRouteSession, settleRoute } from '../app/src/application/route-session.js';

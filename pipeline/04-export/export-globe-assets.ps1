@@ -2,7 +2,7 @@
 # for app/assets/globe/, loaded on demand: Viking texture (2048 px fast + 4096 px full), MOLA elevation (int16, gzip),
 # USGS global geology (Tanaka et al. 2014, uint8 indices, gzip) with bilingual unit names, sky background and the
 # AI-generated logo with a visible watermark (Space Apps rule for AI-generated images).
-# AI-assisted (Claude). Reviewed by the MARS+ team.
+# AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\common\config.ps1')

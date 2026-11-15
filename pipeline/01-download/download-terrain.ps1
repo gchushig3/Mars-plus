@@ -1,6 +1,6 @@
 # Downloads only the pilot-area window of the USGS HiRISE 1 m DTM (float32) and the 25 cm orthomosaic (uint8)
 # with HTTP range requests. The ortho window is aligned to the DTM window (same origin, 4x4 pixels per DTM cell).
-# AI-assisted (Claude). Reviewed by the MARS+ team.
+# AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 param([string]$OutRoot, [switch]$Force)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'

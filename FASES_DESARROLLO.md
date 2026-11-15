@@ -17,7 +17,7 @@
 | 3 | Validez científica | Should | 3 h | Claude + equipo de ciencia | ✅ Hecha · falta que el equipo de ciencia confirme fotos y paradas (3.1–3.2) |
 | 4 | Pulido de UX, accesibilidad y robustez | Should | 2 h | Claude | ✅ Hecha · falta la prueba con una persona nueva del equipo (4.1) |
 | 5 | Globo 3D y transición | Could | 2 h | Equipo (globo) + Claude (integración) | ✅ Hecha · globo WebGL2 del equipo ([ADR-011](docs/es/adr/011-globo-webgl2-del-equipo.md)) |
-| 5A | Correcciones traídas de la copia de Henry | **Must** | 1 h | Claude + Henry (confirma) | ⏳ |
+| 5A | Correcciones traídas de la copia de Henry | **Must** | 1 h | Claude + Henry (confirma) | ✅ Hecha · 61/61 pruebas |
 | 5B | Alerta de polvo medida (Mastcam-Z) + mapas de polvo en el globo | Should | 1,5 h | Claude | ⏳ |
 | 5C | Regreso de emergencia (alerta en plena EVA) | Should | 2,5 h | Claude + equipo de ciencia (supuestos) | ⏳ |
 | 5D | Congelamiento de funcionalidades y verificación pública | **Must** | 0,5 h | Claude | ⏳ |
@@ -214,10 +214,12 @@
 **Plan B:** volver al workflow anterior en un commit, o publicar en Netlify.
 
 **✅ Se considera terminada cuando**
-- [ ] Todas las pruebas pasan en el navegador y en GitHub Actions.
-- [ ] La dosis cuenta solo caminata + tareas, y la recomendación del escenario típico sigue siendo Plan C a las 09:00.
-- [ ] Cambiar A/B rápido no deja una ruta vieja, y un Worker caído muestra un error en vez de quedarse esperando.
-- [ ] Ningún archivo nuevo queda sin encabezado de IA.
+- [x] Todas las pruebas pasan en el navegador (61/61) y en GitHub Actions.
+- [x] La dosis cuenta solo caminata + tareas (124 de 159 min): 25 µGy en vez de 31. La recomendación del escenario típico sigue siendo Plan C a las 09:00.
+- [x] Cambiar A/B rápido no deja una ruta vieja, y un Worker caído muestra un error en vez de quedarse esperando (pruebas de `session.test.js`).
+- [x] Ningún archivo nuevo queda sin encabezado de IA.
+
+**Además:** el pipeline escribe el JSON con saltos de línea LF, para que los hashes de `manifest.json` coincidan con los archivos publicados; antes salían con CRLF en Windows. `stops.json` ahora incluye la fracción de duna de cada parada.
 
 **Commit:** `fix: surface dose, CI tests and route robustness (from Henry's branch)`
 

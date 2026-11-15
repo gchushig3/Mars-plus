@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // Composition root: builds adapters, wires use cases, mounts the UI.
 import { createStore } from './application/store.js';
 import { createRouteSession, settleRoute } from './application/route-session.js';

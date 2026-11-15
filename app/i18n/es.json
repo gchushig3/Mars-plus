@@ -175,7 +175,7 @@
   "reason.noRoute": "no hay ruta segura para el tramo {leg}",
   "reason.noWorkspace": "no hay espacio de trabajo seguro para {task}",
   "reason.overLimit": "excede el límite de {limitMin} min por {overMin} min",
-  "reason.dustStorm": "tormenta de polvo activa, visibilidad reducida (caso real: sols 313–317, opacidad ~2)",
+  "reason.dustStorm": "tormenta de polvo activa, visibilidad reducida (caso real: sols 313–317, mediana diaria de Mastcam-Z de hasta 1,4 de profundidad óptica a 880 nm)",
   "reason.noWeatherData": "sin mediciones de clima a las {hour}",
   "reason.tooCold": "suelo a {tempC} °C a las {hour} (mínimo {minC} °C)",
   "reason.tooWindy": "viento medio de {windMs} m/s a las {hour} (máximo {maxMs} m/s)",

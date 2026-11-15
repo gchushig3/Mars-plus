@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // GO/NO-GO edges: inclusive thresholds, hour boundary, dose = surface time only,
 // workspace limits from config, and the viable-plan tie break.
 import { test, assert, assertEqual, assertClose } from './harness.js';

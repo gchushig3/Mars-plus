@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // UI integrity: translations complete in both languages, every literal text key exists,
 // and index.html preloads every module reachable from main.js (keeps the preload list honest).
 import { test, assert } from './harness.js';

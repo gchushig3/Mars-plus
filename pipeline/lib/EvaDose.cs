@@ -2,7 +2,7 @@
 // Surface exposure is walking time plus science tasks.
 // Airlock time is spent inside the habitat (the unshielded surface rate does not apply).
 // The reserve is unused margin on a nominal EVA, not time spent outside.
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 using System;
 
 public static class EvaDose

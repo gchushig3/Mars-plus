@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // Absorbed dose for time on the surface: dose (uGy) = rate (uGy/h) x hours.
 // Keep in parity with pipeline/lib/EvaDose.cs.
 //
