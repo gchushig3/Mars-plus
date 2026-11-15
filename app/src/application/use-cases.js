@@ -3,6 +3,7 @@
 
 import { evaluatePlans, defaultPlanOptions } from '../domain/plans/evaluate.js';
 import { explainEvaluation } from '../domain/explain/explain.js';
+import { withLargeDuneFactor, largeDuneFactor } from '../domain/terrain/params.js';
 
 /**
  * @param {{repository: import('./ports.js').SiteRepository, solver: import('./ports.js').RouteSolver}} deps
@@ -10,6 +11,16 @@ import { explainEvaluation } from '../domain/explain/explain.js';
 export function createMissionService({ repository, solver }) {
   let site = null;
   let solverReady = null;
+
+  const planInput = (legs) => ({ params: site.params, legs, stops: site.stops, weather: site.weather, radiation: site.radiation });
+
+  /** Walking legs used by the plans, with their end points (landing, observation stop, sampling stop). */
+  function legDefinitions() {
+    const p = { landing: site.site.points.landing, observation: site.stops.observation, sampling: site.stops.sampling };
+    const pt = (k) => ({ lon: p[k].lon, lat: p[k].lat });
+    return ['landing_observation', 'observation_sampling', 'sampling_landing', 'landing_sampling', 'observation_landing']
+      .map((id) => { const [from, to] = id.split('_'); return { id, from: pt(from), to: pt(to) }; });
+  }
 
   return {
     /** Loads everything the first screen needs; terrain for A→B routing is loaded in the background. */
@@ -19,6 +30,8 @@ export function createMissionService({ repository, solver }) {
       return site;
     },
 
+    whenRoutingReady() { return solverReady; },
+
     /** Official legs at the primary resolution, keyed by id (used by the plan chain). */
     officialLegs(resM = site.routes.primaryResM) {
       return Object.fromEntries(site.routes.runs.filter((r) => r.resM === resM).map((r) => [r.id, r]));
@@ -27,9 +40,8 @@ export function createMissionService({ repository, solver }) {
     defaultPlanOptions() { return defaultPlanOptions(site.params); },
 
     /** Evaluates every plan x departure through the filter chain and explains the outcome. */
-    evaluate(options) {
-      const input = { params: site.params, legs: this.officialLegs(), stops: site.stops, weather: site.weather, radiation: site.radiation };
-      const evaluation = evaluatePlans(input, options);
+    evaluate(options, legs = this.officialLegs()) {
+      const evaluation = evaluatePlans(planInput(legs), options);
       return { evaluation, explanation: explainEvaluation(evaluation) };
     },
 
@@ -37,6 +49,25 @@ export function createMissionService({ repository, solver }) {
     async computeRoute(a, b) {
       await solverReady;
       return solver.route(a, b);
+    },
+
+    /** Leg times for each sand factor (computed in the browser over the 2 m grid). Cached by the caller. */
+    async sandSensitivity() {
+      await solverReady;
+      const defs = legDefinitions();
+      const rows = [];
+      for (const factor of site.params.sensitivity.largeDuneTimeFactors) {
+        const res = await solver.legs(defs, withLargeDuneFactor(site.params, factor));
+        rows.push({ factor, isModel: Math.abs(factor - largeDuneFactor(site.params)) < 1e-9, legs: res.ok ? res.legs : null });
+      }
+      return rows;
+    },
+
+    /** Obstacle model checked against Perseverance's real traverse. */
+    async traverseValidation() {
+      await solverReady;
+      const res = await solver.validateTraverse(site.routes.roverPath.coords);
+      return res.ok ? res.result : null;
     },
   };
 }

@@ -2,6 +2,7 @@
 // MapView implementation with Leaflet (global L, loaded from CDN with SRI in index.html).
 // Geographic CRS (EPSG:4326 scheme) matches the Mars Trek tiling, so lon/lat are used directly.
 import { trekTileUrl, TREK_ATTRIBUTION, TREK_MAX_NATIVE_ZOOM } from './mars-trek-layers.js';
+import { escapeHtml } from '../../shared/dom.js';
 
 const GEO_STYLE = {
   largeDunes: { color: '#cc8e37', fillColor: '#cc8e37', fillOpacity: 0.10 },
@@ -64,10 +65,14 @@ export function createLeafletMapView(container, { data, assetUrl }) {
   return {
     /** Rebuilds texts that depend on the language. */
     setLabels(t) {
+      const photoOf = (stop) => {
+        const p = (site.photos ?? []).find((x) => x.stop === stop);
+        return p ? `<img class="popup-photo" src="assets/rover/${escapeHtml(p.file)}" alt="${escapeHtml(t(p.caption))}" loading="lazy"><div class="popup-credit">${escapeHtml(p.camera)} · sol ${escapeHtml(p.sol)} · ${escapeHtml(p.credit)}</div>` : '';
+      };
       markers.landing.bindPopup(t('point.landing'));
-      markers.issole.bindPopup(t('point.issole'));
-      markers.sampling.bindPopup(t('point.sampling'));
-      markers.observation.bindPopup(t('point.observation'));
+      markers.issole.bindPopup(t('point.issole') + photoOf('observation'));
+      markers.sampling.bindPopup(t('point.sampling') + photoOf('sampling'));
+      markers.observation.bindPopup(t('point.observation') + photoOf('observation'));
       if (control) control.remove();
       control = L.control.layers(
         { [t('layer.hirise')]: base.hirise, [t('layer.ctx')]: base.ctx, [t('layer.themis')]: base.themis },

@@ -24,6 +24,10 @@
       "rocks": "Shadow fraction in the 25 cm HiRISE orthoimage (shadow-based rock detection principle, Golombek et al.)"
     }
   },
+  "sensitivity": {
+    "largeDuneTimeFactors": [1.5, 2, 3],
+    "source": "Walking-time multiplier on large aeolian bedforms tested around the model value (x2); the energy cost of walking on sand is 2.1-2.7x firm ground (Lejeune et al. 1998)"
+  },
   "rockDetection": {
     "windowPx": 21,
     "shadowThreshold": 0.65

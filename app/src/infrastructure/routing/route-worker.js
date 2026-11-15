@@ -6,8 +6,13 @@ const core = createRouteCore();
 self.onmessage = (e) => {
   const { id, type, payload } = e.data;
   try {
-    if (type === 'init') { core.init(payload.meta, payload.buffer, payload.params); self.postMessage({ id, result: { ok: true } }); }
-    else if (type === 'route') self.postMessage({ id, result: core.route(payload.a, payload.b) });
+    let result;
+    if (type === 'init') { core.init(payload.meta, payload.buffer, payload.params); result = { ok: true }; }
+    else if (type === 'route') result = core.route(payload.a, payload.b);
+    else if (type === 'legs') result = core.legs(payload.legs, payload.params);
+    else if (type === 'validateTraverse') result = core.validateTraverse(payload.coords);
+    else result = { ok: false, code: 'unknownMessage' };
+    self.postMessage({ id, result });
   } catch (err) {
     self.postMessage({ id, result: { ok: false, code: 'error', message: String(err) } });
   }

@@ -5,7 +5,7 @@ import { fmtHour } from '../../shared/format.js';
 import { reasonText, planName, filterName, statementText } from './common.js';
 
 export function createPlansPanel(el, { i18n, data, actions }) {
-  let ctl = {}, verdict, explainList, grid;
+  let ctl = {}, verdict, explainList, grid, sensBtn, sensStatus, sensTable, sensNote;
   const params = data.params;
 
   function build(state) {
@@ -35,11 +35,40 @@ export function createPlansPanel(el, { i18n, data, actions }) {
         h('span', {}, h('i', { class: 'sw', style: 'background:var(--ok)' }), t('plans.viable')),
         ...[1, 2, 3, 4, 5].map((n) => h('span', {}, h('i', { class: 'sw', style: `background:var(--f${n})` }), `${n} ${filterName(i18n, n)}`))),
     );
+    // Sensitivity of the result to the sand assumption
+    sensBtn = h('button', { type: 'button', class: 'btn', onclick: actions.runSensitivity }, t('sens.run'));
+    sensStatus = h('div', { class: 'status', role: 'status', 'aria-live': 'polite' });
+    sensTable = h('table', { class: 'data' });
+    sensNote = h('div', { class: 'callout' });
+    el.append(h('h3', { class: 'subhead' }, t('sens.title')), h('p', { class: 'lead' }, t('sens.lead')), h('div', { class: 'btn-row' }, sensBtn), sensStatus, sensTable, sensNote);
+  }
+
+  function updateSensitivity(state) {
+    const { t } = i18n;
+    const s = state.sensitivity;
+    sensBtn.disabled = s.status === 'running';
+    sensStatus.textContent = s.status === 'running' ? t('sens.running') : s.status === 'error' ? t('sens.error') : '';
+    clear(sensTable);
+    sensNote.style.display = 'none';
+    const rows = state.sensitivityView;
+    if (!rows?.length) return;
+    sensTable.append(h('tr', {}, ...['sens.factor', 'sens.out', 'sens.back', 'sens.plan'].map((k) => h('th', { scope: 'col' }, t(k)))));
+    for (const r of rows) {
+      const plan = r.rec ? `${r.rec.planId} · ${fmtHour(r.rec.departure)}` : t('sens.none');
+      sensTable.append(h('tr', {},
+        h('td', {}, `×${r.factor}${r.isModel ? ` ${t('sens.model')}` : ''}`),
+        h('td', { class: 'mono' }, `${r.outMin.toFixed(1)}′`), h('td', { class: 'mono' }, `${r.backMin.toFixed(1)}′`), h('td', { class: 'mono' }, plan)));
+    }
+    const plans = new Set(rows.map((r) => (r.rec ? `${r.rec.planId}@${r.rec.departure}` : 'none')));
+    sensNote.style.display = '';
+    sensNote.className = `callout${plans.size === 1 ? ' ok' : ''}`;
+    sensNote.textContent = plans.size === 1 ? t('sens.stable') : t('sens.changes');
   }
 
   function update(state) {
     const { t } = i18n;
     const { evaluation, explanation } = state;
+    updateSensitivity(state);
     if (!evaluation) return;
     const rec = evaluation.recommended;
     clear(verdict);

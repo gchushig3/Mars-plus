@@ -5,20 +5,46 @@ import { TerrainGrid } from '../../domain/terrain/grid.js';
 import { buildCostModel } from '../../domain/terrain/cost.js';
 import { findPath } from '../../domain/routing/astar.js';
 import { routeStats } from '../../domain/routing/route-stats.js';
+import { checkTraverse } from '../../domain/validation/traverse-check.js';
 
 export function createRouteCore() {
-  let model = null;
+  let grid = null, model = null;
+
+  function routeOn(m, a, b) {
+    const ca = m.grid.cellOf(a.lon, a.lat), cb = m.grid.cellOf(b.lon, b.lat);
+    if (ca < 0 || cb < 0) return { ok: false, code: 'outside' };
+    if (m.blocked[ca] || m.blocked[cb]) return { ok: false, code: 'blocked' };
+    const res = findPath(m, ca, cb);
+    if (!res) return { ok: false, code: 'noRoute' };
+    return { ok: true, stats: routeStats(m, res.path) };
+  }
+
   return {
-    init(meta, buffer, params) { model = buildCostModel(new TerrainGrid(meta, buffer), params); },
+    init(meta, buffer, params) { grid = new TerrainGrid(meta, buffer); model = buildCostModel(grid, params); },
+
     route(a, b) {
       if (!model) return { ok: false, code: 'notReady' };
       const t0 = performance.now();
-      const ca = model.grid.cellOf(a.lon, a.lat), cb = model.grid.cellOf(b.lon, b.lat);
-      if (ca < 0 || cb < 0) return { ok: false, code: 'outside' };
-      if (model.blocked[ca] || model.blocked[cb]) return { ok: false, code: 'blocked' };
-      const res = findPath(model, ca, cb);
-      if (!res) return { ok: false, code: 'noRoute' };
-      return { ok: true, stats: routeStats(model, res.path), ms: Math.round(performance.now() - t0) };
+      const r = routeOn(model, a, b);
+      return r.ok ? { ...r, ms: Math.round(performance.now() - t0) } : r;
+    },
+
+    /** Times of several legs under alternative parameters (sensitivity). legs: [{id, from:{lon,lat}, to:{lon,lat}}] */
+    legs(legs, params) {
+      if (!grid) return { ok: false, code: 'notReady' };
+      const m = buildCostModel(grid, params);
+      const out = {};
+      for (const leg of legs) {
+        const r = routeOn(m, leg.from, leg.to);
+        out[leg.id] = r.ok ? { timeMin: r.stats.timeMin, distanceM: r.stats.distanceM, largeDuneM: r.stats.largeDuneM } : { timeMin: NaN, code: r.code };
+      }
+      return { ok: true, legs: out };
+    },
+
+    /** Obstacle model checked against the rover's real traverse. */
+    validateTraverse(coords) {
+      if (!model) return { ok: false, code: 'notReady' };
+      return { ok: true, result: checkTraverse(model, coords) };
     },
   };
 }

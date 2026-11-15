@@ -14,6 +14,10 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 - **Least-effort route A → B:** click two points and an A* search runs in your browser (Web Worker) over the 2 m terrain grid. Cost = time to cross each cell, from directional slope, roughness, sand (aeolian bedforms) and rocks detected in HiRISE.
 - **EVA plan chain:** plans **A** (photo + sample), **C** (sample only) and **B** (documentation only) × every departure hour → **terrain → science → time → weather → radiation**. A plan that fails one filter is rejected with its reason; nothing compensates for a safety failure.
 - **Real conditions:** Perseverance MEDA weather at Issole (sols 286–339, including the January 2022 regional dust storm) and Curiosity RAD dosimetry around the **28 Oct 2021 solar particle event**.
+- **Validity checks built in:**
+  - **Sand sensitivity:** routes and plans are recomputed with sand ×1.5 / ×2 / ×3.
+  - **Obstacle model vs. ground truth:** only 0.8% of the cells along Perseverance's real ~1 km drive inside the area are flagged as blocked.
+  - **Real rover photos** of what the crew will see at Issole.
 - **Explains itself:** "Recommended: Plan C, depart 09:00, back 11:39 … Plan A is out — Time: exceeds the 180-min limit by 5 min."
 - **Bilingual:** English / Spanish.
 

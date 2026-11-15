@@ -1,6 +1,6 @@
 ﻿{
     "site":  "jezero-issole",
-    "generated":  "2026-11-14T21:44:04",
+    "generated":  "2026-11-14T21:58:48",
     "paramsVersion":  "2.0.0",
     "files":  [
                   {
@@ -29,8 +29,8 @@
                   },
                   {
                       "file":  "site.json",
-                      "bytes":  3361,
-                      "sha256":  "b57fe52a2492a29a4957fb4a73937ed283a49999902d19fcc8b752441f0e1b27",
+                      "bytes":  4369,
+                      "sha256":  "2c87fc3d3758065ee68a0734dc0f5e64d1064465d2ee3839da495b7d63228f1f",
                       "source":  "Derived by MARS+ pipeline"
                   },
                   {

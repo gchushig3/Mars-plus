@@ -12,7 +12,12 @@ export function createWorkerRouteSolver() {
   }
   if (!worker) {
     const core = createRouteCore();
-    return { init: async (m, b, p) => core.init(m, b, p), route: async (a, b) => core.route(a, b) };
+    return {
+      init: async (m, b, p) => core.init(m, b, p),
+      route: async (a, b) => core.route(a, b),
+      legs: async (legs, params) => core.legs(legs, params),
+      validateTraverse: async (coords) => core.validateTraverse(coords),
+    };
   }
   let seq = 0;
   const pending = new Map();
@@ -23,5 +28,7 @@ export function createWorkerRouteSolver() {
   return {
     async init(meta, buffer, params) { await call('init', { meta, buffer, params }, [buffer]); },
     route: (a, b) => call('route', { a, b }),
+    legs: (legs, params) => call('legs', { legs, params }),
+    validateTraverse: (coords) => call('validateTraverse', { coords }),
   };
 }

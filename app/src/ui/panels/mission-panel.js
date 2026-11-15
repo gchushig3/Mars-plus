@@ -6,7 +6,7 @@ import { fmt } from '../../shared/format.js';
 const LEGS = ['landing_sampling', 'sampling_landing', 'straight_landing_sampling'];
 
 export function createMissionPanel(el, { i18n, data, store }) {
-  let resButtons = [], tbody, badge;
+  let resButtons = [], tbody, badge, validation;
 
   function build() {
     const { t } = i18n;
@@ -26,6 +26,13 @@ export function createMissionPanel(el, { i18n, data, store }) {
         legendLine('#b9aaa2', t('legend.straight'), true), legendLine('#c792ea', t('legend.rover'), true), legendLine('#f4f1ee', t('legend.user'))),
       h('p', { class: 'note' }, t('mission.note')),
     );
+    const official = data.routes.runs.find((x) => x.resM === data.routes.primaryResM && x.id === 'landing_sampling');
+    const rover = data.routes.roverPath;
+    validation = h('div', { class: 'callout ok', role: 'status', 'aria-live': 'polite' });
+    el.append(
+      h('div', { class: 'callout' }, t('rover.compare', { dist: fmt(rover.distanceM), ratio: fmt(rover.distanceM / official.distanceM, 1) })),
+      validation,
+    );
   }
 
   function update(state) {
@@ -43,6 +50,10 @@ export function createMissionPanel(el, { i18n, data, store }) {
     const spread = (Math.max(...times) - Math.min(...times)) / Math.min(...times);
     badge.className = `badge ${spread < 0.05 ? 'ok' : 'warn'}`;
     badge.textContent = spread < 0.05 ? t('mission.stable') : t('mission.unstable');
+    const v = state.traverseValidation;
+    validation.textContent = v
+      ? t('validation.text', { len: fmt(v.lengthInsideM), pct: fmt(v.blockedShare * 100, 1), cells: v.blockedCells, total: v.cellsInside, area: fmt(v.areaBlockedShare * 100, 1) })
+      : t('validation.pending');
   }
 
   return { build, update };

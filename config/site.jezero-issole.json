@@ -12,6 +12,12 @@
     "sampling": { "lon": 77.44137302, "lat": 18.43266059, "searchRadiusM": 6, "platformRadiusM": 1.5, "target": "Robine core (sol 298), rover site 9/0" },
     "observation": { "lon": 77.44131402, "lat": 18.43260907, "searchRadiusM": 10, "platformRadiusM": 1.0, "target": "Malay core (sol 337), rover site 9/276" }
   },
+  "photos": [
+    { "source": "sol286_NAVCAM_LEFT_NLF_0286_0692337518_300ECM_N0090000NCAM0.jpg", "file": "issole-arrival-navcam-sol286.jpg", "stop": "observation", "sol": 286, "camera": "Navcam", "credit": "NASA/JPL-Caltech", "caption": "photo.arrival" },
+    { "source": "sol337_MCZ_LEFT_ZL0_0337_0696855807_331EBY_N0090276ZCAM0.jpg", "file": "issole-drill-hole-mastcamz-sol337.jpg", "stop": "sampling", "sol": 337, "camera": "Mastcam-Z", "credit": "NASA/JPL-Caltech/ASU", "caption": "photo.drillHole" },
+    { "source": "sol286_FRONT_HAZCAM_LEFT_A_FLE_0286_0692336761_756ECM_N0090000FHAZ0.jpg", "file": "issole-ground-hazcam-sol286.jpg", "stop": "sampling", "sol": 286, "camera": "Front Hazcam", "credit": "NASA/JPL-Caltech", "caption": "photo.ground" },
+    { "source": "sol293_SHERLOC_WATSON_SIF_0293_0692957875_390EBY_N0090000SRLC0.jpg", "file": "issole-rock-watson-sol293.jpg", "stop": "observation", "sol": 293, "camera": "SHERLOC WATSON", "credit": "NASA/JPL-Caltech", "caption": "photo.rock" }
+  ],
   "trekLayers": {
     "hirise": "JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd",
     "ctx": "JEZ_ctx_B_soc_008_orthoMosaic_6m_Eqc_latTs0_lon0",

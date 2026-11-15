@@ -26,7 +26,8 @@ while ($listener.IsListening) {
       $ext = [IO.Path]::GetExtension($path).ToLowerInvariant()
       $ctx.Response.ContentType = $(if ($types.ContainsKey($ext)) { $types[$ext] } else { 'application/octet-stream' })
       $ctx.Response.Headers.Add('Cache-Control', 'no-store')
-      $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
+      $ctx.Response.ContentLength64 = $bytes.Length
+      if ($ctx.Request.HttpMethod -ne 'HEAD') { $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length) }
     } else { $ctx.Response.StatusCode = 404 }
   } catch { $ctx.Response.StatusCode = 500 }
   finally { $ctx.Response.Close() }

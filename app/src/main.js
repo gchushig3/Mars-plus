@@ -11,6 +11,7 @@ import { createRoutePanel } from './ui/panels/route-panel.js';
 import { createPlansPanel } from './ui/panels/plans-panel.js';
 import { createWeatherPanel, createRadiationPanel } from './ui/panels/conditions-panels.js';
 import { createGeologyPanel, createAssumptionsPanel, createSourcesPanel } from './ui/panels/info-panels.js';
+import { createPhotosPanel } from './ui/panels/photos-panel.js';
 
 const SITE_ID = 'jezero-issole';
 
@@ -44,7 +45,15 @@ async function main() {
     pick: null, pointA: null, pointB: null,
     routeStatus: { kind: 'idle' }, userRoute: null,
     paceKey: 'normal', planOptions, ...service.evaluate(planOptions),
+    sensitivity: { status: 'idle', rows: null }, sensitivityView: null, traverseValidation: null,
   });
+
+  // Sensitivity rows (leg times per sand factor) -> view with the recommended plan under the current options
+  const sensitivityView = (rows, options) => (rows ?? []).filter((r) => r.legs).map((r) => ({
+    factor: r.factor, isModel: r.isModel,
+    outMin: r.legs.landing_sampling.timeMin, backMin: r.legs.sampling_landing.timeMin,
+    rec: service.evaluate(options, r.legs).evaluation.recommended,
+  }));
 
   // --- actions (the only place that mutates state) ---
   async function computeIfReady() {
@@ -63,7 +72,18 @@ async function main() {
     },
     setOption: (patch) => {
       const planOptionsNext = { ...store.get().planOptions, ...patch };
-      store.set({ planOptions: planOptionsNext, ...service.evaluate(planOptionsNext) });
+      store.set({ planOptions: planOptionsNext, ...service.evaluate(planOptionsNext), sensitivityView: sensitivityView(store.get().sensitivity.rows, planOptionsNext) });
+    },
+    runSensitivity: async () => {
+      if (store.get().sensitivity.status === 'running') return;
+      store.set({ sensitivity: { status: 'running', rows: null }, sensitivityView: null });
+      try {
+        const rows = await service.sandSensitivity();
+        store.set({ sensitivity: { status: 'done', rows }, sensitivityView: sensitivityView(rows, store.get().planOptions) });
+      } catch (err) {
+        console.error(err);
+        store.set({ sensitivity: { status: 'error', rows: null } });
+      }
     },
     setPace: (key) => {
       store.set({ paceKey: key });
@@ -80,7 +100,7 @@ async function main() {
   // --- panels ---
   const sidebar = document.getElementById('sidebar');
   const ctx = { i18n, data, store, actions };
-  const panels = [createMissionPanel, createRoutePanel, createPlansPanel, createWeatherPanel, createRadiationPanel, createGeologyPanel, createAssumptionsPanel, createSourcesPanel]
+  const panels = [createMissionPanel, createPhotosPanel, createRoutePanel, createPlansPanel, createWeatherPanel, createRadiationPanel, createGeologyPanel, createAssumptionsPanel, createSourcesPanel]
     .map((factory) => { const el = document.createElement('section'); el.className = 'section'; sidebar.append(el); return factory(el, ctx); });
 
   const buildAll = () => {
@@ -110,6 +130,7 @@ async function main() {
   map.showOfficial(store.get().officialRes);
   last = store.get();
   loading.remove();
+  service.traverseValidation().then((v) => store.set({ traverseValidation: v })).catch((err) => console.error(err));
   window.MARSPLUS = { store, service }; // debugging aid for the team
 }
 

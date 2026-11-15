@@ -144,6 +144,16 @@ $radJson = '{"source":"MSL RAD RDR, NASA PDS PPI (detector E), Gale crater","uni
   '},"note":"Reference rate from Gale crater; Jezero is higher (less atmosphere above), so local dose would be somewhat larger.","series":[' + $series + ']}'
 [IO.File]::WriteAllText((Join-Path $outDir 'radiation-oct2021.json'), $radJson)
 
+# --- rover photos for the stops (selected in config/site.*.json, credited NASA/JPL-Caltech) ---
+Write-Step 'Rover photos'
+$photoDir = Join-Path $repo 'app\assets\rover'
+New-Item -ItemType Directory -Force $photoDir | Out-Null
+foreach ($ph in $site.photos) {
+  $srcPhoto = Join-Path (Resolve-RepoPath $repo $raw.roverImagesDir) $ph.source
+  if (-not (Test-Path $srcPhoto)) { throw "Rover photo not found: $($ph.source) (run download-rover-images.ps1)" }
+  Copy-Item $srcPhoto (Join-Path $photoDir $ph.file) -Force
+}
+
 # --- configuration shipped with the app (single source of truth stays in config/) ---
 Copy-Item (Join-Path $repo 'config\model-parameters.json') (Join-Path $repo 'app\data\model-parameters.json') -Force
 Copy-Item (Join-Path $repo 'config\site.jezero-issole.json') (Join-Path $outDir 'site.json') -Force

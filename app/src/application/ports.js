@@ -26,6 +26,8 @@
  * @typedef {object} RouteSolver
  * @property {(meta:object, buffer:ArrayBuffer, params:object) => Promise<void>} init
  * @property {(a:LonLat, b:LonLat) => Promise<{ok:true, stats:object, ms:number} | {ok:false, code:string}>} route
+ * @property {(legs:{id:string, from:LonLat, to:LonLat}[], params:object) => Promise<{ok:boolean, legs?:Record<string,{timeMin:number}>}>} legs
+ * @property {(coords:number[][]) => Promise<{ok:boolean, result?:object}>} validateTraverse
  */
 
 export {};
