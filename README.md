@@ -4,7 +4,7 @@
 
 MARS+ helps a crew inside the habitat decide **whether, when and how** to walk from **Octavia E. Butler Landing** to the **Issole outcrop** in Jezero crater (≈886 m away). The goal is to document signs of past water alteration, collect a sample and come back safely. MARS+ layers NASA orbital and surface data into a hyper-local map, computes **least-effort walking routes**, and runs every candidate plan through a transparent **chain of safety filters** that explains *why* a plan is GO or NO-GO.
 
-> **Live site:** _add the public URL here after publishing_ · **Demo:** _add the slides/video link here_
+> **Live site:** https://gchushig3.github.io/Mars-plus/ · **Code:** https://github.com/gchushig3/Mars-plus · **Demo:** _slides link coming soon_
 
 ---
 
