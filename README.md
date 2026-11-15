@@ -4,7 +4,7 @@
 
 MARS+ is a decision-support prototype for a round-trip traverse from **Octavia E. Butler Landing** to the **Issole outcrop** in Jezero crater. A hypothetical habitat is placed at Perseverance’s real landing site. The modeled 2 m route to the sampling stop is 948 m. MARS+ combines NASA orbital and surface data to plan where to walk, when to leave and what fieldwork fits the selected scenario.
 
-> [Explore the Mars globe in English](https://gchushig3.github.io/Mars-plus/?lang=en) · [Six-slide demo](https://gchushig3.github.io/Mars-plus/demo/) · [Source code](https://github.com/gchushig3/Mars-plus)
+> [Explore the Mars globe in English](https://gchushig3.github.io/Mars-plus/?lang=en) · [Seven-slide demo](https://gchushig3.github.io/Mars-plus/demo/) · [Source code](https://github.com/gchushig3/Mars-plus)
 
 ---
 
@@ -111,7 +111,7 @@ The team's original software and accompanying documentation are released under t
   - build the emergency return during the EVA;
   - draft documentation.
 - **Cursor:** a team member (Henry) used the **Cursor** agent to add the CI test run before publishing, the corrected surface dose (walking + tasks only), configurable workspace limits, route-calculation robustness, the measured dust alert, the globe dust maps (with their Python builder, `tools/dust/`), and the time-field and line-of-sight prototypes the emergency return builds on. Those commits keep Cursor as author in the git history.
-- **OpenAI Codex:** supported source verification, route and map features, automated and browser testing, documentation and the six-slide demo. The archived instrument data are measured observations. Derived outputs use documented deterministic calculations.
+- **OpenAI Codex:** supported source verification, route and map features, automated and browser testing, documentation and the seven-slide demo. The archived instrument data are measured observations. Derived outputs use documented deterministic calculations.
 - **AI-generated image:** the MARS+ logo was generated with AI. It is shown with a visible "AI-generated image" label, and `app/assets/globe/globe.json` declares it (`logo.aiGenerated`). No other AI-generated images, audio or video are used.
 - **Marking:** the project-level disclosure supplements source-file headers, data provenance metadata and the visible AI-image credit.
 

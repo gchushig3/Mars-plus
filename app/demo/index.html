@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Six-slide public demonstration of MARS+, a Jezero astronaut traverse planning prototype.">
+  <meta name="description" content="Seven-slide public demonstration of MARS+, a Jezero astronaut traverse planning prototype.">
   <title>MARS+ · Jezero EVA demo</title>
   <link rel="stylesheet" href="./deck.css">
 </head>
@@ -11,8 +11,8 @@
   <header class="deck-nav">
     <a class="brand" href="#mission">MARS<span>+</span></a>
     <nav aria-label="Demo slides">
-      <a href="#mission">Mission</a><a href="#plan">Plan</a><a href="#science">Science</a>
-      <a href="#return">Return</a><a href="#method">Method</a><a href="#review">Review</a>
+      <a href="#mission">Mission</a><a href="#problem">Problem</a><a href="#plan">Plan</a><a href="#method">Method</a>
+      <a href="#science">Science</a><a href="#return">Return</a><a href="#review">Review</a>
     </nav>
     <a class="action" href="../?view=local&amp;lang=en">Open map ↗</a>
   </header>
@@ -27,9 +27,16 @@
       </div>
       <footer>Interplanetary Survival Guide: Martian Map · Globe rendered with NASA/JPL/USGS data and AI-assisted code.</footer>
     </section>
+    <section class="slide text-slide" id="problem" aria-labelledby="problem-title">
+      <p class="eyebrow">02 / 07 · Challenge and problem</p>
+      <h2 id="problem-title">The crew needs to know when to turn back</h2>
+      <p>A traverse competes for walking time, science time and return time. The crew needs to decide where to stop and whether it can get back from each part of the route.</p>
+      <p>The challenge asks for a layered map that integrates measurements from NASA missions at the scale of a human expedition. The Jezero pilot combines terrain, science targets and historical conditions around one walk.</p>
+      <p class="small"><a href="https://www.spaceappschallenge.org/2026/challenges/interplanetary-survival-guide-martian-map/?tab=details">Space Apps challenge brief</a></p>
+    </section>
     <section class="slide split" id="plan" aria-labelledby="plan-title">
       <div class="copy">
-        <p class="eyebrow">02 / 06 · Before departure</p>
+        <p class="eyebrow">03 / 07 · Proposed solution</p>
         <h2 id="plan-title">Choose a plan that fits the EVA</h2>
         <p>Under the 180-minute scenario, sampling alone fits at 09:00 local solar time. Adding the photography stop exceeds the allowed time by about five minutes.</p>
         <dl class="numbers"><div><dt>09:00</dt><dd>Depart</dd></div><div><dt>11:39</dt><dd>Return</dd></div><div><dt>159 min</dt><dd>Budgeted EVA</dd></div></dl>
@@ -37,9 +44,19 @@
       </div>
       <figure><img src="eva-plan.png" alt="Jezero route and the GO recommendation for Plan C, with an outbound route of 948 m."><figcaption>MARS+ prototype · HiRISE imagery via JPL Mars Trek</figcaption></figure>
     </section>
+    <section class="slide text-slide" id="method" aria-labelledby="method-title">
+      <p class="eyebrow">04 / 07 · From data to a decision</p>
+      <h2 id="method-title">Different scales answer different questions</h2>
+      <dl class="method">
+        <div><dt>Where can the crew walk?</dt><dd>HiRISE imagery and elevation, plus mapped dunes, feed directional walking costs on a 2 m grid. A* finds the least-cost path.</dd></div>
+        <div><dt>What is worth examining?</dt><dd>CRISM identifies broad spectral patterns. Published rover observations and sample records support the choice of individual stops.</dd></div>
+        <div><dt>When can the plan go ahead?</dt><dd>Terrain, workspace, time budget, historical weather and radiation each have their own check. A failed check excludes that plan.</dd></div>
+      </dl>
+      <p class="small"><a href="https://github.com/gchushig3/Mars-plus/blob/main/ATTRIBUTION.md">Full sources and licenses</a> · <a href="https://github.com/gchushig3/Mars-plus">Code and test suite</a></p>
+    </section>
     <section class="slide split" id="science" aria-labelledby="science-title">
       <div class="copy">
-        <p class="eyebrow">03 / 06 · At the outcrop</p>
+        <p class="eyebrow">05 / 07 · At the outcrop</p>
         <h2 id="science-title">Find a reason to stop</h2>
         <p>At Issole, the annotated Quartier target and instrument measurements connect the route to a real science task. NASA’s catalog records the Robine and Malay cores from the outcrop.</p>
         <p>CRISM shows orbital mineral signatures at 18 m per pixel. A pixel can contain several materials. The stop cards cite the separate surface evidence.</p>
@@ -49,7 +66,7 @@
     </section>
     <section class="slide split" id="return" aria-labelledby="return-title">
       <div class="copy">
-        <p class="eyebrow">04 / 06 · During the traverse</p>
+        <p class="eyebrow">06 / 07 · During the traverse</p>
         <h2 id="return-title">Recompute the way back</h2>
         <p>Replay the Mastcam-Z opacity observation from sol 1255. At 574 m along Plan C, the model estimates a 28-minute return under its dust constraints.</p>
         <p>Compare the same position under normal and dust conditions. A separate solar-particle replay uses historical Curiosity RAD data from Gale crater.</p>
@@ -57,22 +74,13 @@
       </div>
       <figure><img src="eva-return.png" alt="Colored return-time bands, the estimated astronaut position and the modeled return route during the dust replay."><figcaption>MARS+ prototype · Mastcam-Z archive v2 and HiRISE terrain</figcaption></figure>
     </section>
-    <section class="slide text-slide" id="method" aria-labelledby="method-title">
-      <p class="eyebrow">05 / 06 · From data to a decision</p>
-      <h2 id="method-title">Different scales answer different questions</h2>
-      <dl class="method">
-        <div><dt>Where can the crew walk?</dt><dd>HiRISE imagery and elevation, plus mapped dunes, feed directional walking costs on a 2 m grid. A* finds the least-cost path.</dd></div>
-        <div><dt>What is worth examining?</dt><dd>CRISM identifies broad spectral patterns. Published rover observations and sample records support the choice of individual stops.</dd></div>
-        <div><dt>When can the plan go ahead?</dt><dd>Terrain, workspace, time budget, historical weather and radiation each have their own check. A failed check excludes that plan.</dd></div>
-      </dl>
-      <p class="small"><a href="https://github.com/gchushig3/Mars-plus/blob/main/ATTRIBUTION.md">Full sources and licenses</a> · <a href="https://github.com/gchushig3/Mars-plus">Code and test suite</a></p>
-    </section>
     <section class="slide text-slide" id="review" aria-labelledby="review-title">
-      <p class="eyebrow">06 / 06 · Evidence and scope</p>
+      <p class="eyebrow">07 / 07 · Evidence and scope</p>
       <h2 id="review-title">What the prototype can show</h2>
       <dl class="method">
         <div><dt>Reproducible checks</dt><dd>Browser and pipeline route times agree within 1% for the tested legs. Eight of 1,059 cells sampled along the historic rover drive were flagged as blocked. That check covers only terrain along the rover trace.</dd></div>
         <div><dt>Scope of the estimates</dt><dd>Walking pace, habitat, reserves and alert thresholds are scenario assumptions. The weather and radiation replays use measurements from specific places and dates. The prototype has no human EVA field validation.</dd></div>
+        <div><dt>Next step</dt><dd>Test walking times and terrain restrictions in suited field trials. Use those observations to refine the model before considering operational use.</dd></div>
       </dl>
       <p><a class="action" href="../?view=local&amp;lang=en">Try the Jezero EVA map ↗</a></p>
       <p class="small">AI assistance: Claude, Cursor and OpenAI Codex supported research, code, testing, writing and this presentation. The globe screenshot shows an AI-assisted renderer using NASA imagery. The separate AI-generated MARS+ logo is labeled in the project.</p>
