@@ -21,6 +21,11 @@ a { color: var(--accent); }
 #map { flex: 1 1 auto; min-height: 0; height: 100%; background: #000; }
 .sidebar { overflow-y: auto; border-left: 1px solid var(--line); padding: 4px 16px 32px; }
 
+/* The fixed globe must not leave the mobile planner scrollable underneath.
+   Follow its visibility even during startup, before mission data is ready. */
+body:has(#globe-view:not([hidden])) { overflow: hidden; }
+body:has(#globe-view:not([hidden])) .layout { display: none; }
+
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; height: auto; }
   .map-wrap { height: auto; }
