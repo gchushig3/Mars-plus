@@ -18,6 +18,8 @@ import { createWelcome } from './ui/panels/welcome.js';
 import { createWebGLGlobe, isWebGL2Supported } from './infrastructure/globe/webgl-globe.js';
 import { createGlobeView } from './ui/views/globe-view.js';
 import { createDustMaps } from './application/dust-maps.js';
+import { createContingencyPanel } from './ui/panels/contingency-panel.js';
+import { headingDeg } from './domain/contingency/contingency.js';
 import { fetchDustCatalog, fetchGzipBytes, productSpec } from './infrastructure/dust/load-dust.js';
 import { createDustFlatMap } from './infrastructure/map/dust-flat-map.js';
 
@@ -96,6 +98,7 @@ async function main() {
     paceKey: 'normal', planOptions: firstPlan.evaluation.options, dustInfo: firstPlan.dustInfo,
     evaluation: firstPlan.evaluation, explanation: firstPlan.explanation,
     sensitivity: { status: 'idle', rows: null }, sensitivityView: null, traverseValidation: null, routingReady: false,
+    emergency: { status: 'idle', alerts: { sep: true, dust: false }, minute: 0, prepared: null, rows: null, result: null, farthest: null, astronautView: false, key: null },
   });
 
   // Sensitivity rows (leg times per sand factor) -> view with the recommended plan under the current options
@@ -156,7 +159,45 @@ async function main() {
       store.set({ paceKey: key });
       actions.setOption({ paceFactor: data.params.pace[key] });
     },
+    /** Emergency return: alerts on/off, minute of the EVA, astronaut view. */
+    setEmergency: async (patch) => {
+      const prev = store.get().emergency;
+      const next = { ...prev, ...patch, alerts: { ...prev.alerts, ...(patch.alerts ?? {}) } };
+      store.set({ emergency: next });
+      if (!next.prepared || (!('minute' in patch) && !('alerts' in patch))) return;
+      const id = ++emergencySeq;
+      try {
+        const result = await service.emergencyReturn(next.prepared, next.minute, next.alerts);
+        if (id !== emergencySeq) return;
+        const heading = result.choice && !result.choice.noRoute ? headingDeg(result.choice.coords) : null;
+        store.set((s) => ({ emergency: { ...s.emergency, result: { ...result, heading }, farthest: service.farthestFromHabitat(next.prepared, next.alerts) } }));
+      } catch (err) {
+        console.error(err);
+        store.set((s) => ({ emergency: { ...s.emergency, status: 'error' } }));
+      }
+    },
   };
+  let emergencySeq = 0;
+  /** Prepares the return plan for the plan in effect (recommended, or the closest one when the EVA is postponed). */
+  async function prepareEmergency() {
+    const s = store.get();
+    const plan = s.evaluation.recommended ?? s.evaluation.closest;
+    if (!plan || !s.routingReady || s.routingReady === 'error') return;
+    const key = `${plan.planId}|${s.planOptions.paceFactor}`;
+    if (s.emergency.key === key) return;
+    store.set((st) => ({ emergency: { ...st.emergency, key, status: 'preparing' } }));
+    try {
+      const prepared = await service.prepareContingency(plan.planId, s.planOptions.paceFactor);
+      if (store.get().emergency.key !== key) return;
+      const view = { planId: prepared.planId, outsideMin: prepared.timeline.outsideMin, timeline: prepared.timeline, rows: prepared.rows, paceFactor: prepared.paceFactor };
+      const minute = Math.min(store.get().emergency.minute || Math.round(prepared.timeline.outsideMin * 0.4), Math.floor(prepared.timeline.outsideMin));
+      store.set((st) => ({ emergency: { ...st.emergency, status: 'ready', prepared: view, rows: service.checkpointTable(prepared) } }));
+      await actions.setEmergency({ minute });
+    } catch (err) {
+      console.error(err);
+      store.set((st) => ({ emergency: { ...st.emergency, status: 'error', key: null } }));
+    }
+  }
   map.onClick((p) => {
     const { pick } = store.get();
     if (!pick) return;
@@ -170,7 +211,7 @@ async function main() {
   const summaryEl = document.createElement('div');
   sidebar.append(summaryEl);
   const panels = [createSummaryBar(summaryEl, ctx)];
-  const sections = [['mission', createMissionPanel], ['plans', createPlansPanel], ['route', createRoutePanel], ['photos', createPhotosPanel],
+  const sections = [['mission', createMissionPanel], ['plans', createPlansPanel], ['emergency', createContingencyPanel], ['route', createRoutePanel], ['photos', createPhotosPanel],
     ['weather', createWeatherPanel], ['radiation', createRadiationPanel], ['geology', createGeologyPanel], ['assumptions', createAssumptionsPanel], ['sources', createSourcesPanel]];
   for (const [id, factory] of sections) {
     const el = document.createElement('section'); el.className = 'section'; el.id = `panel-${id}`; sidebar.append(el); panels.push(factory(el, ctx));
@@ -214,6 +255,11 @@ async function main() {
     if (s.pointA !== last.pointA) map.setPoint('A', s.pointA);
     if (s.pointB !== last.pointB) map.setPoint('B', s.pointB);
     if (s.userRoute !== last.userRoute) map.showUserRoute(s.userRoute?.coords ?? null);
+    if (s.emergency.result !== last.emergency?.result) {
+      const r = s.emergency.result;
+      map.showEmergencyReturn(r && { position: r.position, coords: r.choice?.coords, policy: r.choice?.policy, label: i18n.t('emergency.crewHere') });
+    }
+    if (s.evaluation !== last.evaluation || s.routingReady !== last.routingReady) prepareEmergency();
     map.setPickCursor(Boolean(s.pick));
     last = s;
   });

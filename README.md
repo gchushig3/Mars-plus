@@ -19,6 +19,7 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
   - **Sand sensitivity:** routes and plans are recomputed with sand ×1.5 / ×2 / ×3.
   - **Obstacle model vs. ground truth:** only 0.8% of the cells along Perseverance's real ~1 km drive inside the area are flagged as blocked.
   - **Real rover photos** of what the crew will see at Issole.
+- **Emergency return during the EVA:** a dust storm or a solar particle event cannot be dodged inside a 1 km² area, so MARS+ prepares the way back to the habitat before leaving. Pick the minute and the alert: solar particles → fastest route, with the extra dose at the 28 Oct 2021 event rate; dust storm → dust-safe route (gentler slopes, fewer dunes, habitat in view, slower pace); both → the dust-safe route and what it costs against the fastest. An "astronaut view" shows the minimum the crew would get on a suit display (concept).
 - **Explains itself:** "Recommended: Plan C, depart 09:00, back 11:39 … Plan A is out — Time: exceeds the 180-min limit by 5 min."
 - **Bilingual:** English / Spanish.
 
@@ -84,6 +85,7 @@ node tests/run.mjs
 - Radiation rate comes from Gale crater (RAD). Jezero is higher, so the local dose would be somewhat larger. The nominal dose is that rate times time on the surface (walking and tasks). Airlock time is inside the habitat, and the reserve is unused margin, so neither is counted as exposure. The weather check still covers the whole budgeted window, including the reserve.
 - The dust-storm alert follows Mastcam-Z 880 nm optical depth at Jezero and turns on at τ ≥ 1.0 (see `config/model-parameters.json`). The crew can still override it. Derived MEDA files do not contain opacity. Global maps show the Montabone column-dust climatology and MDAD storm frequency; both are orbital and do not separate routes inside Jezero. Provenance is in `app/data/dust/catalog.json` and `docs/es/datos-polvo.md`.
 - Stops are the flattest rock-free workspaces near the rover positions for Robine and Malay.
+- Emergency return (scenario assumptions, `config/model-parameters.json → contingency`): the habitat is the only shelter; the crew position is estimated from progress along the planned route (no GPS on Mars); dust-safe routes keep slopes ≤ 15° and are walked 1.5× slower; a warning appears when any point of the plan is more than 45 min from the habitat. How much warning an alert gives on Mars is not modelled.
 
 ## AI assistance (Space Apps "Super Intelligence" disclosure)
 

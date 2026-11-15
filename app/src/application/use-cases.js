@@ -5,6 +5,9 @@ import { evaluatePlans, defaultPlanOptions } from '../domain/plans/evaluate.js';
 import { applyDustAlert } from '../domain/dust/dust.js';
 import { explainEvaluation } from '../domain/explain/explain.js';
 import { withLargeDuneFactor, largeDuneFactor } from '../domain/terrain/params.js';
+import { legsOfPlan } from '../domain/plans/tasks.js';
+import { buildTimeline, positionAt, checkpoints, chooseReturn, farthestPoint } from '../domain/contingency/contingency.js';
+import { dustPolicy, eventRateUGyH } from '../domain/contingency/return-policy.js';
 
 /**
  * @param {{repository: import('./ports.js').SiteRepository, solver: import('./ports.js').RouteSolver}} deps
@@ -12,6 +15,7 @@ import { withLargeDuneFactor, largeDuneFactor } from '../domain/terrain/params.j
 export function createMissionService({ repository, solver }) {
   let site = null;
   let solverReady = null;
+  let returnReady = null;
 
   const planInput = (legs) => ({ params: site.params, legs, stops: site.stops, weather: site.weather, radiation: site.radiation });
 
@@ -63,6 +67,72 @@ export function createMissionService({ repository, solver }) {
         rows.push({ factor, isModel: Math.abs(factor - largeDuneFactor(site.params)) < 1e-9, legs: res.ok ? res.legs : null });
       }
       return rows;
+    },
+
+    /**
+     * Emergency-return plan for one EVA plan, prepared before leaving: timeline of outside time and
+     * the way home (fast and dust-safe) from every checkpoint. Return fields are built once in the Worker.
+     */
+    async prepareContingency(planId, paceFactor) {
+      await solverReady;
+      const plan = site.params.plans.find((p) => p.id === planId);
+      if (!plan) throw new Error(`unknown plan ${planId}`);
+      const official = this.officialLegs();
+      const ids = legsOfPlan(site.params, plan);
+      const tl = await solver.legTimeline(ids.map((id) => ({ id, coords: official[id].coords })));
+      if (!tl.ok) throw new Error(`legTimeline: ${tl.code}`);
+      const timeline = buildTimeline(site.params, plan, tl.legs, paceFactor);
+      if (!returnReady) {
+        returnReady = solver.prepareReturn(site.site.points.landing, site.params.visibility)
+          .then((r) => { if (!r.ok) throw new Error(`prepareReturn: ${r.code}`); return r; });
+        returnReady.catch(() => { returnReady = null; });
+      }
+      await returnReady;
+      const positions = checkpoints(timeline, site.params.contingency.stepMin).map((m) => positionAt(timeline, m));
+      const res = await solver.returnsFrom(positions);
+      if (!res.ok) throw new Error(`returnsFrom: ${res.code}`);
+      const rows = positions.map((p, i) => ({ ...p, routes: res.results[i] }));
+      return { planId, paceFactor, timeline, rows };
+    },
+
+    /** Constants used to turn a route into minutes and dose. */
+    returnConstants(paceFactor) {
+      return {
+        paceFactor,
+        lowVisibilityPaceFactor: dustPolicy(site.params).lowVisibilityPaceFactor,
+        backgroundUGyH: site.radiation.backgroundUGyH,
+        eventUGyH: eventRateUGyH(site.params, site.radiation),
+      };
+    },
+
+    /** Way home if the alerts arrive at `minute` of outside time. */
+    async emergencyReturn(prepared, minute, alerts) {
+      const position = positionAt(prepared.timeline, minute);
+      if (position.atHome) return { position, atHome: true };
+      const res = await solver.returnsFrom([position]);
+      if (!res.ok) throw new Error(`returnsFrom: ${res.code}`);
+      return { position, choice: chooseReturn(alerts, res.results[0], this.returnConstants(prepared.paceFactor)) };
+    },
+
+    /** One row per stop (arrival): return minutes by the fast and the dust-safe route. */
+    checkpointTable(prepared) {
+      const k = this.returnConstants(prepared.paceFactor);
+      const seen = new Set();
+      return prepared.rows.filter((r) => r.kind === 'task' && !seen.has(r.stop) && seen.add(r.stop)).map((r) => ({
+        minute: r.minute, kind: r.kind, stop: r.stop,
+        fastMin: r.routes.fast ? r.routes.fast.walkMin * k.paceFactor : null,
+        dustMin: r.routes.dust ? r.routes.dust.walkMin * k.paceFactor * k.lowVisibilityPaceFactor : null,
+      }));
+    },
+
+    /** Farthest checkpoint from the habitat for these alerts, against the configured limit (a warning, not a filter). */
+    farthestFromHabitat(prepared, alerts) {
+      const k = this.returnConstants(prepared.paceFactor);
+      const rows = prepared.rows.map((r) => {
+        const c = chooseReturn(alerts, r.routes, k);
+        return { minute: r.minute, kind: r.kind, stop: r.stop, legId: r.legId, timeMin: c.noRoute ? NaN : c.timeMin };
+      });
+      return farthestPoint(rows, site.params.contingency.maxMinutesFromHabitat);
     },
 
     /** Obstacle model checked against Perseverance's real traverse. */

@@ -52,6 +52,9 @@ function mainThreadSolver() {
     route: async (a, b) => core.route(a, b),
     legs: async (legs, params) => core.legs(legs, params),
     validateTraverse: async (coords) => core.validateTraverse(coords),
+    legTimeline: async (legs) => core.legTimeline(legs),
+    prepareReturn: async (home, visibility) => core.prepareReturn(home, visibility),
+    returnsFrom: async (points) => core.returnsFrom(points),
   };
 }
 
@@ -70,5 +73,8 @@ export function createWorkerRouteSolver() {
     route: (a, b) => bridge.call('route', { a, b }),
     legs: (legs, params) => bridge.call('legs', { legs, params }),
     validateTraverse: (coords) => bridge.call('validateTraverse', { coords }),
+    legTimeline: (legs) => bridge.call('legTimeline', { legs }),
+    prepareReturn: (home, visibility) => bridge.call('prepareReturn', { home, visibility }),
+    returnsFrom: (points) => bridge.call('returnsFrom', { points }),
   };
 }

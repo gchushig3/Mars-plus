@@ -35,6 +35,7 @@ export function createAssumptionsPanel(el, { i18n, data }) {
         html('assumptions.dust', { tau: p.dust.alertTau880 }),
         html('assumptions.radiation', { rad: p.radiation.source }),
         html('assumptions.stops', { slope: p.workspace.maxSlopeDeg, dune: p.workspace.maxLargeDuneFraction }),
+        html('assumptions.emergency', { rate: data.radiation.event[p.contingency.solarEventRate], slope: p.contingency.dust.maxSlopeDeg, pace: p.contingency.dust.lowVisibilityPaceFactor, max: p.contingency.maxMinutesFromHabitat }),
         t('assumptions.whole'),
       ];
       el.append(h('h2', {}, t('assumptions.title')), h('ul', { class: 'list' }, ...items.map((x) => h('li', { html: x }))));

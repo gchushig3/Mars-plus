@@ -75,5 +75,22 @@
     "visibleFromIrAbsorption": 2.6,
     "referencePressurePa": 610,
     "source": "Postpone the EVA when Mastcam-Z 880 nm column optical depth is at least 1.0. In sols 286-339 the non-storm daily medians stay at or below 0.845 (median about 0.50) and the highest storm-day median is 1.376 (sols 316-317; sol 313 has no Mastcam-Z tau in the table). Lemmon et al. 2022 (doi:10.1029/2022GL100126) separately report an RDS visible peak near 1.7; that peak is not a row in the Mastcam-Z table (doi:10.17632/gktjp9jptb.2) and is not used as a measurement. Typical and worst weather share the background dust value: worst refers to temperature and wind. The 1.0 threshold is a scenario rule for this planner."
+  },
+  "visibility": {
+    "habitatHeightM": 3,
+    "crewEyeHeightM": 1.5,
+    "source": "Scenario assumption for geometric line of sight only, not a radio model. The habitat antenna is 3 m above the local surface and the crew eye is 1.5 m (values from Henry's line-of-sight prototype). Used to prefer return routes that keep the habitat in view during a dust storm."
+  },
+  "contingency": {
+    "stepMin": 5,
+    "solarEventRate": "maxUGyH",
+    "maxMinutesFromHabitat": 45,
+    "dust": {
+      "maxSlopeDeg": 15,
+      "largeDunePenalty": 2,
+      "noLineOfSightPenalty": 0.25,
+      "lowVisibilityPaceFactor": 1.5
+    },
+    "source": "Emergency return during the EVA. A dust storm or a solar particle event cannot be avoided by rerouting inside the 1 km2 pilot area, so the planner gives the way back to the habitat (the only shelter). SCENARIO ASSUMPTIONS, pending the science team: return checkpoints every 5 min and at each stop; the particle-event dose uses the peak RAD rate of 28 Oct 2021 (detector E, Gale; conservative); dust-safe route blocks slopes above 15 deg (normal limit 20), weighs large dunes x(1+2*fraction) and cells without line of sight to the habitat x1.25 when choosing the route, and is walked 1.5x slower for low visibility; warn when any point of the plan is more than 45 min from the habitat. The warning never changes the recommended plan. How much warning an alert gives on Mars is not known and is not modelled."
   }
 }

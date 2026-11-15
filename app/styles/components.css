@@ -106,3 +106,27 @@ table.data th { color: var(--muted); font-weight: 500; font-size: 12px; }
 .leaflet-control-attribution a { color: var(--accent); }
 .map-pin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #14110f; }
 .map-pin.ab { width: 22px; height: 22px; display: grid; place-items: center; font: 600 12px var(--font-sans); color: #14110f; background: var(--route-user); }
+
+/* Emergency return (alert during the EVA) */
+.emergency-alerts { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px; margin: 10px 0; display: grid; gap: 6px; }
+.emergency-alerts legend { padding: 0 4px; color: var(--muted); font-size: 12px; }
+.emergency-alerts label { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; }
+.emergency-minute { display: grid; gap: 4px; font-size: 13px; margin-top: 6px; }
+.emergency-minute input { width: 100%; accent-color: var(--accent); }
+.emergency-result { margin-top: 8px; font-size: 13px; }
+.emergency-big { font-size: 16px; font-weight: 600; margin: 4px 0; color: var(--warn); }
+.emergency-big.bad, .note.bad { color: var(--bad); }
+.emergency-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.emergency-table th, .emergency-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+
+/* Astronaut view: concept of a suit/wrist display. High contrast, large type, one route. */
+.astro { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; background: rgba(8, 6, 5, 0.94); padding: 16px; }
+.astro[hidden] { display: none; }
+.astro-card { width: min(420px, 100%); text-align: center; border: 2px solid var(--warn); border-radius: 16px; padding: 20px; background: #000; color: #fff; }
+.astro-concept { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+.astro-title { margin: 0; font-size: 40px; letter-spacing: 0.04em; color: var(--warn); }
+.astro-arrow { font-size: 72px; line-height: 1; margin: 8px auto; width: 1em; color: #fff; }
+.astro-big { font-size: 30px; font-weight: 600; margin: 6px 0; font-family: var(--font-mono); }
+.astro-line { font-size: 18px; margin: 4px 0; }
+.astro-card .btn { margin-top: 12px; }
+@media (prefers-reduced-motion: no-preference) { .astro-arrow { transition: transform 0.3s ease; } }

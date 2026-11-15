@@ -120,7 +120,7 @@ martian-map/                       (repositorio: mars-plus)
 │   ├── raw/                       ← descargas originales: dtm, ortho, meda, rad, geology, thermal, rover, globe (~1,7 GB)
 │   └── interim/                   ← productos intermedios: geology, meda, rad, rover
 ├── docs/
-│   ├── es/                        ← equipo: LEEME (índice), arquitectura, auditoría, informe, catálogo, adr/ (001–011)
+│   ├── es/                        ← equipo: LEEME (índice), arquitectura, auditoría, informe, catálogo, adr/ (001–013)
 │   │   └── historico/             ← documentos superados + prototipo v1 (web/, scripts/) como referencia
 │   └── en/                        ← material para jueces
 └── demo/

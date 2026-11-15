@@ -19,7 +19,7 @@
 | 5 | Globo 3D y transición | Could | 2 h | Equipo (globo) + Claude (integración) | ✅ Hecha · globo WebGL2 del equipo ([ADR-011](docs/es/adr/011-globo-webgl2-del-equipo.md)) |
 | 5A | Correcciones traídas de la copia de Henry | **Must** | 1 h | Claude + Henry (confirma) | ✅ Hecha · 61/61 pruebas |
 | 5B | Alerta de polvo medida (Mastcam-Z) + mapas de polvo en el globo | Should | 1,5 h | Claude | ✅ Hecha · 71/71 pruebas |
-| 5C | Regreso de emergencia (alerta en plena EVA) | Should | 2,5 h | Claude + equipo de ciencia (supuestos) | ⏳ |
+| 5C | Regreso de emergencia (alerta en plena EVA) | Should | 2,5 h | Claude + equipo de ciencia (supuestos) | ✅ Hecha · 82/82 pruebas · supuestos pendientes del equipo de ciencia |
 | 5D | Congelamiento de funcionalidades y verificación pública | **Must** | 0,5 h | Claude | ⏳ |
 | 6 | Demo (7 diapositivas en inglés) | **Must** | 3 h | Equipo de pitch + Claude | ⏳ |
 | 7 | Formulario de envío y entrega | **Must** | 1,5 h | Equipo + Claude | ⏳ |
@@ -303,10 +303,10 @@
 - Con la alerta en el minuto 0 no hay regreso: es posponer.
 
 **✅ Se considera terminada cuando**
-- [ ] Desde cualquier punto de la ruta oficial hay un regreso para cada alerta, con minutos y dosis.
-- [ ] La simulación funciona con teclado y en ES/EN.
-- [ ] El cálculo tarda menos de 1 s y no bloquea la pantalla (se hace en el Worker).
-- [ ] Todas las pruebas en verde.
+- [x] Desde cualquier punto de la ruta oficial hay un regreso para cada alerta, con minutos y dosis. Ejemplo, plan C en la parada de muestreo: partículas → 38 min y 17,6 µGy; las dos alertas → ruta segura de 63 min y 29,3 µGy (+6,2 min frente a la rápida, 203 m menos de dunas).
+- [x] La simulación funciona con teclado (control deslizante y casillas nativos; Esc cierra la vista del astronauta) y en ES/EN. El minuto se elige con el control deslizante; hacer clic en la ruta quedó fuera.
+- [x] No bloquea la pantalla: los campos de regreso se preparan una vez en el Worker (unos 2,5 s, no 1 s como se planeó); después, cada consulta tarda milisegundos.
+- [x] Todas las pruebas en verde (82/82, con 7 del regreso de emergencia y las de Henry para el campo de tiempo y la línea de vista).
 
 **Commit:** `feat: emergency return routes for dust and solar particle alerts during the EVA`
 

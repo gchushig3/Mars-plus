@@ -28,6 +28,9 @@
  * @property {(a:LonLat, b:LonLat) => Promise<{ok:true, stats:object, ms:number} | {ok:false, code:string}>} route
  * @property {(legs:{id:string, from:LonLat, to:LonLat}[], params:object) => Promise<{ok:boolean, legs?:Record<string,{timeMin:number}>}>} legs
  * @property {(coords:number[][]) => Promise<{ok:boolean, result?:object}>} validateTraverse
+ * @property {(legs:{id:string, coords:number[][]}[]) => Promise<{ok:boolean, legs?:Record<string,{coords:number[][], cumMin:number[]}>}>} legTimeline
+ * @property {(home:LonLat, visibility:{habitatHeightM:number, crewEyeHeightM:number}) => Promise<{ok:boolean, ms?:number, visibleShare?:number}>} prepareReturn
+ * @property {(points:LonLat[]) => Promise<{ok:boolean, results?:{fast:object|null, dust:object|null}[]}>} returnsFrom
  */
 
 export {};

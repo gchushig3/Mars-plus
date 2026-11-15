@@ -44,11 +44,13 @@ export function createLeafletMapView(container, { data, assetUrl }) {
     official: L.layerGroup(),
     rover: L.polyline(routes.roverPath.coords.map(([lon, lat]) => [lat, lon]), { color: '#c792ea', weight: 2, dashArray: '4 6', opacity: 0.9 }),
     user: L.layerGroup(),
+    emergency: L.layerGroup(),
   };
   layers.geology.addTo(map);
   layers.official.addTo(map);
   layers.rover.addTo(map);
   layers.user.addTo(map);
+  layers.emergency.addTo(map);
 
   const pin = (cls, color, text = '') => L.divIcon({ className: '', html: `<div class="map-pin ${cls}" style="background:${color}">${text}</div>`, iconSize: cls ? [22, 22] : [14, 14], iconAnchor: cls ? [11, 11] : [7, 7] });
   const markers = {
@@ -104,7 +106,7 @@ export function createLeafletMapView(container, { data, assetUrl }) {
       if (control) control.remove();
       control = L.control.layers(
         { [t('layer.hirise')]: base.hirise, [t('layer.ctx')]: base.ctx, [t('layer.themis')]: base.themis },
-        { [t('layer.cost')]: layers.cost, [t('layer.slope')]: layers.slope, [t('layer.geology')]: layers.geology, [t('layer.official')]: layers.official, [t('layer.rover')]: layers.rover, [t('layer.user')]: layers.user },
+        { [t('layer.cost')]: layers.cost, [t('layer.slope')]: layers.slope, [t('layer.geology')]: layers.geology, [t('layer.official')]: layers.official, [t('layer.rover')]: layers.rover, [t('layer.user')]: layers.user, [t('layer.emergency')]: layers.emergency },
         { collapsed: true },
       ).addTo(map);
     },
@@ -130,6 +132,19 @@ export function createLeafletMapView(container, { data, assetUrl }) {
       const ll = coords.map(([lon, lat]) => [lat, lon]);
       L.polyline(ll, { color: '#14110f', weight: 6, opacity: 0.7 }).addTo(layers.user);
       L.polyline(ll, { color: '#f4f1ee', weight: 3 }).addTo(layers.user);
+    },
+    /** Emergency return: the way home from the crew's estimated position (null clears it). */
+    showEmergencyReturn(r) {
+      layers.emergency.clearLayers();
+      if (!r || !r.position || r.position.atHome) return;
+      if (r.coords) {
+        const ll = r.coords.map(([lon, lat]) => [lat, lon]);
+        const color = r.policy === 'dust' ? '#ff8a5c' : '#f6c445';
+        L.polyline(ll, { color: '#14110f', weight: 7, opacity: 0.75 }).addTo(layers.emergency);
+        L.polyline(ll, { color, weight: 4, dashArray: r.policy === 'dust' ? '10 6' : null }).addTo(layers.emergency);
+      }
+      L.circleMarker([r.position.lat, r.position.lon], { radius: 8, color: '#ff5a4f', weight: 3, fillColor: '#f4f1ee', fillOpacity: 1 })
+        .bindTooltip(r.label ?? '', { direction: 'top' }).addTo(layers.emergency);
     },
     fitPilot() { map.fitBounds(pilotBounds.pad(0.02)); },
     invalidate() { map.invalidateSize(); },
