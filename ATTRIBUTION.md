@@ -15,6 +15,9 @@
 | MOLA MEGDR elevation (globe) | NASA Mars Global Surveyor, MOLA team; NASA PDS Geosciences | PDS public data |
 | Geologic Map of Mars, SIM 3292 (globe) | Tanaka et al. 2014, USGS for NASA | USGS public domain |
 | Star field (globe background) | NASA Goddard Scientific Visualization Studio; ESA/Gaia/DPAC | NASA SVS; credit requested |
+| Column dust optical depth maps, MY24–MY36 (globe dust layer) | Montabone et al. 2015, Icarus 251; Montabone et al. 2020, JGR Planets (LMD Mars dust climatology) | **CC BY-SA 3.0**: `app/data/dust/cdod-*.u8.gz` are a derived work under the same license (seasonal means, 30° Ls bins) |
+| Mars Dust Activity Database v1.1, MY28–MY32 (storm frequency) | Battalio & Wang 2021, Icarus 354; Zenodo doi:10.5281/zenodo.7480334 | CC BY 4.0 |
+| Mastcam-Z 880 nm optical depth at Jezero (dust alert) | M. Lemmon, Mendeley Data doi:10.17632/gktjp9jptb.2 (marked PRELIMINARY by its author) | CC BY 4.0 |
 
 ## Globe and logo
 - **3D globe:** built by the MARS+ team with AI assistance; integrated into the app by Claude.

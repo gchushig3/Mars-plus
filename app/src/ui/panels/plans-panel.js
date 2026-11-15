@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // EVA plan chain: controls, GO / NO-GO verdict, deterministic explanation and plan x hour grid.
 import { h, clear } from '../../shared/dom.js';
 import { fmtHour } from '../../shared/format.js';

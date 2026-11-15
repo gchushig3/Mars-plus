@@ -1,4 +1,4 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // Use cases. They depend on the domain and on ports, never on the DOM or on Leaflet.
 
 import { evaluatePlans, defaultPlanOptions } from '../domain/plans/evaluate.js';

@@ -23,3 +23,5 @@
 - La opacidad que decide la alerta es la del rover, no la celda orbital. La celda de profundidad óptica mide 3° (~180 km en el ecuador) y la de frecuencia 2° (~120 km). No separan las rutas dentro de Jezero.
 - Los mapas de Montabone se publican aquí como obra derivada en CC BY-SA 3.0. MDAD y la tabla de Mastcam-Z, en CC BY 4.0.
 - El texto antiguo «opacidad ~2» no es la medición de Mastcam-Z. En la tabla, el pico de los soles 316–317 es 1,38. El ~2 del artículo mezcla otras estimaciones (el resumen del artículo y el pico del RDS).
+
+**Integración en MARS+ (15-nov):** la vista del globo no carga ni pinta los mapas por su cuenta. Lo hace el caso de uso `application/dust-maps.js`, que recibe los cargadores desde `main.js`; así `ui/` no importa `domain/` ni `infrastructure/` (lo comprueba una prueba de arquitectura). Trabajo de Henry hecho con Cursor; ver README → "AI assistance".

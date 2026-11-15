@@ -1,3 +1,4 @@
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // Loads the seasonal dust grids. Row 0 of every volume is north.
 
 export async function fetchDustCatalog(base) {

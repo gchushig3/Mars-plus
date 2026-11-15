@@ -17,6 +17,9 @@ import { createSummaryBar } from './ui/panels/summary-bar.js';
 import { createWelcome } from './ui/panels/welcome.js';
 import { createWebGLGlobe, isWebGL2Supported } from './infrastructure/globe/webgl-globe.js';
 import { createGlobeView } from './ui/views/globe-view.js';
+import { createDustMaps } from './application/dust-maps.js';
+import { fetchDustCatalog, fetchGzipBytes, productSpec } from './infrastructure/dust/load-dust.js';
+import { createDustFlatMap } from './infrastructure/map/dust-flat-map.js';
 
 const SITE_ID = 'jezero-issole';
 
@@ -46,7 +49,14 @@ async function main() {
       const webgl = isWebGL2Supported();
       globeRoot.hidden = false;
       loading.hidden = true; // the globe shows its own progress while the EVA data loads underneath
-      globeView = createGlobeView(globeRoot, { i18n, assetBase: 'assets/globe/', dustBase: 'data/dust/', meta, onEnterMission: goLocal, preferFlat: flatDust || !webgl });
+      const dustBase = 'data/dust/';
+      const dustMaps = createDustMaps({
+        loadCatalog: () => fetchDustCatalog(dustBase),
+        loadVolume: (file) => fetchGzipBytes(dustBase + file),
+        specOf: productSpec,
+        createFlatMap: createDustFlatMap,
+      });
+      globeView = createGlobeView(globeRoot, { i18n, assetBase: 'assets/globe/', dustMaps, meta, onEnterMission: goLocal, preferFlat: flatDust || !webgl });
       if (webgl) {
         globe = createWebGLGlobe(globeView.canvas, { assetBase: 'assets/globe/', meta, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
         globe.start().then(() => {

@@ -1,11 +1,9 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; dust layer with Cursor, used by Henry). Reviewed by the MARS+ team.
 // Globe screen (state GLOBE): explore Mars in 3D and fly to Jezero to plan the EVA.
 // Layout, controls and design follow the MARS+ team's globe proposal; texts come from i18n.
-// The renderer (infrastructure/globe) is injected by main.js — this view never imports it.
+// The renderer (infrastructure/globe) and the dust maps (application/dust-maps.js) are injected
+// by main.js — this view never imports domain/ or infrastructure/.
 import { h, clear } from '../../shared/dom.js';
-import { CDOD_COLORS, FREQ_COLORS, FREQ_MISSING, VISIBLE_FROM_IR, paintVolume, sampleVolume } from '../../domain/dust/dust.js';
-import { fetchDustCatalog, fetchGzipBytes, productSpec } from '../../infrastructure/dust/load-dust.js';
-import { createDustFlatMap } from '../../infrastructure/map/dust-flat-map.js';
 
 const LAYER_KEYS = ['viking', 'mola', 'geology', 'dust'];
 
@@ -17,11 +15,10 @@ const PLACES = {
 };
 const JEZERO_APPROACH = { lat: 18.44, lon: 77.45, distance: 1.06 };
 
-export function createGlobeView(root, { i18n, assetBase, dustBase, meta, onEnterMission, preferFlat = false }) {
+export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnterMission, preferFlat = false }) {
   const { t } = i18n;
   let globe = null, activeLayer = 'viking', layerError = null, selectedPlace = null, lastUnit;
-  let dustCatalog = null, dustProduct = 'climatology', dustBin = 5, flat = false, flatMap = null, paintRequest = 0;
-  const dustVolumes = new Map();
+  let dustProduct = 'climatology', dustBin = 5, flat = false, flatMap = null, paintRequest = 0;
   const el = {};
 
   // --- static skeleton (created once; texts refreshed by setTexts) ---
@@ -137,8 +134,9 @@ export function createGlobeView(root, { i18n, assetBase, dustBase, meta, onEnter
         oninput: (e) => { dustBin = Number(e.target.value); e.target.setAttribute('aria-valuenow', String(dustBin * 30)); paintDust(false).catch((err) => { console.error(err); layerError = 'dust'; }); },
       });
       el.dustLs = h('p', { class: 'g-dust-ls' }, t('globe.dustLs', { from, to: from + 30 }));
-      const stops = dustCatalog ? productSpec(dustCatalog, dustProduct).stops : [0, 1];
-      const colors = dustProduct === 'frequency' ? FREQ_COLORS : CDOD_COLORS;
+      const legend = dustMaps.legend(dustProduct);
+      const stops = legend ? legend.stops : [0, 1];
+      const colors = legend ? legend.colors : ['#16343f', '#f3e6d0'];
       const ramp = h('div', { class: 'g-ramp', style: `background:linear-gradient(90deg, ${colors.join(', ')})`, 'aria-hidden': 'true' });
       const ticks = [stops[0], stops[Math.floor((stops.length - 1) / 2)], stops[stops.length - 1]];
       const max = stops[stops.length - 1];
@@ -162,36 +160,21 @@ export function createGlobeView(root, { i18n, assetBase, dustBase, meta, onEnter
   function select(key) { selectedPlace = key; el.placeButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.place === key))); }
   function goToPlace(key) { showPlaces(false); el.placesToggle.focus({ preventScroll: true }); select(key); globe?.flyTo(PLACES[key]); }
 
-  async function dustFrame() {
-    if (!dustCatalog) dustCatalog = await fetchDustCatalog(dustBase);
-    const spec = productSpec(dustCatalog, dustProduct);
-    if (spec.stops.length !== (spec.mode === 'frequency' ? FREQ_COLORS : CDOD_COLORS).length) throw new Error('dust legend stops do not match the colour ramp');
-    if (!dustVolumes.has(dustProduct)) {
-      const bytes = await fetchGzipBytes(dustBase + spec.file);
-      const expected = spec.grid.width * spec.grid.height * dustCatalog.lsBinStarts.length;
-      if (bytes.length !== expected) throw new Error(`${spec.file}: ${bytes.length} bytes, expected ${expected}`);
-      dustVolumes.set(dustProduct, bytes);
-    }
-    const colors = spec.mode === 'frequency' ? FREQ_COLORS : CDOD_COLORS;
-    const rgba = paintVolume({ bytes: dustVolumes.get(dustProduct), grid: spec.grid, band: dustBin, mode: spec.mode, stops: spec.stops, colors, scale: dustCatalog.cdod.scale });
-    return { rgba, spec };
-  }
-
   async function paintDust(rebuildLegend = true) {
     const request = ++paintRequest;
-    const frame = await dustFrame();
+    const frame = await dustMaps.frame(dustProduct, dustBin);
     if (request !== paintRequest) return;
     if (flat) {
-      if (!flatMap) flatMap = createDustFlatMap(el.flat);
-      flatMap.setPixels(frame.rgba, frame.spec.grid.width, frame.spec.grid.height);
+      if (!flatMap) flatMap = dustMaps.createFlatMap(el.flat);
+      flatMap.setPixels(frame.rgba, frame.width, frame.height);
       flatMap.setAttribution(t(dustProduct === 'frequency' ? 'globe.dustCreditFreq' : 'globe.dustCredit'));
-      const jez = dustProduct === 'frequency' ? dustCatalog.frequency.jezero.percent[dustBin] : (dustProduct === 'my34' ? dustCatalog.cdod.jezero.my34Cdod610[dustBin] : dustCatalog.cdod.jezero.climatologyCdod610[dustBin]);
+      const jez = dustMaps.jezero(dustProduct, dustBin);
       const tip = dustProduct === 'frequency'
-        ? t('globe.dustJezeroFreq', { value: jez == null ? t('globe.dustMissing') : jez })
-        : t('globe.dustJezeroCdod', { value: Number(jez).toFixed(2) });
-      flatMap.setMarker(dustCatalog.jezeroTau.lat, dustCatalog.jezeroTau.lon, tip);
+        ? t('globe.dustJezeroFreq', { value: jez.value == null ? t('globe.dustMissing') : jez.value })
+        : t('globe.dustJezeroCdod', { value: Number(jez.value).toFixed(2) });
+      flatMap.setMarker(jez.lat, jez.lon, tip);
       flatMap.invalidate();
-    } else if (!(globe && globe.showRaster(frame.rgba, frame.spec.grid.width, frame.spec.grid.height))) {
+    } else if (!(globe && globe.showRaster(frame.rgba, frame.width, frame.height))) {
       throw new Error('dust raster was not shown');
     }
     if (el.dustLs) {
@@ -264,17 +247,12 @@ export function createGlobeView(root, { i18n, assetBase, dustBase, meta, onEnter
     const sample = globe.sampleCenter();
     el.detail.hidden = activeLayer !== 'mola' && activeLayer !== 'dust';
     if ('elevationKm' in sample) el.detail.value = t('globe.elevationKm', { km: sample.elevationKm.toFixed(1) });
-    if (activeLayer === 'dust' && dustCatalog && dustVolumes.has(dustProduct)) {
-      const spec = productSpec(dustCatalog, dustProduct);
-      const byte = sampleVolume(dustVolumes.get(dustProduct), dustBin, camera.lat, camera.lon, spec.grid);
-      if (spec.mode === 'frequency' && byte === FREQ_MISSING) el.detail.value = t('globe.dustMissing');
-      else if (spec.mode === 'frequency') el.detail.value = t('globe.dustReadoutFreq', { value: byte });
-      else {
-        const ir = (byte * dustCatalog.cdod.scale).toFixed(2);
-        const vis = (byte * dustCatalog.cdod.scale * (dustCatalog.cdod.visibleExtinctionFactor || VISIBLE_FROM_IR)).toFixed(2);
-        const clipped = byte === 255 ? '≥' : '';
-        el.detail.value = t('globe.dustReadoutCdod', { ir: clipped + ir, vis: clipped + vis });
-      }
+    const dust = activeLayer === 'dust' ? dustMaps.readout(dustProduct, dustBin, camera.lat, camera.lon) : null;
+    if (dust?.kind === 'missing') el.detail.value = t('globe.dustMissing');
+    else if (dust?.kind === 'frequency') el.detail.value = t('globe.dustReadoutFreq', { value: dust.value });
+    else if (dust?.kind === 'cdod') {
+      const clipped = dust.clipped ? '≥' : '';
+      el.detail.value = t('globe.dustReadoutCdod', { ir: clipped + dust.ir.toFixed(2), vis: clipped + dust.vis.toFixed(2) });
     }
     if ('unitIndex' in sample && el.unitNow && sample.unitIndex !== lastUnit) {
       lastUnit = sample.unitIndex;

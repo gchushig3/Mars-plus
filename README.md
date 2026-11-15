@@ -10,7 +10,7 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 
 ## What it does
 
-- **3D Mars globe as the entry screen:** a WebGL2 globe built by the MARS+ team. It has three global layers (Viking colour mosaic, MOLA elevation, USGS geologic map with all 44 units) and a guided flight to Jezero that opens the local planner. Without WebGL2, or with `?view=local`, the app starts directly on the local map.
+- **3D Mars globe as the entry screen:** a WebGL2 globe built by the MARS+ team. It has four global layers (Viking colour mosaic, MOLA elevation, USGS geologic map with all 44 units, and seasonal dust: column optical depth and where storms happen) and a guided flight to Jezero that opens the local planner. Without WebGL2, or with `?view=local`, the app starts directly on the local map.
 - **Hyper-local map (≈1 km², 2 m grid):** HiRISE 25 cm imagery, slope, walking-cost layer, geology units, the official EVA route (out and back), the real Perseverance traverse, and the sampling and observation stops.
 - **Least-effort route A → B:** click two points and an A* search runs in your browser (Web Worker) over the 2 m terrain grid. Cost = time to cross each cell, from directional slope, roughness, sand (aeolian bedforms) and rocks detected in HiRISE.
 - **EVA plan chain:** plans **A** (photo + sample), **C** (sample only) and **B** (documentation only) × every departure hour → **terrain → science → time → weather → radiation**. A plan that fails one filter is rejected with its reason; nothing compensates for a safety failure.
@@ -38,6 +38,9 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 | MOLA MEGDR (8 px/deg) | Globe elevation layer | NASA MGS, PDS Geosciences |
 | Geologic Map of Mars (SIM 3292) | Globe geology layer (44 units) | USGS for NASA |
 | Star field (Deep Star Maps) | Globe background | NASA Goddard SVS, ESA/Gaia/DPAC |
+| Mastcam-Z 880 nm optical depth (Perseverance) | Dust-storm alert at Jezero (τ ≥ 1.0) | Lemmon, Mendeley Data doi:10.17632/gktjp9jptb.2 |
+| Column dust optical depth maps (MY24–MY36) | Globe dust layer by season | Montabone et al. 2015/2020 (CC BY-SA 3.0) |
+| Mars Dust Activity Database v1.1 | Globe storm-frequency layer | Battalio & Wang 2021, doi:10.5281/zenodo.7480334 |
 
 ## How it works
 
@@ -91,7 +94,7 @@ node tests/run.mjs
   - write the data-processing pipeline (PowerShell/C#), the route engine, the web application code and the tests;
   - integrate the team's globe into the app;
   - draft documentation.
-- **Cursor:** a team member (Henry) used the **Cursor** agent to add the CI test run before publishing, the corrected surface dose (walking + tasks only), configurable workspace limits and route-calculation robustness. Those commits keep Cursor as author in the git history.
+- **Cursor:** a team member (Henry) used the **Cursor** agent to add the CI test run before publishing, the corrected surface dose (walking + tasks only), configurable workspace limits, route-calculation robustness, the measured dust alert and the globe dust maps (with their Python builder, `tools/dust/`). Those commits keep Cursor as author in the git history.
 - **AI-generated image:** the MARS+ logo was generated with AI. It is shown with a visible "AI-generated image" label, and `app/assets/globe/globe.json` declares it (`logo.aiGenerated`). No other AI-generated images, audio or video are used.
 - **Marking:** every AI-assisted source file carries a header naming the tool, e.g. `AI-assisted (Claude). Reviewed by the MARS+ team.` or `AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.`
 
@@ -107,6 +110,9 @@ node tests/run.mjs
 - USGS Astrogeology, *Mars Viking Colorized Global Mosaic (MDIM 2.1)*.
 - Smith, D. E. et al., *MGS MOLA Mission Experiment Gridded Data Records (MEGDR)*, NASA PDS Geosciences, MGS-M-MOLA-5-MEGDR-L3-V1.0.
 - NASA Goddard Scientific Visualization Studio, *Deep Star Maps 2020* (ESA/Gaia/DPAC).
+- Montabone, L. et al. (2015). *Eight-year climatology of dust optical depth on Mars*. Icarus 251, 65–95. doi:10.1016/j.icarus.2014.12.034. Montabone, L. et al. (2020), JGR Planets, doi:10.1029/2019JE006111.
+- Battalio, M. & Wang, H. (2021). *The Mars Dust Activity Database (MDAD)*. Icarus 354, 114059. doi:10.1016/j.icarus.2020.114059.
+- Lemmon, M. T., *Mars 2020 Mastcam-Z optical depth*, Mendeley Data, doi:10.17632/gktjp9jptb.2.
 
 **Literature**
 - Bell, J. F. III et al. (2022). *Geological, multispectral, and meteorological imaging results from the Mars 2020 Perseverance rover in Jezero crater*. Sci. Adv. 8, eabo4856.

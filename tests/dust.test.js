@@ -1,3 +1,4 @@
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // Dust maps and the Jezero alert. The grids are the published measurements, reduced;
 // these checks fail if a bin, a sol or the threshold is filled in by hand.
 import { test, assert, assertEqual } from './harness.js';

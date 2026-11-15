@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 # Build the small dust products used by the app.
 # Reads public NetCDF/text sources from data/raw/dust (gitignored) and writes
 # quantized, seasonal grids plus the Jezero tau table under app/data/dust.

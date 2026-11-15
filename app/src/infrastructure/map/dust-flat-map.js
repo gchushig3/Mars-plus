@@ -1,3 +1,4 @@
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // Equirectangular Leaflet view of the same dust grid the 3D globe draws.
 // The image's top row is north, matching the volume layout.
 

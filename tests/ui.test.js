@@ -48,6 +48,20 @@ test('performance: index.html preloads every module of the import graph', async 
   assert(!missing.length, `not preloaded: ${missing.join(', ')}`);
 });
 
+test('architecture: ui/ never imports domain/ or infrastructure/; domain/ imports only domain/', async () => {
+  const graph = await moduleGraph();
+  const broken = [];
+  for (const f of graph) {
+    const src = await text(f);
+    for (const m of src.matchAll(/\bfrom\s+'(\.{1,2}\/[^']+)'/g)) {
+      const target = new URL(m[1], `https://x/${f}`).pathname.slice(1);
+      if (f.startsWith('src/ui/') && /^src\/(domain|infrastructure)\//.test(target)) broken.push(`${f} → ${target}`);
+      if (f.startsWith('src/domain/') && !target.startsWith('src/domain/')) broken.push(`${f} → ${target}`);
+    }
+  }
+  assert(!broken.length, `layer rule broken: ${broken.join('; ')}`);
+});
+
 test('i18n: dynamic keys for plans, legs, reasons and route errors exist in both languages', async () => {
   const [en, es, params] = await Promise.all([
     text('i18n/en.json').then(JSON.parse),

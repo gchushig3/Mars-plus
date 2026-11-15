@@ -18,7 +18,7 @@
 | 4 | Pulido de UX, accesibilidad y robustez | Should | 2 h | Claude | ✅ Hecha · falta la prueba con una persona nueva del equipo (4.1) |
 | 5 | Globo 3D y transición | Could | 2 h | Equipo (globo) + Claude (integración) | ✅ Hecha · globo WebGL2 del equipo ([ADR-011](docs/es/adr/011-globo-webgl2-del-equipo.md)) |
 | 5A | Correcciones traídas de la copia de Henry | **Must** | 1 h | Claude + Henry (confirma) | ✅ Hecha · 61/61 pruebas |
-| 5B | Alerta de polvo medida (Mastcam-Z) + mapas de polvo en el globo | Should | 1,5 h | Claude | ⏳ |
+| 5B | Alerta de polvo medida (Mastcam-Z) + mapas de polvo en el globo | Should | 1,5 h | Claude | ✅ Hecha · 71/71 pruebas |
 | 5C | Regreso de emergencia (alerta en plena EVA) | Should | 2,5 h | Claude + equipo de ciencia (supuestos) | ⏳ |
 | 5D | Congelamiento de funcionalidades y verificación pública | **Must** | 0,5 h | Claude | ⏳ |
 | 6 | Demo (7 diapositivas en inglés) | **Must** | 3 h | Equipo de pitch + Claude | ⏳ |
@@ -244,10 +244,10 @@
 **Puerta de las 10:30:** si no está listo, se entrega solo la alerta de Jezero (pasos 1 sin mapas, 3 y 4) y los mapas del globo pasan a trabajo futuro.
 
 **✅ Se considera terminada cuando**
-- [ ] La alerta muestra el τ medido, el umbral y el sol. La tripulación puede forzarla o apagarla.
-- [ ] El globo muestra polvo por estación (o el mapa plano, si no hay WebGL2).
-- [ ] Ningún archivo de `ui/` importa de `domain/` o `infrastructure/`; la prueba de arquitectura lo verifica.
-- [ ] Todas las pruebas en verde.
+- [x] La alerta muestra el τ medido, el umbral y el sol. La tripulación puede forzarla o apagarla. Día típico: τ 0,50 → Plan C a las 09:00. Día de tormenta: τ 1,38 → posponer.
+- [x] El globo muestra polvo por estación, y el mapa plano funciona (`?dust=flat`).
+- [x] Ningún archivo de `ui/` importa de `domain/` o `infrastructure/`; la prueba de arquitectura nueva lo verifica. Los mapas pasan por `application/dust-maps.js`.
+- [x] Todas las pruebas en verde (71/71).
 
 **Commit:** `feat: measured dust alert from Mastcam-Z and dust maps on the globe`
 

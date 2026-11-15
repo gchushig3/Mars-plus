@@ -1,7 +1,7 @@
 // MARS+ 3D globe renderer (WebGL2, no libraries): a ray-traced sphere textured with the Viking MDIM 2.1 mosaic,
 // MOLA elevation (shaded relief + colour ramp) or the USGS global geologic map (Tanaka et al. 2014).
 // Original renderer, shaders and interaction: MARS+ team (AI-assisted). Ported to an ES module with on-demand
-// binary assets and a callback API for the UI by Claude (AI-assisted). Reviewed by the MARS+ team.
+// binary assets and a callback API for the UI by Claude (AI-assisted); dust raster added with Cursor (used by Henry). Reviewed by the MARS+ team.
 
 const ELEVATION_STOPS = [
   [-8.2, '#33405c'], [-4, '#527a8e'], [0, '#acc2a1'], [4, '#d7bb82'],

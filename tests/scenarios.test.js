@@ -1,8 +1,9 @@
-// AI-assisted (Claude). Reviewed by the MARS+ team.
+// AI-assisted (Claude; changes with Cursor, used by Henry). Reviewed by the MARS+ team.
 // The six plan scenarios from the project audit (docs: informe-datos-y-decisiones.md, D13).
 import { test, assert, assertEqual } from './harness.js';
 import { evaluatePlans, defaultPlanOptions } from '../app/src/domain/plans/evaluate.js';
 import { explainEvaluation } from '../app/src/domain/explain/explain.js';
+import { applyDustAlert } from '../app/src/domain/dust/dust.js';
 import { loadSiteFixture } from './fixtures.js';
 
 async function run(overrides) {
@@ -35,10 +36,30 @@ test('scenario 3 · worst recorded sol, 210 min → Plan A at 10:00 (09:00 too c
   assertEqual(e.results.find((r) => r.planId === 'A' && r.departure === 9).reason.code, 'tooCold');
 });
 
-test('scenario 4 · storm-day weather without alert → Plan A at 10:00', async () => {
-  const e = await run({ limitMin: 210, weatherScenario: 'storm' });
+// The app runs every evaluation through the measured dust alert (use-cases.js → applyDustAlert).
+async function runWithMeasuredDust(overrides) {
+  const f = await loadSiteFixture();
+  const catalog = await fetch('../app/data/dust/catalog.json').then((r) => r.json());
+  const options = applyDustAlert(f.params, catalog.jezeroTau, { ...defaultPlanOptions(f.params), ...overrides }).options;
+  return evaluatePlans({ params: f.params, legs: f.legs, stops: f.stops, weather: f.weather, radiation: f.radiation }, options);
+}
+
+test('scenario 4 · storm day: measured Mastcam-Z τ ≥ 1.0 turns the alert on → postpone', async () => {
+  const e = await runWithMeasuredDust({ limitMin: 210, weatherScenario: 'storm' });
+  assertEqual(e.recommended, null);
+  assertEqual(e.closest.reason.code, 'dustStorm');
+});
+
+test('scenario 4b · storm day with the alert switched off by the crew → Plan A at 10:00', async () => {
+  const e = await runWithMeasuredDust({ limitMin: 210, weatherScenario: 'storm', dustAlertOverride: false });
   assertEqual(e.recommended?.planId, 'A');
   assertEqual(e.recommended?.departure, 10);
+});
+
+test('scenario 1b · typical sol: measured background dust stays below the alert → still Plan C at 09:00', async () => {
+  const e = await runWithMeasuredDust({});
+  assertEqual(e.recommended?.planId, 'C');
+  assertEqual(e.recommended?.departure, 9);
 });
 
 test('scenario 5 · dust-storm alert → postpone (filter 4)', async () => {

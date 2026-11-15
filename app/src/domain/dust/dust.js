@@ -1,3 +1,4 @@
+// AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.
 // Dust opacity and the seasonal maps. Numbers come from the published files
 // (see app/data/dust/catalog.json). This module does not fill missing data.
 

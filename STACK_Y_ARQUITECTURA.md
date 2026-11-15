@@ -21,6 +21,8 @@
 | Parámetros del modelo | `config/model-parameters.json` (**fuente única**: la leen el pipeline y la app) | — | `config/` |
 | Pruebas | Página propia de pruebas en el navegador (sin dependencias) | — | `tests/` |
 | Servidor local | `tools/dev-server.ps1` (HttpListener) | — | `tools/` |
+| Productos de polvo *(fuera del pipeline)* | **Python 3** + `netCDF4` + `numpy`, una sola vez; el resultado ya está publicado en `app/data/dust/` | — | `tools/dust/build_dust_products.py` |
+| Pruebas en GitHub | **Node 22** corre `tests/run.mjs` en GitHub Actions antes de publicar (no hace falta instalarlo en local) | 22 | `.github/workflows/pages.yml` |
 | Versiones | Git + GitHub | — | raíz |
 | Publicación | **GitHub Pages** (workflow incluido) **o Netlify** (`netlify.toml` incluido). Se publica la carpeta `app/` | — | `.github/workflows/pages.yml`, `netlify.toml` |
 | Demo | Google Slides (7 diapositivas, EN) | — | `demo/` |
@@ -113,7 +115,7 @@ martian-map/                       (repositorio: mars-plus)
 │   ├── 03-model/RouteEngine.cs    ← motor oficial de rutas + ImageWriter
 │   └── 04-export/                 ← export-web-data.ps1 (app/data + manifest; copia config/) · export-globe-assets.ps1 (app/assets/globe)
 ├── tests/   index.html · run.mjs · harness.js · fixtures.js · domain/scenarios/parity/validity/ui/globe/criteria/session/assets.test.js
-├── tools/   dev-server.ps1
+├── tools/   dev-server.ps1 · dust/build_dust_products.py (Python, opcional: regenera app/data/dust)
 ├── data/                          ← FUERA de git
 │   ├── raw/                       ← descargas originales: dtm, ortho, meda, rad, geology, thermal, rover, globe (~1,7 GB)
 │   └── interim/                   ← productos intermedios: geology, meda, rad, rover
