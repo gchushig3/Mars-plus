@@ -1,0 +1,33 @@
+/* AI-assisted (Claude). Reviewed by the MARS+ team.
+   MARS+ design tokens. Terracotta only for accents/large text (contrast ~3:1 on the dark background). */
+:root {
+  --mars-terracotta: #a2453e;
+  --mars-taupe: #c2a198;
+  --mars-warm-gray: #7d6d6d;
+  --mars-golden: #cc8e37;
+  --mars-peach: #e0a98b;
+
+  --bg: #14110f;
+  --surface: #1c1715;
+  --surface-2: #251f1c;
+  --line: #3a302b;
+  --text: #efe6e1;
+  --muted: #b9aaa2;
+  --accent: var(--mars-peach);
+
+  --route-out: #5ec8f2;
+  --route-back: var(--mars-golden);
+  --route-user: #f4f1ee;
+  --route-rover: #c792ea;
+  --ok: #7bd389;
+  --bad: #ff8a80;
+  --warn: #f3c969;
+  --f1: #9e8f88; --f2: #c792ea; --f3: #f3c969; --f4: #5ec8f2; --f5: #ff8a80;
+
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --radius: 8px;
+  --gap: 12px;
+  --sidebar: 440px;
+  color-scheme: dark;
+}

@@ -1,0 +1,27 @@
+/* AI-assisted (Claude). Reviewed by the MARS+ team. */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 14px/1.5 var(--font-sans); }
+h1, h2, h3 { margin: 0; font-weight: 600; }
+button, select, input { font: inherit; color: inherit; }
+a { color: var(--accent); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); min-height: 56px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, var(--mars-peach), var(--mars-terracotta) 60%, #5a221e); border: 2px solid var(--mars-golden); flex: none; }
+.brand-name { font-size: 20px; letter-spacing: .04em; }
+.brand-name b { color: var(--mars-golden); }
+.brand-sub { color: var(--muted); font-size: 12px; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--sidebar); height: calc(100% - 57px); }
+#map { height: 100%; background: #000; }
+.sidebar { overflow-y: auto; border-left: 1px solid var(--line); padding: 4px 16px 32px; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; height: auto; }
+  #map { height: 60vh; }
+  .sidebar { border-left: 0; border-top: 1px solid var(--line); padding: 4px 16px 32px; }
+}

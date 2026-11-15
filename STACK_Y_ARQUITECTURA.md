@@ -1,0 +1,181 @@
+﻿# MARS+ — Stack tecnológico y arquitectura (documento base de desarrollo)
+
+> Este es el documento de referencia para programar el MVP. Si una decisión no aparece aquí, se sigue lo que dice [`arquitectura-mvp.md`](arquitectura-mvp.md), donde están las fases, los ADR y la migración.
+> **Objetivo del MVP:** un sitio **publicado y funcional** que planifique una EVA entre Octavia E. Butler Landing e Issole (Jezero). Debe calcular rutas de menor esfuerzo, evaluar qué plan es viable según el terreno, el tiempo, el clima y la radiación, y **explicar por qué**.
+
+---
+
+## 1. Stack
+
+| Capa | Tecnología | Versión | Dónde vive |
+|---|---|---|---|
+| Lenguaje | JavaScript ES2020, **módulos nativos**, tipos con JSDoc | — | `app/src/` |
+| Mapa local | **Leaflet** (CDN cdnjs, versión fija + SRI) | 1.9.4 | `app/src/infrastructure/map/` |
+| Teselas | **Mars Trek WMTS** (NASA/JPL): HiRISE 25 cm, CTX 6 m, THEMIS 100 m | — | `mars-trek-layers.js` |
+| Globo 3D *(opcional, después de publicar)* | **CesiumJS** (CDN, versión fija) | se fija al implementarlo | `app/src/infrastructure/globe/` |
+| Cálculo de rutas | Algoritmo A* propio en un **Web Worker** | — | `domain/routing/` + `infrastructure/routing/` |
+| Gráficas | SVG propio | — | `app/src/ui/charts/` |
+| Estilos | CSS con variables (paleta MARS+), tema oscuro | — | `app/styles/` |
+| Idiomas | JSON ES/EN + `i18n.js` | — | `app/i18n/` |
+| Pipeline de datos | **PowerShell 5.1 + C# (.NET 4.8)** | ya instalados | `pipeline/` |
+| Parámetros del modelo | `config/model-parameters.json` (**fuente única**: la leen el pipeline y la app) | — | `config/` |
+| Pruebas | Página propia de pruebas en el navegador (sin dependencias) | — | `tests/` |
+| Servidor local | `tools/dev-server.ps1` (HttpListener) | — | `tools/` |
+| Versiones | Git + GitHub | — | raíz |
+| Publicación | **GitHub Pages** (workflow incluido) **o Netlify** (`netlify.toml` incluido). Se publica la carpeta `app/` | — | `.github/workflows/pages.yml`, `netlify.toml` |
+| Demo | Google Slides (7 diapositivas, EN) | — | `demo/` |
+
+**Fuera del stack, por decisión:** React/Vite/TypeScript (requieren Node y compilación), MapLibre (solo Web Mercator), backend o base de datos, asistente con IA, CRISM y la PDS API dentro de la app.
+
+---
+
+## 2. Arquitectura
+
+### 2.1 Capas y regla de dependencias
+```
+ui/  ──▶  application/  ──▶  domain/  ◀──  infrastructure/
+                 │                               ▲
+                 └──── puertos (contratos) ──────┘
+main.js = raíz de composición: crea los adaptadores y los conecta
+```
+
+| Capa | Hace | Puede importar | Prohibido |
+|---|---|---|---|
+| `domain/` | Reglas de la misión: costo del terreno, A*, estadísticas de ruta, tareas, filtros, clima, dosis, explicación | solo `domain/` | DOM, `window`, `fetch`, Leaflet, Cesium |
+| `application/` | Casos de uso, estado observable, máquina de estados, puertos | `domain/` | DOM, Leaflet, Cesium |
+| `infrastructure/` | Adaptadores: datos estáticos, Leaflet, Worker de rutas, teselas de Mars Trek | `domain/`, `application/ports.js` | `ui/` |
+| `ui/` | Vistas, paneles, gráficas, idioma | `application/`, `shared/` | `domain/`, `infrastructure/` |
+
+### 2.2 Estados
+`LOCAL` (mapa + ruta oficial) → `ROUTE` (ruta A→B calculada). `GLOBE` y `TRANSITION` se agregan con el globo opcional; si no existen, la app arranca en `LOCAL`.
+
+### 2.3 Cadena de filtros (núcleo del dominio)
+Planes **A** (foto + muestra), **C** (solo muestra) y **B** (solo documentación), probados en cada hora de salida y pasados por estos filtros en orden:
+1. **Terreno:** hay ruta a cada parada y de vuelta.
+2. **Ciencia:** la parada tiene espacio de trabajo seguro.
+3. **Tiempo:** esclusa + viajes + trabajo + reserva ≤ límite.
+4. **Clima:** alerta de polvo; suelo ≥ mínimo y viento ≤ máximo en cada hora afuera.
+5. **Radiación:** alerta de evento solar; dosis = tasa × tiempo.
+
+Un plan que falla un filtro se descarta con su **motivo estructurado** (código + valores), y la UI lo traduce. Ningún filtro compensa a otro.
+
+---
+
+## 3. Estructura de carpetas
+
+```
+martian-map/                       (repositorio: mars-plus)
+├── STACK_Y_ARQUITECTURA.md        ← este documento
+├── README.md                      ← EN, para jueces (incluye "AI assistance")
+├── ATTRIBUTION.md                 ← créditos y licencias de datos y librerías
+├── .gitignore · .env.example · netlify.toml
+├── .github/workflows/pages.yml    ← publica app/ en GitHub Pages
+├── config/
+│   ├── model-parameters.json      ← parámetros con su fuente
+│   └── site.jezero-issole.json    ← puntos, bbox, capas, radio de Marte
+├── app/                           ← SE PUBLICA TAL CUAL
+│   ├── index.html
+│   ├── styles/  tokens.css · base.css · components.css
+│   ├── i18n/    es.json · en.json
+│   ├── assets/  brand/ · rover/
+│   ├── data/sites/jezero-issole/  ← GENERADO por pipeline/04-export (no se edita a mano)
+│   └── src/
+│       ├── main.js
+│       ├── domain/
+│       │   ├── terrain/   grid.js · cost.js
+│       │   ├── routing/   min-heap.js · astar.js · route-stats.js
+│       │   ├── plans/     tasks.js · filters.js · evaluate.js
+│       │   ├── weather/   window.js
+│       │   ├── radiation/ dose.js
+│       │   └── explain/   explain.js
+│       ├── application/   ports.js · store.js · use-cases.js
+│       ├── infrastructure/
+│       │   ├── data/      static-site-repository.js
+│       │   ├── routing/   route-core.js · route-worker.js · worker-route-solver.js (con respaldo sin Worker)
+│       │   └── map/       leaflet-map-view.js · mars-trek-layers.js
+│       ├── ui/
+│       │   ├── i18n.js
+│       │   ├── charts/    elevation-profile.js · weather-chart.js · dose-chart.js
+│       │   └── panels/    common.js (textos de motivos y explicación) · mission-panel.js · route-panel.js
+│       │                  plans-panel.js (veredicto + explicación + grilla) · conditions-panels.js (clima, radiación)
+│       │                  info-panels.js (geología, supuestos, fuentes)
+│       └── shared/        format.js · dom.js
+├── pipeline/
+│   ├── run-pipeline.ps1           ← orquestador
+│   ├── common/config.ps1          ← lee config/ y .env
+│   ├── 03-model/RouteEngine.cs    ← motor oficial (lee los parámetros del config)
+│   └── 04-export/export-web-data.ps1   (genera app/data + manifest; copia config/ a app/data)
+├── tests/   index.html · harness.js · fixtures.js · domain/scenarios/parity.test.js   (18 pruebas)
+├── tools/   dev-server.ps1
+├── data/    raw · interim             ← FUERA de git (~2 GB)
+├── docs/    es/ (equipo) · en/ (jueces)
+├── web/ · scripts/                    ← LEGADO (prototipo v1). No se modifican; se archivan al terminar la migración
+└── demo/
+```
+
+---
+
+## 4. Contratos de datos (`app/data/sites/jezero-issole/`)
+
+| Archivo | Contenido |
+|---|---|
+| `terrain-2m.json` | `rows`, `cols`, `res`, `originX`, `originY`, `marsRadius`, y la descripción de cada banda del binario (tipo, escala, desplazamiento) |
+| `terrain-2m.bin` | Bandas por celda: elevación (Uint16, cm sobre el mínimo; 65535 = sin dato), pendiente (Uint8, °×4), rugosidad (Uint8, m×200), dunas grandes y pequeñas (Uint8, fracción×255), rocas (Uint8, fracción×255) |
+| `routes.json` | Rutas oficiales (ida y vuelta, 1/2/5 m, con estadísticas) y ruta real del rover |
+| `stops.json` | Paradas de observación y muestreo, con su criterio |
+| `geology.geojson` | Unidades de Stack et al. 2020 recortadas |
+| `weather-issole.json` | 24 h × escenario típico, peor y tormenta (MEDA, sols 286–339) |
+| `radiation-oct2021.json` | Fondo, evento y serie (RAD, detector E) |
+| `overlays/*.png` + `overlays.json` | Costo, pendiente y ortoimagen de respaldo (2 m), con sus límites geográficos |
+| `manifest.json` | SHA-256, tamaño, fuente y licencia de cada archivo, y la versión de los parámetros |
+
+**Regla:** la app **calcula el costo** a partir de las bandas crudas y de `model-parameters.json`, igual que el motor C#. Así un cambio de parámetros se refleja en los dos lados, y una prueba de paridad lo verifica.
+
+---
+
+## 5. Convenciones
+
+- **Código, carpetas e identificadores en inglés.** Documentación del equipo en español; la de los jueces, en inglés.
+- **Módulos ES** con `import`/`export`, sin variables globales. Funciones puras en `domain/`.
+- **Textos visibles solo desde `i18n/*.json`**, nunca escritos directamente en el código de la UI.
+- **Cada número que se muestra lleva su fuente o supuesto** en el panel de supuestos.
+- **Encabezado en cada archivo** generado con asistencia de IA: `// AI-assisted (Claude). Reviewed by the MARS+ team.` (requisito de Space Apps).
+- **Commits** pequeños en `main`: `feat:`, `fix:`, `data:`, `test:`, `docs:`. Etiquetas `v0.1-preliminar` y `v1.0-envio`.
+- **PowerShell:** `Set-StrictMode -Version Latest` y nombres que no choquen entre mayúsculas y minúsculas (lección de la auditoría).
+
+---
+
+## 6. Cómo se trabaja
+
+```powershell
+# 1. Regenerar los datos de la app (después de cambiar config/ o data/)
+powershell -ExecutionPolicy Bypass -File martian-map\pipeline\run-pipeline.ps1
+
+# 2. Servidor local (sirve app/ y tests/)
+powershell -ExecutionPolicy Bypass -File martian-map\tools\dev-server.ps1
+#    App:     http://localhost:8765/app/
+#    Pruebas: http://localhost:8765/tests/
+```
+
+**Puerta de calidad antes de cada publicación:**
+1. Todas las pruebas en verde, incluida la paridad JS↔C# (<1%).
+2. La consola de `/app/` sin errores.
+3. Con el idioma en EN no queda ningún texto en español.
+4. Prueba de humo en la URL pública: ventana privada, otro navegador y el móvil.
+
+**Presupuestos:** carga inicial <3 MB sin contar teselas; ruta A→B <0,5 s; la interfaz nunca se bloquea.
+
+**Seguridad:** ningún secreto en `app/`. La clave de la NASA solo vive en `.env` y la usa el pipeline.
+
+---
+
+## 7. Definición de "terminado" del MVP
+- [ ] URL pública HTTPS sin login que carga en <5 s.
+- [ ] Mapa con HiRISE, capas de costo, pendiente y geología, ruta oficial, ruta del rover y paradas.
+- [ ] Ruta A→B dentro de la zona del piloto, con estadísticas y perfil.
+- [ ] Panel de planes con escenarios (típico, peor, tormenta, evento solar), límite, ritmo y tareas, más la explicación del resultado.
+- [ ] Clima y radiación con sus gráficas y fuentes.
+- [ ] Panel de supuestos y límites.
+- [ ] ES/EN completo.
+- [ ] Pruebas en verde.
+- [ ] README en inglés con References y AI assistance.

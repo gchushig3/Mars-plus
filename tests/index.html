@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MARS+ tests</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 16px; background: #14110f; color: #efe6e1; font: 14px/1.5 system-ui, sans-serif; }
+  h1 { font-size: 18px; font-weight: 600; }
+  ul { list-style: none; padding: 0; }
+  li { padding: 4px 0; border-bottom: 1px solid #2c2522; }
+  .ok { color: #7bd389; } .bad { color: #ff8a80; }
+</style>
+</head>
+<body>
+<h1>MARS+ — domain, scenario and parity tests</h1>
+<div id="out"><p>Running…</p></div>
+<script type="module">
+  import { run } from './harness.js';
+  import './domain.test.js';
+  import './scenarios.test.js';
+  import './parity.test.js';
+  const out = document.getElementById('out');
+  out.textContent = '';
+  run(out);
+</script>
+</body>
+</html>

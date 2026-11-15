@@ -1,0 +1,79 @@
+﻿{
+    "site":  "jezero-issole",
+    "generated":  "2026-11-14T20:42:05",
+    "paramsVersion":  "2.0.0",
+    "files":  [
+                  {
+                      "file":  "geology.geojson",
+                      "bytes":  144879,
+                      "sha256":  "6e3712c0ee75fda3accb7c29b434e26da69c07aad7d1a67c6915f4947f7340d5",
+                      "source":  "Stack et al. 2020 (CC BY 4.0)"
+                  },
+                  {
+                      "file":  "overlays.json",
+                      "bytes":  1258,
+                      "sha256":  "ccd505205c37c095c788113c7493b0db8c5359d73c600053354c1dee8f6314a8",
+                      "source":  "Derived by MARS+ pipeline"
+                  },
+                  {
+                      "file":  "radiation-oct2021.json",
+                      "bytes":  31031,
+                      "sha256":  "2358c6c89dabdd86f8d37d86f900e3d8dfa9009d883d6d33bc357aa5a979bce7",
+                      "source":  "MSL RAD, NASA PDS PPI"
+                  },
+                  {
+                      "file":  "routes.json",
+                      "bytes":  216819,
+                      "sha256":  "6baf9d52d3bdf03e5c6b4ea519035b7941c537708911124c1533be8b1da303bf",
+                      "source":  "MARS+ route engine (pipeline/03-model/RouteEngine.cs); rover path: NASA MMGIS M20 waypoints"
+                  },
+                  {
+                      "file":  "site.json",
+                      "bytes":  1543,
+                      "sha256":  "7655b43491f6b665854afb94b5491d026f9194bf95f531c725dac1266ea25ac3",
+                      "source":  "Derived by MARS+ pipeline"
+                  },
+                  {
+                      "file":  "stops.json",
+                      "bytes":  378,
+                      "sha256":  "0c518a13d5ff2b3a9d13daeac416ab2ddfa2bcf3f2f04c35a38e314049da95f8",
+                      "source":  "MARS+ workspace search around Robine/Malay rover positions (NASA MMGIS M20)"
+                  },
+                  {
+                      "file":  "terrain-2m.bin",
+                      "bytes":  1574580,
+                      "sha256":  "6d75326827e4799ce0ef78a2d6be35907554a885b649b8b0b6c67110fa276eba",
+                      "source":  "HiRISE 1 m DTM (USGS Astrogeology, Mars 2020 TRN) + HiRISE 25 cm orthoimage + Stack et al. 2020"
+                  },
+                  {
+                      "file":  "terrain-2m.json",
+                      "bytes":  2212,
+                      "sha256":  "a8049574a437c9ced34223caf4ba912eeb7cb008eceded9cf93d37e2d561b46c",
+                      "source":  "Derived by MARS+ pipeline"
+                  },
+                  {
+                      "file":  "weather-issole.json",
+                      "bytes":  3835,
+                      "sha256":  "c69e25dc255437442854bf636971efb07ef1e3aef92ed4ea4adc62d9787a8806",
+                      "source":  "MEDA, NASA PDS Atmospheres"
+                  },
+                  {
+                      "file":  "overlays/base-ortho-2m.png",
+                      "bytes":  287004,
+                      "sha256":  "973d72cd6b369381f7661d320f05f6c49f84268f55cd852a8be8b6f1d683aff0",
+                      "source":  "HiRISE orthomosaic (NASA/JPL/University of Arizona; USGS Mars 2020 TRN)"
+                  },
+                  {
+                      "file":  "overlays/cost-2m.png",
+                      "bytes":  235158,
+                      "sha256":  "fe0902b29e40c329fa4169b4e78e033a9309197e2b08d99b87eff8d5a09221d0",
+                      "source":  "Derived by MARS+ pipeline"
+                  },
+                  {
+                      "file":  "overlays/slope-2m.png",
+                      "bytes":  46067,
+                      "sha256":  "1b43e4738213f33f9c63cba8c9b10ed5e0cb64701454b5b9dd15de54388a956b",
+                      "source":  "Derived by MARS+ pipeline"
+                  }
+              ]
+}

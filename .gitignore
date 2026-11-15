@@ -1,0 +1,11 @@
+# Raw and intermediate data (~2 GB) — regenerate with pipeline/
+/data/
+# Secrets
+.env
+# Local tool history
+.Rhistory
+.RData
+# OS / editor
+Thumbs.db
+.DS_Store
+*.tmp

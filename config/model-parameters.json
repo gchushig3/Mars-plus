@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "description": "Single source of truth for the MARS+ EVA model. Read by pipeline/ (C#) and app/ (JS).",
+  "walking": {
+    "toblerFactor": 0.5,
+    "source": "Tobler (1993) hiking function scaled x0.5 for a pressurized suit: ~2.5 km/h on flat ground (scenario assumption)"
+  },
+  "pace": {
+    "slow": 1.4,
+    "normal": 1.0,
+    "fast": 0.8,
+    "source": "Travel-time multipliers for crew pace (scenario assumption)"
+  },
+  "terrain": {
+    "slopeBlockDeg": 20,
+    "roughnessRefM": 0.25,
+    "largeDuneExtra": 1.0,
+    "smallDuneExtra": 0.3,
+    "rockMult": 6.0,
+    "rockBlockFraction": 0.12,
+    "sources": {
+      "slope": "HiRISE 1 m DTM (USGS Mars 2020 TRN); cells steeper than 20 deg are blocked (scenario assumption)",
+      "sand": "Walking on sand costs 2.1-2.7x the energy of firm ground (Lejeune et al. 1998, J. Exp. Biol. 201:2071); aeolian units from Stack et al. 2020",
+      "rocks": "Shadow fraction in the 25 cm HiRISE orthoimage (shadow-based rock detection principle, Golombek et al.)"
+    }
+  },
+  "rockDetection": {
+    "windowPx": 21,
+    "shadowThreshold": 0.65
+  },
+  "eva": {
+    "airlockMin": 20,
+    "reserveMin": 15,
+    "limitMin": 180,
+    "departureHours": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+    "source": "Scenario assumptions for the pilot; adjustable in the app"
+  },
+  "tasks": {
+    "photo": { "minutes": 25, "stop": "observation" },
+    "sample": { "minutes": 50, "stop": "sampling" }
+  },
+  "plans": [
+    { "id": "A", "tasks": ["photo", "sample"], "scienceValue": 3 },
+    { "id": "C", "tasks": ["sample"], "scienceValue": 2 },
+    { "id": "B", "tasks": ["photo"], "scienceValue": 1 }
+  ],
+  "weather": {
+    "minGroundTempC": -20,
+    "maxMeanWindMs": 8,
+    "source": "Scenario thresholds applied to MEDA ground temperature and mean wind (Perseverance, sols 286-339)"
+  },
+  "radiation": {
+    "detector": "E",
+    "maxDoseUGyPerEva": 500,
+    "source": "MSL RAD dose rate (Gale crater), Oct 2021; Jezero is higher than Gale so local dose would be somewhat larger"
+  }
+}

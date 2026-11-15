@@ -1,0 +1,9 @@
+# Netlify deploy (alternative to GitHub Pages): publishes app/ as a static site, no build step.
+[build]
+  publish = "app"
+  command = ""
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"

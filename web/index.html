@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Martian Map · Issole EVA</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --text:#e8e6e3; --muted:#9aa0aa;
+  --mars:#d9734a; --ida:#4fc3f7; --vuelta:#ffd166; --recta:#9aa0aa; --rover:#c084fc;
+  --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line)}
+header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.02em}
+header h1 span{color:var(--mars)}
+header p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.lang button{background:none;border:1px solid var(--line);color:var(--muted);padding:4px 10px;cursor:pointer;font:inherit}
+.lang button.on{color:var(--text);border-color:var(--mars)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:calc(100% - 58px)}
+#map{height:100%;background:#000}
+aside{overflow-y:auto;border-left:1px solid var(--line);padding:12px 14px 40px}
+section{border-bottom:1px solid var(--line);padding:12px 0}
+section:last-child{border-bottom:0}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.mono{font-family:"IBM Plex Mono",monospace}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:4px 2px;text-align:right;border-bottom:1px solid var(--line)}
+td:first-child,th:first-child{text-align:left}
+th{color:var(--muted);font-weight:500;font-size:12px}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.row label{color:var(--muted);font-size:13px}
+select,input[type=number]{background:var(--panel);color:var(--text);border:1px solid var(--line);padding:4px 6px;font:inherit}
+input[type=number]{width:64px}
+.seg{display:flex;border:1px solid var(--line)}
+.seg button{background:none;border:0;color:var(--muted);padding:4px 10px;cursor:pointer;font:inherit}
+.seg button.on{background:var(--panel);color:var(--text)}
+.badge{display:inline-block;padding:2px 8px;font-size:12px;border:1px solid}
+.ok{color:var(--ok);border-color:var(--ok)} .warn{color:var(--warn);border-color:var(--warn)} .bad{color:var(--bad);border-color:var(--bad)}
+.bar{display:flex;height:22px;margin:8px 0 4px;border:1px solid var(--line)}
+.bar div{height:100%;font-size:11px;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;color:#0f1115}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
+.legend b{display:inline-block;width:10px;height:10px;vertical-align:middle;margin-right:4px}
+.note{color:var(--muted);font-size:12px;line-height:1.45;margin:6px 0 0}
+.verdict{font-size:15px;font-weight:600;margin:6px 0}
+svg text{fill:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:10px}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--text)}
+.leaflet-popup-content{font-size:13px;line-height:1.45}
+.leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
+.leaflet-control-layers{background:var(--panel);color:var(--text);border:1px solid var(--line)}
+@media (max-width:900px){main{grid-template-columns:1fr;grid-template-rows:55vh auto;height:auto}#map{height:55vh}aside{border-left:0}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Martian Map · <span>Octavia E. Butler Landing ↔ Issole</span></h1>
+    <p data-t="sub"></p>
+  </div>
+  <div class="lang"><button id="es" class="on">ES</button><button id="en">EN</button></div>
+</header>
+<main>
+  <div id="map"></div>
+  <aside>
+    <section>
+      <h2 data-t="hRoute"></h2>
+      <div class="row"><label data-t="res"></label>
+        <div class="seg" id="resSeg"><button data-r="1">1 m</button><button data-r="2" class="on">2 m</button><button data-r="5">5 m</button></div>
+        <span id="stable" class="badge"></span>
+      </div>
+      <table id="routeTable"></table>
+      <div class="legend">
+        <span><i style="background:var(--ida)"></i><span data-t="lgIda"></span></span>
+        <span><i style="background:var(--vuelta)"></i><span data-t="lgVuelta"></span></span>
+        <span><i style="background:var(--recta)"></i><span data-t="lgRecta"></span></span>
+        <span><i style="background:var(--rover)"></i><span data-t="lgRover"></span></span>
+      </div>
+      <svg id="profile" viewBox="0 0 370 120" width="100%"></svg>
+      <p class="note" data-t="routeNote"></p>
+    </section>
+
+    <section>
+      <h2 data-t="hBudget"></h2>
+      <div class="row"><label data-t="depart"></label><select id="dep"></select>
+        <label data-t="pace"></label>
+        <select id="pace"><option value="0.35" data-t="slow"></option><option value="0.5" selected data-t="normal"></option><option value="0.65" data-t="fast"></option></select>
+      </div>
+      <div class="row"><label><input type="checkbox" id="tPhoto" checked> <span data-t="tPhoto"></span></label></div>
+      <div class="row"><label><input type="checkbox" id="tSample" checked> <span data-t="tSample"></span></label></div>
+      <div class="row"><label data-t="reserve"></label><input type="number" id="res" value="15" min="0">
+        <label data-t="limit"></label><input type="number" id="lim" value="180" min="30"></div>
+      <div class="bar" id="bar"></div>
+      <div class="verdict" id="verdict"></div>
+      <p class="note" id="budgetDetail"></p>
+    </section>
+
+    <section>
+      <h2 data-t="hWeather"></h2>
+      <svg id="meda" viewBox="0 0 370 130" width="100%"></svg>
+      <div class="verdict" id="best"></div>
+      <p class="note" data-t="medaNote"></p>
+    </section>
+
+    <section>
+      <h2 data-t="hRad"></h2>
+      <div class="row"><label><input type="checkbox" id="sep"> <span data-t="sep"></span></label></div>
+      <div class="verdict" id="rad"></div>
+      <p class="note" data-t="radNote"></p>
+    </section>
+
+    <section>
+      <h2 data-t="hGeo"></h2>
+      <table>
+        <tr><th data-t="zone"></th><th data-t="rock"></th></tr>
+        <tr><td>Landing · Máaz</td><td data-t="geoMaaz" style="text-align:left"></td></tr>
+        <tr><td>Issole · Séítah</td><td data-t="geoSeitah" style="text-align:left"></td></tr>
+      </table>
+      <div class="legend" style="margin-top:10px">
+        <span><b style="background:rgba(250,204,21,.45)"></b>5–10°</span>
+        <span><b style="background:rgba(249,115,22,.6)"></b>10–15°</span>
+        <span><b style="background:rgba(220,38,38,.7)"></b>15–20°</span>
+        <span><b style="background:rgba(127,29,29,.85)"></b>&gt;20°</span>
+      </div>
+      <p class="note" data-t="geoNote"></p>
+    </section>
+
+    <section>
+      <h2 data-t="hSources"></h2>
+      <p class="note" data-t="sources"></p>
+    </section>
+  </aside>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="data/rutas.js"></script>
+<script src="data/trayecto.js"></script>
+<script src="data/meda_issole.js"></script>
+<script src="data/pendiente_bounds.js"></script>
+<script>
+const T = {
+ es:{
+  sub:"Piloto de planificación de EVA en el hábitat · cráter Jezero, Marte · NASA Space Apps 2026",
+  hRoute:"Ruta de menor esfuerzo", res:"Resolución", stable:"Corredor estable 1–5 m", unstable:"Corredor cambia con la resolución",
+  route:"Ruta", dist:"Distancia", time:"Tiempo*", up:"Sube", down:"Baja", maxs:"Pend. máx",
+  rIda:"Ida óptima", rVuelta:"Vuelta óptima", rRecta:"Ida en línea recta",
+  lgIda:"Ida", lgVuelta:"Vuelta", lgRecta:"Línea recta", lgRover:"Ruta real de Perseverance",
+  routeNote:"*Tiempo a ritmo normal (~2,5 km/h en llano, función de Tobler escalada para traje). El modelo minimiza tiempo según pendiente en el sentido de marcha y rugosidad; bloquea celdas con pendiente >20°. Las distancias sobre cuadrícula son ~4% mayores que la recta geométrica (886 m). El DTM de 1 m no resuelve rocas menores a ~1 m: revisar la ortoimagen HiRISE en los tramos críticos.",
+  hBudget:"Presupuesto de tiempo", depart:"Salida (hora solar local)", pace:"Ritmo", slow:"Lento", normal:"Normal", fast:"Rápido",
+  tPhoto:"Fotografiar y describir el afloramiento (25 min)", tSample:"Tomar una muestra (50 min)",
+  reserve:"Reserva (min)", limit:"Límite EVA (min)",
+  bIda:"Ida", bWork:"Trabajo", bVuelta:"Vuelta", bLock:"Esclusa", bRes:"Reserva",
+  ok:"✓ La salida cabe en el límite", over:"✗ Excede el límite por {m} min",
+  detail:"Total {t} min · regreso a las {h} · incluye 20 min de esclusa (salida + ingreso).",
+  wxBad:" · ⚠ Fuera de la ventana térmica recomendada",
+  hWeather:"Mejor hora para salir (MEDA, sol 286 en Issole)",
+  best:"Ventana recomendada: salir a las {h}:00 (suelo ≥ {t} °C, viento medio ≤ {w} m/s)", noBest:"Ninguna ventana cumple con la duración actual",
+  medaNote:"Temperatura del suelo (línea naranja) estimada con la irradiancia infrarroja ascendente de TIRS (emisividad 0,99); viento horizontal medio (barras). Huecos = horas sin medición. Criterio del escenario: suelo ≥ −20 °C y viento medio ≤ 8 m/s durante toda la salida.",
+  hRad:"Exposición a radiación", sep:"Simular tormenta de partículas solares activa (alerta DONKI)",
+  rad:"Dosis estimada de la salida: {d} mSv ({p}% de un día en superficie)", radSep:"✗ No salir: permanecer en el refugio hasta que pase el evento",
+  radNote:"Referencia: 0,64 mSv/día medidos por RAD (Curiosity, cráter Gale), casi todo por rayos cósmicos galácticos, que son uniformes en esta escala. Por eso, menos tiempo afuera = menos dosis. La dosis para una persona en Jezero requiere un modelo local de blindaje. Las alertas de tormentas solares vienen de DONKI (api.nasa.gov), medidas sobre todo desde la Tierra.",
+  hGeo:"Geología y muestras", zone:"Zona", rock:"Roca y suelo",
+  geoMaaz:"Llanura de bajo relieve con rocas planas ('pavers', <30 cm); a >100 m, bloques oscuros y crestas de 1–3 m; ondulaciones de arena de hasta ~20 cm.",
+  geoSeitah:"Cumulado de olivino con augita y plagioclasa. Carbonatos y sulfatos hidratados: indicios de alteración por agua. Muestras Robine (sol 298) y Malay (sol 337).",
+  geoNote:"Capa de pendiente calculada con el DTM HiRISE de 1 m (USGS), agregado a 2 m. Fuente geológica: Bell et al. 2022, Sci. Adv.; catálogo de muestras NASA.",
+  hSources:"Fuentes",
+  sources:"Ortoimágenes HiRISE 25 cm y CTX 6 m: Mars Trek (NASA/JPL). DTM HiRISE 1 m: USGS Astrogeology (Mars 2020 TRN). Ruta y posiciones del rover: NASA MMGIS M20. Clima: MEDA, PDS Atmospheres (DOI 10.17189/1522849). Radiación: RAD/MSL. Clima espacial: DONKI, api.nasa.gov.",
+  pLanding:"<b>Octavia E. Butler Landing</b><br>Base de la tripulación · Formación Máaz<br>18.4446 °N, 77.4509 °E · −2569,9 m",
+  pIssole:"<b>Afloramiento Issole</b><br>Formación Séítah · cumulado de olivino<br>Carbonatos y sulfatos hidratados (indicios de agua)<br>Muestras: Robine (sol 298), Malay (sol 337)<br>18.43266 °N, 77.44137 °E · −2574,4 m",
+  lHirise:"HiRISE 25 cm (Mars Trek)", lCtx:"CTX 6 m (Mars Trek)", lThemis:"THEMIS IR noche 100 m", lSlope:"Pendiente (DTM 1 m → 2 m)", lRover:"Ruta de Perseverance",
+  pDist:"Distancia (m)", pElev:"Elevación (m)"
+ },
+ en:{
+  sub:"Habitat EVA planning pilot · Jezero crater, Mars · NASA Space Apps 2026",
+  hRoute:"Least-effort route", res:"Resolution", stable:"Corridor stable 1–5 m", unstable:"Corridor changes with resolution",
+  route:"Route", dist:"Distance", time:"Time*", up:"Climb", down:"Descent", maxs:"Max slope",
+  rIda:"Optimal outbound", rVuelta:"Optimal return", rRecta:"Straight-line outbound",
+  lgIda:"Outbound", lgVuelta:"Return", lgRecta:"Straight line", lgRover:"Perseverance actual path",
+  routeNote:"*Time at normal pace (~2.5 km/h on flat ground, Tobler hiking function scaled for a suit). The model minimizes time using slope in the direction of travel and roughness; cells steeper than 20° are blocked. Grid distances are ~4% longer than the geometric straight line (886 m). The 1 m DTM does not resolve rocks smaller than ~1 m: review the HiRISE orthoimage on critical segments.",
+  hBudget:"Time budget", depart:"Departure (local solar time)", pace:"Pace", slow:"Slow", normal:"Normal", fast:"Fast",
+  tPhoto:"Photograph and describe the outcrop (25 min)", tSample:"Collect a sample (50 min)",
+  reserve:"Reserve (min)", limit:"EVA limit (min)",
+  bIda:"Out", bWork:"Work", bVuelta:"Back", bLock:"Airlock", bRes:"Reserve",
+  ok:"✓ The EVA fits within the limit", over:"✗ Exceeds the limit by {m} min",
+  detail:"Total {t} min · back at {h} · includes 20 min of airlock time (egress + ingress).",
+  wxBad:" · ⚠ Outside the recommended thermal window",
+  hWeather:"Best departure time (MEDA, sol 286 at Issole)",
+  best:"Recommended window: depart at {h}:00 (ground ≥ {t} °C, mean wind ≤ {w} m/s)", noBest:"No window fits the current EVA duration",
+  medaNote:"Ground temperature (orange line) estimated from TIRS upward infrared irradiance (emissivity 0.99); mean horizontal wind (bars). Gaps = hours without measurements. Scenario rule: ground ≥ −20 °C and mean wind ≤ 8 m/s for the whole EVA.",
+  hRad:"Radiation exposure", sep:"Simulate an active solar particle event (DONKI alert)",
+  rad:"Estimated EVA dose: {d} mSv ({p}% of one surface day)", radSep:"✗ Do not go out: stay in the shelter until the event passes",
+  radNote:"Reference: 0.64 mSv/day measured by RAD (Curiosity, Gale crater), mostly galactic cosmic rays, which are uniform at this scale. So less time outside = less dose. A dose for a person at Jezero needs a local shielding model. Solar storm alerts come from DONKI (api.nasa.gov), measured mostly near Earth.",
+  hGeo:"Geology and samples", zone:"Zone", rock:"Rock and soil",
+  geoMaaz:"Low-relief plain with flat 'paver' rocks (<30 cm); beyond 100 m, dark boulders and 1–3 m ridges; sand ripples up to ~20 cm.",
+  geoSeitah:"Olivine cumulate with augite and plagioclase. Carbonates and hydrated sulfates: signs of water alteration. Samples Robine (sol 298) and Malay (sol 337).",
+  geoNote:"Slope layer computed from the USGS 1 m HiRISE DTM, aggregated to 2 m. Geology: Bell et al. 2022, Sci. Adv.; NASA sample catalog.",
+  hSources:"Sources",
+  sources:"HiRISE 25 cm and CTX 6 m orthoimages: Mars Trek (NASA/JPL). HiRISE 1 m DTM: USGS Astrogeology (Mars 2020 TRN). Rover path and positions: NASA MMGIS M20. Weather: MEDA, PDS Atmospheres (DOI 10.17189/1522849). Radiation: RAD/MSL. Space weather: DONKI, api.nasa.gov.",
+  pLanding:"<b>Octavia E. Butler Landing</b><br>Crew base · Máaz formation<br>18.4446°N, 77.4509°E · −2569.9 m",
+  pIssole:"<b>Issole outcrop</b><br>Séítah formation · olivine cumulate<br>Carbonates and hydrated sulfates (signs of water)<br>Samples: Robine (sol 298), Malay (sol 337)<br>18.43266°N, 77.44137°E · −2574.4 m",
+  lHirise:"HiRISE 25 cm (Mars Trek)", lCtx:"CTX 6 m (Mars Trek)", lThemis:"THEMIS night IR 100 m", lSlope:"Slope (1 m DTM → 2 m)", lRover:"Perseverance path",
+  pDist:"Distance (m)", pElev:"Elevation (m)"
+ }
+};
+let lang = 'es', resM = 2;
+const fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
+const run = (name, r) => RUTAS.corridas.find(c => c.nombre === name && c.res_m === r);
+
+// ---------- Mapa ----------
+const trek = id => `https://trek.nasa.gov/tiles/Mars/EQ/${id}/1.0.0/default/default028mm/{z}/{y}/{x}.png`;
+const map = L.map('map', {crs: L.CRS.EPSG4326, center:[18.4386, 77.4462], zoom:15, maxZoom:19, attributionControl:true});
+const hirise = L.tileLayer(trek('JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd'), {maxNativeZoom:17, maxZoom:19, tileSize:256, attribution:'NASA/JPL/UArizona · Mars Trek'}).addTo(map);
+const ctx = L.tileLayer(trek('JEZ_ctx_B_soc_008_orthoMosaic_6m_Eqc_latTs0_lon0'), {maxNativeZoom:13, maxZoom:19});
+// CTX siempre debajo para rellenar huecos de cobertura HiRISE
+L.tileLayer(trek('JEZ_ctx_B_soc_008_orthoMosaic_6m_Eqc_latTs0_lon0'), {maxNativeZoom:13, maxZoom:19, zIndex:0}).addTo(map);
+hirise.setZIndex(1);
+const themis = L.tileLayer(trek('THEMIS_NightIR_ControlledMosaics_100m_v2_oct2018'), {maxNativeZoom:9, maxZoom:19, opacity:.7});
+const slope = L.imageOverlay('data/pendiente_2m.png', PENDIENTE_BOUNDS, {opacity:.65}).addTo(map);
+const roverF = TRAYECTO.features.find(f => f.properties.id === 'ruta_rover');
+const rover = L.polyline(roverF.geometry.coordinates.map(c => [c[1], c[0]]), {color:'#c084fc', weight:2, dashArray:'4 6'}).addTo(map);
+const lines = L.layerGroup().addTo(map);
+const icon = c => L.divIcon({className:'', html:`<div style="width:14px;height:14px;border-radius:50%;background:${c};border:2px solid #0f1115;box-shadow:0 0 0 2px ${c}"></div>`, iconSize:[14,14], iconAnchor:[7,7]});
+const mLanding = L.marker([18.4446, 77.4509], {icon:icon('#e8e6e3')}).addTo(map);
+const mIssole = L.marker([18.43266059, 77.44137302], {icon:icon('#d9734a')}).addTo(map);
+let layersCtl;
+
+function drawRoutes(){
+  lines.clearLayers();
+  const ll = r => r.coords.map(c => [c[1], c[0]]);
+  L.polyline(ll(run('recta_ida', resM)), {color:'#9aa0aa', weight:2, dashArray:'2 6'}).addTo(lines);
+  L.polyline(ll(run('vuelta', resM)), {color:'#ffd166', weight:3, opacity:.9}).addTo(lines);
+  L.polyline(ll(run('ida', resM)), {color:'#4fc3f7', weight:3}).addTo(lines);
+}
+
+// ---------- Tabla y perfil ----------
+function routeTable(){
+  const rows = [['rIda','ida'],['rVuelta','vuelta'],['rRecta','recta_ida']];
+  let h = `<tr><th>${T[lang].route}</th><th>${T[lang].dist}</th><th>${T[lang].time}</th><th>${T[lang].up}</th><th>${T[lang].down}</th><th>${T[lang].maxs}</th></tr>`;
+  for (const [k, n] of rows){ const r = run(n, resM);
+    h += `<tr><td>${T[lang][k]}</td><td class="mono">${r.dist_m.toFixed(0)} m</td><td class="mono">${r.tiempo_min.toFixed(1)}′</td><td class="mono">+${r.subida_m.toFixed(1)}</td><td class="mono">−${r.bajada_m.toFixed(1)}</td><td class="mono">${r.pendiente_max_deg.toFixed(1)}°</td></tr>`; }
+  document.getElementById('routeTable').innerHTML = h;
+  // estabilidad: diferencia de tiempo de la ida entre resoluciones < 5%
+  const t = [1,2,5].map(r => run('ida', r).tiempo_min), sp = (Math.max(...t) - Math.min(...t)) / Math.min(...t);
+  const b = document.getElementById('stable'); b.className = 'badge ' + (sp < .05 ? 'ok' : 'warn'); b.textContent = sp < .05 ? T[lang].stable : T[lang].unstable;
+}
+function cumDist(coords){ const R = 3396190, d = [0];
+  for (let i = 1; i < coords.length; i++){ const [a, b] = [coords[i-1], coords[i]], p = Math.PI/180;
+    const x = (b[0]-a[0])*p*Math.cos((a[1]+b[1])/2*p), y = (b[1]-a[1])*p; d.push(d[i-1] + R*Math.hypot(x, y)); }
+  return d; }
+function profile(){
+  const W = 370, H = 120, m = {l:40, r:8, t:8, b:22};
+  const series = [['ida','#4fc3f7'],['recta_ida','#9aa0aa']].map(([n, c]) => { const r = run(n, resM); return {c, d:cumDist(r.coords), z:r.coords.map(k => k[2])}; });
+  const zs = series.flatMap(s => s.z), z0 = Math.min(...zs), z1 = Math.max(...zs), dmax = Math.max(...series.map(s => s.d.at(-1)));
+  const X = v => m.l + v/dmax*(W-m.l-m.r), Y = v => m.t + (1-(v-z0)/(z1-z0))*(H-m.t-m.b);
+  let s = `<line x1="${m.l}" y1="${H-m.b}" x2="${W-m.r}" y2="${H-m.b}" stroke="#2a2f3a"/>`;
+  for (const v of [z0, (z0+z1)/2, z1]) s += `<text x="${m.l-4}" y="${Y(v)+3}" text-anchor="end">${v.toFixed(0)}</text>`;
+  for (const v of [0, dmax/2, dmax]) s += `<text x="${X(v)}" y="${H-6}" text-anchor="middle">${v.toFixed(0)}</text>`;
+  for (const sr of series) s += `<polyline fill="none" stroke="${sr.c}" stroke-width="1.5" points="${sr.d.map((d,i)=>X(d).toFixed(1)+','+Y(sr.z[i]).toFixed(1)).join(' ')}"/>`;
+  s += `<text x="${W-m.r}" y="${m.t+8}" text-anchor="end">${T[lang].pElev} · ${T[lang].pDist}</text>`;
+  document.getElementById('profile').innerHTML = s;
+}
+
+// ---------- Presupuesto ----------
+const LOCK = 20;
+function budget(){
+  const f = 0.5 / +document.getElementById('pace').value;
+  const ida = run('ida', resM).tiempo_min * f, vuelta = run('vuelta', resM).tiempo_min * f;
+  const work = (document.getElementById('tPhoto').checked ? 25 : 0) + (document.getElementById('tSample').checked ? 50 : 0);
+  const res = +document.getElementById('res').value || 0, lim = +document.getElementById('lim').value || 1;
+  const total = ida + work + vuelta + LOCK + res, dep = +document.getElementById('dep').value;
+  const parts = [[LOCK/2,'#6b7280','bLock'],[ida,'#4fc3f7','bIda'],[work,'#d9734a','bWork'],[vuelta,'#ffd166','bVuelta'],[LOCK/2,'#6b7280','bLock'],[res,'#4ade80','bRes']];
+  const scale = Math.max(total, lim);
+  document.getElementById('bar').innerHTML = parts.filter(p => p[0] > 0).map(p => `<div style="width:${p[0]/scale*100}%;background:${p[1]}" title="${T[lang][p[2]]} ${p[0].toFixed(0)} min">${p[0]/scale > .09 ? T[lang][p[2]] : ''}</div>`).join('') + (total < lim ? `<div style="flex:1"></div>` : '');
+  const v = document.getElementById('verdict');
+  const end = dep + total/60, hh = Math.floor(end) % 24, mm = Math.round((end % 1) * 60);
+  const wxOk = windowOk(dep, total);
+  v.className = 'verdict'; v.style.color = total <= lim ? 'var(--ok)' : 'var(--bad)';
+  v.textContent = total <= lim ? T[lang].ok : fmt(T[lang].over, {m:Math.ceil(total - lim)});
+  document.getElementById('budgetDetail').textContent = fmt(T[lang].detail, {t:Math.round(total), h:`${hh}:${String(mm).padStart(2,'0')}`}) + (wxOk ? '' : T[lang].wxBad);
+  radiation(total); bestHour(total);
+}
+
+// ---------- Clima ----------
+const TMIN = -20, WMAX = 8;
+function windowOk(dep, total){
+  for (let h = Math.floor(dep); h < dep + total/60; h++){ const r = MEDA_ISSOLE.horas[h % 24];
+    if (r.temp_suelo_c === null || r.viento_medio_ms === null || r.temp_suelo_c < TMIN || r.viento_medio_ms > WMAX) return false; }
+  return true;
+}
+function bestHour(total){
+  let best = null;
+  for (let h = 6; h <= 18; h++) if (windowOk(h, total)){
+    const span = MEDA_ISSOLE.horas.slice(h, Math.ceil(h + total/60)), tmin = Math.min(...span.map(r => r.temp_suelo_c));
+    if (!best || tmin > best.t) best = {h, t:tmin, w:Math.max(...span.map(r => r.viento_medio_ms))}; }
+  document.getElementById('best').innerHTML = best ? fmt(T[lang].best, {h:best.h, t:best.t.toFixed(0), w:best.w.toFixed(1)}) : `<span style="color:var(--warn)">${T[lang].noBest}</span>`;
+  drawMeda(best, total);
+}
+function drawMeda(best, total){
+  const W = 370, H = 130, m = {l:34, r:30, t:8, b:20}, hrs = MEDA_ISSOLE.horas;
+  const X = h => m.l + h/24*(W-m.l-m.r), YT = t => m.t + (1-(t+80)/100)*(H-m.t-m.b), YW = w => H-m.b - w/16*(H-m.t-m.b);
+  let s = '';
+  if (best) s += `<rect x="${X(best.h)}" y="${m.t}" width="${X(best.h+total/60)-X(best.h)}" height="${H-m.t-m.b}" fill="rgba(74,222,128,.12)"/>`;
+  const dep = +document.getElementById('dep').value;
+  s += `<rect x="${X(dep)}" y="${m.t}" width="${Math.max(1,X(Math.min(24,dep+total/60))-X(dep))}" height="${H-m.t-m.b}" fill="none" stroke="#e8e6e3" stroke-dasharray="3 3"/>`;
+  hrs.forEach(r => { if (r.viento_medio_ms !== null) s += `<rect x="${X(r.hora)+2}" y="${YW(r.viento_medio_ms)}" width="${(W-m.l-m.r)/24-4}" height="${H-m.b-YW(r.viento_medio_ms)}" fill="#4b5563"/>`; });
+  let pts = '', segs = [];
+  hrs.forEach(r => { if (r.temp_suelo_c === null){ if (pts) segs.push(pts); pts = ''; } else pts += `${X(r.hora+.5).toFixed(1)},${YT(r.temp_suelo_c).toFixed(1)} `; }); if (pts) segs.push(pts);
+  segs.forEach(p => s += `<polyline fill="none" stroke="#d9734a" stroke-width="2" points="${p}"/>`);
+  s += `<line x1="${m.l}" x2="${W-m.r}" y1="${YT(TMIN)}" y2="${YT(TMIN)}" stroke="#d9734a" stroke-dasharray="2 4" opacity=".6"/>`;
+  for (const t of [-80,-40,0,20]) s += `<text x="${m.l-4}" y="${YT(t)+3}" text-anchor="end">${t}°</text>`;
+  for (const w of [0,8,16]) s += `<text x="${W-m.r+4}" y="${YW(w)+3}">${w}</text>`;
+  for (const h of [0,6,12,18,24]) s += `<text x="${X(h)}" y="${H-6}" text-anchor="middle">${h}h</text>`;
+  document.getElementById('meda').innerHTML = s;
+}
+
+// ---------- Radiación ----------
+function radiation(total){
+  const el = document.getElementById('rad');
+  if (document.getElementById('sep').checked){ el.style.color = 'var(--bad)'; el.textContent = T[lang].radSep; return; }
+  const d = 0.64 * total / 1440; el.style.color = 'var(--text)';
+  el.textContent = fmt(T[lang].rad, {d:d.toFixed(3), p:(total/1440*100).toFixed(0)});
+}
+
+// ---------- Idioma ----------
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(e => e.textContent = T[lang][e.dataset.t]);
+  document.getElementById('es').classList.toggle('on', lang === 'es'); document.getElementById('en').classList.toggle('on', lang === 'en');
+  mLanding.bindPopup(T[lang].pLanding); mIssole.bindPopup(T[lang].pIssole);
+  if (layersCtl) layersCtl.remove();
+  layersCtl = L.control.layers({[T[lang].lHirise]:hirise, [T[lang].lCtx]:ctx, [T[lang].lThemis]:themis}, {[T[lang].lSlope]:slope, [T[lang].lRover]:rover}, {collapsed:false}).addTo(map);
+  routeTable(); profile(); budget();
+}
+const dep = document.getElementById('dep');
+for (let h = 6; h <= 18; h++) dep.add(new Option(`${h}:00`, h, false, h === 10));
+document.getElementById('es').onclick = () => { lang = 'es'; applyLang(); };
+document.getElementById('en').onclick = () => { lang = 'en'; applyLang(); };
+document.querySelectorAll('#resSeg button').forEach(b => b.onclick = () => {
+  resM = +b.dataset.r; document.querySelectorAll('#resSeg button').forEach(x => x.classList.toggle('on', x === b));
+  drawRoutes(); routeTable(); profile(); budget(); });
+['dep','pace','tPhoto','tSample','res','lim','sep'].forEach(id => document.getElementById(id).addEventListener('input', budget));
+drawRoutes(); applyLang();
+const fitRoute = () => { map.invalidateSize(); map.fitBounds(L.latLngBounds([[18.4446, 77.4509],[18.43266, 77.44137]]).pad(0.2)); };
+fitRoute(); window.addEventListener('load', () => setTimeout(fitRoute, 100));
+</script>
+</body>
+</html>

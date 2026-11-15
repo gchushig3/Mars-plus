@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba del motor de planes</title>
+<style>
+:root{--bg:#0f1115;--text:#e8e6e3;--muted:#9aa0aa;--line:#2a2f3a;--ok:#4ade80;--bad:#f87171}
+body{margin:0;padding:16px;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,sans-serif}
+h1{font-size:18px} h2{font-size:15px;margin-top:24px}
+table{border-collapse:collapse;width:100%;max-width:980px;font-size:13px}
+td,th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}
+th{color:var(--muted);font-weight:500}
+.ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
+</style>
+</head>
+<body>
+<h1>Prueba del motor de planes (cadena de filtros)</h1>
+<p class="muted">Rutas del motor v2 (2 m) · clima MEDA sols 286–339 · radiación RAD oct-2021</p>
+<div id="out"></div>
+<script src="data/rutas_v2.js"></script>
+<script src="data/meda_tipico.js"></script>
+<script src="data/rad_oct2021.js"></script>
+<script src="js/motor_planes.js"></script>
+<script>
+const D = { paradas: RUTAS_V2.paradas, meda: MEDA_TIPICO, rad: RAD_OCT2021 };
+const casos = [
+  ['Día típico, límite 180 min', {}],
+  ['Día típico, límite 210 min', { limiteMin: 210 }],
+  ['Peor sol registrado, límite 210 min', { limiteMin: 210, escenario: 'peor' }],
+  ['Clima de los días de tormenta, sin alerta, límite 210 min', { limiteMin: 210, escenario: 'tormenta' }],
+  ['Tormenta de polvo activa (alerta), límite 210 min', { limiteMin: 210, escenario: 'tormenta', alertaPolvo: true }],
+  ['Evento solar activo (28-oct-2021)', { limiteMin: 210, eventoSolar: true }]
+];
+const hh = h => `${Math.floor(h)}:${String(Math.round((h % 1) * 60)).padStart(2, '0')}`;
+let html = '';
+window.RESULTADOS = {};
+for (const [titulo, op] of casos) {
+  const r = MotorPlanes.evaluar(D, op); window.RESULTADOS[titulo] = r;
+  const rec = r.recomendado ? `<span class="ok">Recomendado: Plan ${r.recomendado.plan} (${r.recomendado.nombre}), salida ${r.recomendado.salida}:00, ${r.recomendado.total_min} min, ${r.recomendado.dosis_uGy} µGy</span>`
+                            : `<span class="bad">Posponer. Más cercano: Plan ${r.cercano.plan} a las ${r.cercano.salida}:00 — filtro ${r.cercano.filtro}: ${r.cercano.motivo}</span>`;
+  html += `<h2>${titulo}</h2><p>${rec}</p><table><tr><th>Plan</th><th>Salida</th><th>Total</th><th>Regreso</th><th>Estado</th><th>Filtro</th><th>Motivo / dosis</th></tr>`;
+  for (const p of r.planes.filter(p => p.salida >= 8 && p.salida <= 15))
+    html += `<tr><td>${p.plan} · ${p.nombre}</td><td>${p.salida}:00</td><td>${p.total_min ?? '—'} min</td><td>${p.regreso ? hh(p.regreso) : '—'}</td><td class="${p.estado === 'viable' ? 'ok' : 'bad'}">${p.estado}</td><td>${p.filtro ?? ''}</td><td>${p.motivo || (p.dosis_uGy + ' µGy')}</td></tr>`;
+  html += '</table>';
+}
+document.getElementById('out').innerHTML = html;
+</script>
+</body>
+</html>

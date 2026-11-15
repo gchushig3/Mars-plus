@@ -1,0 +1,66 @@
+﻿{
+    "paramsVersion":  "2.0.0",
+    "rows":  489,
+    "cols":  460,
+    "resM":  2,
+    "originXM":  4590143,
+    "originYM":  1093441,
+    "marsRadiusM":  3396190,
+    "nodata":  65535,
+    "bounds":  {
+                   "west":  77.438488795243572,
+                   "south":  18.430511595111128,
+                   "east":  77.454009751713031,
+                   "north":  18.447011046662364
+               },
+    "bands":  [
+                  {
+                      "name":  "z",
+                      "type":  "uint16",
+                      "offset":  0,
+                      "scale":  0.01,
+                      "add":  -2591.90087890625,
+                      "unit":  "m"
+                  },
+                  {
+                      "name":  "slope",
+                      "type":  "uint8",
+                      "offset":  449880,
+                      "scale":  0.25,
+                      "add":  0,
+                      "unit":  "deg"
+                  },
+                  {
+                      "name":  "rough",
+                      "type":  "uint8",
+                      "offset":  674820,
+                      "scale":  0.005,
+                      "add":  0,
+                      "unit":  "m"
+                  },
+                  {
+                      "name":  "duneLarge",
+                      "type":  "uint8",
+                      "offset":  899760,
+                      "scale":  0.00392156862745098,
+                      "add":  0,
+                      "unit":  "fraction"
+                  },
+                  {
+                      "name":  "duneSmall",
+                      "type":  "uint8",
+                      "offset":  1124700,
+                      "scale":  0.00392156862745098,
+                      "add":  0,
+                      "unit":  "fraction"
+                  },
+                  {
+                      "name":  "rock",
+                      "type":  "uint8",
+                      "offset":  1349640,
+                      "scale":  0.00392156862745098,
+                      "add":  0,
+                      "unit":  "fraction"
+                  }
+              ]
+}

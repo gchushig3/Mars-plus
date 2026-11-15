@@ -1,0 +1,8 @@
+# Keep LF in the repository and in the working copy so published files match manifest.json hashes
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bin binary
+*.png binary
+*.jpg binary
+*.tif binary
+*.zip binary
