@@ -4,7 +4,7 @@
 
 MARS+ is a decision-support prototype for a round-trip traverse from **Octavia E. Butler Landing** to the **Issole outcrop** in Jezero crater. A hypothetical habitat is placed at Perseverance’s real landing site. The modeled 2 m route to the sampling stop is 948 m. MARS+ combines NASA orbital and surface data to plan where to walk, when to leave and what fieldwork fits the selected scenario.
 
-> [Interactive project in English](https://gchushig3.github.io/Mars-plus/?view=local&lang=en) · [Six-slide demo](https://gchushig3.github.io/Mars-plus/demo/) · [Source code](https://github.com/gchushig3/Mars-plus)
+> [Explore the Mars globe in English](https://gchushig3.github.io/Mars-plus/?lang=en) · [Six-slide demo](https://gchushig3.github.io/Mars-plus/demo/) · [Source code](https://github.com/gchushig3/Mars-plus)
 
 ---
 
@@ -85,6 +85,10 @@ node tests/run.mjs
 `app/` is a static site with no build step:
 - **GitHub Pages:** on every push to `main`, `.github/workflows/pages.yml` runs the full test suite (Node 22) and publishes `app/` only if every test passes (Settings → Pages → Source: GitHub Actions).
 - **Netlify:** `netlify.toml` publishes `app/`.
+
+## License
+
+The team's original software and accompanying documentation are released under the [MIT License](LICENSE). Third-party data, imagery, fonts and libraries retain their respective terms in [ATTRIBUTION.md](ATTRIBUTION.md).
 
 ## Assumptions and limits (stated in the app)
 

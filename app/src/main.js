@@ -318,8 +318,17 @@ async function main() {
   };
 
   // --- view switching: GLOBE <-> LOCAL (EVA map) ---
-  viewToggle.hidden = !globeView;
-  viewToggle.addEventListener('click', () => store.set((s) => ({ view: s.view === 'globe' ? 'local' : 'globe' })));
+  viewToggle.hidden = !globeView && !openLocal;
+  viewToggle.addEventListener('click', () => {
+    if (openLocal) {
+      const url = new URL(location.href);
+      url.searchParams.delete('view');
+      url.searchParams.set('lang', i18n.lang);
+      location.assign(url);
+      return;
+    }
+    store.set((s) => ({ view: s.view === 'globe' ? 'local' : 'globe' }));
+  });
   function applyView(view) {
     const onGlobe = view === 'globe' && Boolean(globeView);
     globeRoot.hidden = !onGlobe;
