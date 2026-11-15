@@ -169,6 +169,8 @@ powershell -ExecutionPolicy Bypass -File tools\dev-server.ps1
 # 3. Publicar: commit + push a main → GitHub Pages se actualiza solo (~1 min)
 ```
 
+> **Caché después de publicar:** GitHub Pages deja que el navegador guarde los archivos hasta 10 minutos. Para ver la versión nueva de inmediato, recarga con **Ctrl+F5**. Quien visita por primera vez, como un juez, siempre recibe la versión nueva.
+
 **Puerta de calidad antes de cada publicación:**
 1. Todas las pruebas en verde, incluida la paridad JS↔C# (<1%).
 2. La consola de `/app/` sin errores.
