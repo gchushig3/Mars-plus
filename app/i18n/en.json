@@ -3,6 +3,22 @@
   "app.loading": "Loading mission data…",
   "app.loadError": "Could not load mission data. Please reload the page.",
   "lang.label": "Language",
+  "app.skip": "Skip to the mission panel",
+  "map.label": "Map of the EVA area in Jezero crater. Use arrow keys to pan and + / − to zoom.",
+  "map.trekDown": "Mars Trek imagery is not responding — showing the built-in HiRISE backup image.",
+
+  "welcome.help": "How to use MARS+",
+  "welcome.title": "MARS+ · plan a Mars EVA",
+  "welcome.what": "You are in the habitat at Octavia E. Butler Landing (Jezero crater). Your crew wants to walk ~900 m to the Issole outcrop to document signs of ancient water and take a sample — safely.",
+  "welcome.step1": "Read the verdict at the top: GO or NO-GO, which plan and when to leave.",
+  "welcome.step2": "Change the conditions — weather scenario, dust or solar alerts, time limit, pace — and see why each plan passes or fails.",
+  "welcome.step3": "Plan your own route: press “Set A” and “Set B” and click the map. The least-effort path is computed in your browser.",
+  "welcome.data": "Built with NASA data: HiRISE terrain and imagery, Perseverance weather (MEDA) and photos, Curiosity radiation (RAD).",
+  "welcome.start": "Start planning",
+
+  "summary.go": "Plan {planId} ({planName}) · depart {departure}, back {returnTime} · {dose} µGy",
+  "summary.noGo": "No plan is safe under the current conditions — postpone the EVA.",
+  "summary.why": "Why ↓",
 
   "layer.hirise": "HiRISE 25 cm (Mars Trek)",
   "layer.ctx": "CTX 6 m (Mars Trek)",
@@ -42,7 +58,9 @@
   "legend.user": "Your route",
 
   "route.title": "Plan your own route (A → B)",
-  "route.help": "Press “Set A”, click the map, then “Set B” and click again. The least-effort route is computed in your browser over the 2 m terrain grid of the pilot area.",
+  "route.help": "Press “Set A”, click the map, then “Set B” and click again. With the keyboard: focus the map, move it with the arrow keys and press Enter to drop the point at the crosshair. The least-effort route is computed in your browser over the 2 m terrain grid of the pilot area.",
+  "route.loadingTerrain": "Preparing the 2 m terrain grid for routing…",
+  "route.terrainError": "The terrain grid could not be loaded; your own routes are unavailable (the official route still works).",
   "route.setA": "Set A",
   "route.setB": "Set B",
   "route.clear": "Clear",

@@ -12,6 +12,8 @@ import { createPlansPanel } from './ui/panels/plans-panel.js';
 import { createWeatherPanel, createRadiationPanel } from './ui/panels/conditions-panels.js';
 import { createGeologyPanel, createAssumptionsPanel, createSourcesPanel } from './ui/panels/info-panels.js';
 import { createPhotosPanel } from './ui/panels/photos-panel.js';
+import { createSummaryBar } from './ui/panels/summary-bar.js';
+import { createWelcome } from './ui/panels/welcome.js';
 
 const SITE_ID = 'jezero-issole';
 
@@ -45,7 +47,7 @@ async function main() {
     pick: null, pointA: null, pointB: null,
     routeStatus: { kind: 'idle' }, userRoute: null,
     paceKey: 'normal', planOptions, ...service.evaluate(planOptions),
-    sensitivity: { status: 'idle', rows: null }, sensitivityView: null, traverseValidation: null,
+    sensitivity: { status: 'idle', rows: null }, sensitivityView: null, traverseValidation: null, routingReady: false,
   });
 
   // Sensitivity rows (leg times per sand factor) -> view with the recommended plan under the current options
@@ -97,18 +99,32 @@ async function main() {
     computeIfReady();
   });
 
-  // --- panels ---
+  // --- panels: the answer first (GO / NO-GO), then mission, plans, own route and details ---
   const sidebar = document.getElementById('sidebar');
   const ctx = { i18n, data, store, actions };
-  const panels = [createMissionPanel, createPhotosPanel, createRoutePanel, createPlansPanel, createWeatherPanel, createRadiationPanel, createGeologyPanel, createAssumptionsPanel, createSourcesPanel]
-    .map((factory) => { const el = document.createElement('section'); el.className = 'section'; sidebar.append(el); return factory(el, ctx); });
+  const summaryEl = document.createElement('div');
+  sidebar.append(summaryEl);
+  const panels = [createSummaryBar(summaryEl, ctx)];
+  const sections = [['mission', createMissionPanel], ['plans', createPlansPanel], ['route', createRoutePanel], ['photos', createPhotosPanel],
+    ['weather', createWeatherPanel], ['radiation', createRadiationPanel], ['geology', createGeologyPanel], ['assumptions', createAssumptionsPanel], ['sources', createSourcesPanel]];
+  for (const [id, factory] of sections) {
+    const el = document.createElement('section'); el.className = 'section'; el.id = `panel-${id}`; sidebar.append(el); panels.push(factory(el, ctx));
+  }
+
+  const welcome = createWelcome(document.getElementById('welcome'), { i18n });
+  const helpBtn = document.getElementById('help');
+  helpBtn.addEventListener('click', () => welcome.open(helpBtn));
 
   const buildAll = () => {
-    document.getElementById('subtitle').textContent = i18n.t('app.subtitle');
+    const { t } = i18n;
+    document.getElementById('subtitle').textContent = t('app.subtitle');
     document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === i18n.lang)));
+    helpBtn.setAttribute('aria-label', t('welcome.help')); helpBtn.title = t('welcome.help');
+    document.getElementById('skip').textContent = t('app.skip');
     map.setLabels(i18n.html);
     panels.forEach((p) => p.build(store.get()));
     panels.forEach((p) => p.update(store.get()));
+    welcome.rerender();
   };
   let last = {};
   store.subscribe((s) => {
@@ -130,8 +146,10 @@ async function main() {
   map.showOfficial(store.get().officialRes);
   last = store.get();
   loading.remove();
+  if (welcome.shouldShowOnLoad()) welcome.open();
+  service.whenRoutingReady().then(() => store.set({ routingReady: true })).catch((err) => { console.error(err); store.set({ routingReady: 'error' }); });
   service.traverseValidation().then((v) => store.set({ traverseValidation: v })).catch((err) => console.error(err));
-  window.MARSPLUS = { store, service }; // debugging aid for the team
+  window.MARSPLUS = { store, service, map }; // debugging aid for the team (map.setTrekUrlForTest simulates an outage)
 }
 
 main();

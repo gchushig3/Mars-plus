@@ -60,7 +60,30 @@ export function createLeafletMapView(container, { data, assetUrl }) {
   const userPins = { A: null, B: null };
   let control = null;
   let clickHandler = null;
+  let picking = false;
+  let lastT = (k) => k;
   map.on('click', (e) => clickHandler && clickHandler({ lon: e.latlng.lng, lat: e.latlng.lat }));
+
+  // Keyboard alternative to clicking: while choosing A/B, Enter places the point at the map centre (crosshair).
+  const crosshair = L.DomUtil.create('div', 'map-crosshair', container);
+  crosshair.setAttribute('aria-hidden', 'true');
+  crosshair.hidden = true;
+  container.addEventListener('keydown', (e) => {
+    if (picking && e.key === 'Enter' && clickHandler) { const c = map.getCenter(); clickHandler({ lon: c.lng, lat: c.lat }); e.preventDefault(); }
+  });
+
+  // Robustness: if Mars Trek tiles keep failing, say so; the local HiRISE backup image stays visible underneath.
+  const notice = L.control({ position: 'bottomleft' });
+  notice.onAdd = () => { const d = L.DomUtil.create('div', 'map-notice'); d.setAttribute('role', 'status'); return d; };
+  notice.addTo(map);
+  const noticeEl = notice.getContainer();
+  noticeEl.hidden = true;
+  let consecutiveErrors = 0; // reset by any successful tile, so a later outage is still detected
+  const refreshNotice = () => { noticeEl.hidden = consecutiveErrors < 3; noticeEl.textContent = lastT('map.trekDown'); };
+  for (const layer of Object.values(base)) {
+    layer.on('tileerror', () => { consecutiveErrors++; refreshNotice(); });
+    layer.on('tileload', () => { consecutiveErrors = 0; refreshNotice(); });
+  }
 
   return {
     /** Rebuilds texts that depend on the language. */
@@ -69,6 +92,9 @@ export function createLeafletMapView(container, { data, assetUrl }) {
         const p = (site.photos ?? []).find((x) => x.stop === stop);
         return p ? `<img class="popup-photo" src="assets/rover/${escapeHtml(p.file)}" alt="${escapeHtml(t(p.caption))}" loading="lazy"><div class="popup-credit">${escapeHtml(p.camera)} · sol ${escapeHtml(p.sol)} · ${escapeHtml(p.credit)}</div>` : '';
       };
+      lastT = t;
+      container.setAttribute('aria-label', t('map.label'));
+      refreshNotice();
       markers.landing.bindPopup(t('point.landing'));
       markers.issole.bindPopup(t('point.issole') + photoOf('observation'));
       markers.sampling.bindPopup(t('point.sampling') + photoOf('sampling'));
@@ -89,7 +115,9 @@ export function createLeafletMapView(container, { data, assetUrl }) {
       line(run('landing_sampling'), { color: '#5ec8f2', weight: 3, opacity: 0.95 });
     },
     onClick(fn) { clickHandler = fn; },
-    setPickCursor(on) { container.style.cursor = on ? 'crosshair' : ''; },
+    setPickCursor(on) { picking = on; container.style.cursor = on ? 'crosshair' : ''; crosshair.hidden = !on; },
+    /** Test hook: point the Trek base layers to another URL (used to simulate an outage). */
+    setTrekUrlForTest(url) { Object.values(base).forEach((l) => l.setUrl(url)); },
     setPoint(which, p) {
       if (userPins[which]) { userPins[which].remove(); userPins[which] = null; }
       if (p) userPins[which] = L.marker([p.lat, p.lon], { icon: pin('ab', '#f4f1ee', which) }).addTo(map);

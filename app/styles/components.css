@@ -68,6 +68,33 @@ table.data th { color: var(--muted); font-weight: 500; font-size: 12px; }
 .callout { margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--mars-golden); background: var(--surface); font-size: 12.5px; line-height: 1.45; border-radius: 0 var(--radius) var(--radius) 0; }
 .callout.ok { border-left-color: var(--ok); }
 
+/* Summary bar (GO / NO-GO first) */
+.summary { position: sticky; top: 0; z-index: 5; margin: 0 -16px; padding: 8px 16px; background: var(--surface); border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 13px; }
+.summary strong { font-size: 13px; letter-spacing: .06em; padding: 1px 8px; border-radius: 999px; color: #14110f; }
+.summary.ok strong { background: var(--ok); }
+.summary.bad strong { background: var(--bad); }
+.summary span { flex: 1 1 220px; }
+.summary a { font-size: 12px; white-space: nowrap; }
+
+/* Welcome dialog */
+.welcome { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; padding: 16px; background: rgba(10, 8, 7, .72); }
+.welcome[hidden] { display: none; }
+.welcome-card { width: min(520px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; box-shadow: 0 12px 40px rgba(0, 0, 0, .5); }
+.welcome-card h2 { font-size: 18px; margin-bottom: 8px; color: var(--text); text-transform: none; letter-spacing: 0; }
+.welcome-card p { margin: 0 0 8px; color: var(--text); font-size: 14px; }
+.welcome-steps { margin: 4px 0 8px; padding-left: 20px; font-size: 14px; }
+.welcome-steps li { margin: 4px 0; }
+.btn-primary { background: var(--mars-golden); border-color: var(--mars-golden); color: #14110f; font-weight: 600; }
+.icon-btn { background: none; border: 1px solid var(--line); border-radius: 999px; width: 30px; height: 30px; cursor: pointer; color: var(--text); }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+
+/* Map aids */
+.map-notice { background: rgba(28, 23, 21, .92); color: var(--warn); border: 1px solid var(--warn); border-radius: 6px; padding: 6px 10px; font-size: 12px; max-width: 280px; }
+.map-crosshair { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; z-index: 650; pointer-events: none; border: 2px solid var(--route-user); border-radius: 50%; box-shadow: 0 0 0 1px #14110f; }
+.map-crosshair[hidden] { display: none; }
+.skip-link { position: absolute; left: -9999px; top: 8px; z-index: 4000; background: var(--mars-golden); color: #14110f; padding: 6px 10px; border-radius: 6px; }
+.skip-link:focus { left: 8px; }
+
 .loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg); z-index: 2000; color: var(--muted); }
 
 /* Leaflet theming */

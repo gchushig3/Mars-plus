@@ -32,8 +32,10 @@ export function createRoutePanel(el, { i18n, actions }) {
     const rs = state.routeStatus;
     status.className = `status${rs.kind === 'error' ? ' bad' : ''}`;
     status.textContent =
-      state.pick === 'A' ? t('route.pickA') : state.pick === 'B' ? t('route.pickB')
-        : rs.kind === 'computing' ? t('route.computing')
+      state.routingReady === 'error' ? t('route.terrainError')
+        : state.pick === 'A' ? t('route.pickA') : state.pick === 'B' ? t('route.pickB')
+        : rs.kind === 'computing' ? t(state.routingReady ? 'route.computing' : 'route.loadingTerrain')
+        : !state.routingReady && rs.kind === 'idle' ? t('route.loadingTerrain')
           : rs.kind === 'error' ? t(`route.${rs.code}`)
             : rs.kind === 'done' ? t('route.done', { ms: rs.ms }) : '';
     clear(stats);

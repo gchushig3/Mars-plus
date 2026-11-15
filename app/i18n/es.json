@@ -3,6 +3,22 @@
   "app.loading": "Cargando datos de la misión…",
   "app.loadError": "No se pudieron cargar los datos de la misión. Recarga la página.",
   "lang.label": "Idioma",
+  "app.skip": "Saltar al panel de la misión",
+  "map.label": "Mapa de la zona de la EVA en el cráter Jezero. Usa las flechas para moverte y + / − para acercar.",
+  "map.trekDown": "Las imágenes de Mars Trek no responden: se muestra la imagen HiRISE de respaldo incluida en el sitio.",
+
+  "welcome.help": "Cómo usar MARS+",
+  "welcome.title": "MARS+ · planifica una EVA en Marte",
+  "welcome.what": "Estás en el hábitat de Octavia E. Butler Landing (cráter Jezero). Tu tripulación quiere caminar ~900 m hasta el afloramiento Issole para documentar indicios de agua antigua y tomar una muestra, con seguridad.",
+  "welcome.step1": "Lee el veredicto arriba: SALIR o NO SALIR, qué plan y a qué hora.",
+  "welcome.step2": "Cambia las condiciones (escenario de clima, alertas de polvo o solares, límite de tiempo, ritmo) y mira por qué cada plan pasa o falla.",
+  "welcome.step3": "Planifica tu propia ruta: pulsa «Fijar A» y «Fijar B» y haz clic en el mapa. El camino de menor esfuerzo se calcula en tu navegador.",
+  "welcome.data": "Hecho con datos de la NASA: terreno e imágenes HiRISE, clima (MEDA) y fotos de Perseverance, radiación de Curiosity (RAD).",
+  "welcome.start": "Empezar a planificar",
+
+  "summary.go": "Plan {planId} ({planName}) · salida {departure}, regreso {returnTime} · {dose} µGy",
+  "summary.noGo": "Ningún plan es seguro con las condiciones actuales: posponer la EVA.",
+  "summary.why": "Por qué ↓",
 
   "layer.hirise": "HiRISE 25 cm (Mars Trek)",
   "layer.ctx": "CTX 6 m (Mars Trek)",
@@ -42,7 +58,9 @@
   "legend.user": "Tu ruta",
 
   "route.title": "Planifica tu propia ruta (A → B)",
-  "route.help": "Pulsa «Fijar A», haz clic en el mapa, luego «Fijar B» y vuelve a hacer clic. La ruta de menor esfuerzo se calcula en tu navegador sobre la cuadrícula de 2 m de la zona piloto.",
+  "route.help": "Pulsa «Fijar A», haz clic en el mapa, luego «Fijar B» y vuelve a hacer clic. Con el teclado: enfoca el mapa, muévelo con las flechas y pulsa Enter para dejar el punto en la mira. La ruta de menor esfuerzo se calcula en tu navegador sobre la cuadrícula de 2 m de la zona piloto.",
+  "route.loadingTerrain": "Preparando la cuadrícula de terreno de 2 m para calcular rutas…",
+  "route.terrainError": "No se pudo cargar la cuadrícula de terreno: tus rutas propias no están disponibles (la ruta oficial sigue funcionando).",
   "route.setA": "Fijar A",
   "route.setB": "Fijar B",
   "route.clear": "Borrar",
