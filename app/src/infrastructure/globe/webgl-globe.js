@@ -8,12 +8,26 @@ const ELEVATION_STOPS = [
   [8, '#b87550'], [12, '#a15141'], [17, '#da9b79'], [21.2, '#fff0dc'],
 ];
 export const GLOBE_ELEVATION_STOPS = ELEVATION_STOPS;
-const OVERVIEW = { lat: 8, lon: -65, distance: 2.92 };
+const OVERVIEW = { lat: 8, lon: 30, distance: 2.92 };
 const RANGE = { min: 1.052, max: 6.4 };
 const PERSPECTIVE = 0.48;
 const MARS_RADIUS_KM = 3396.19;
 const RAD = Math.PI / 180;
 const LIGHTING = { viking: 1, mola: 0, geology: 0 };
+
+// Inverse of the fragment shader's camera ray, in CSS pixels.
+export function projectSurfacePoint(point, camera, width, height) {
+  if (!width || !height) return null;
+  const lat = point.lat * RAD, centerLat = camera.lat * RAD;
+  const deltaLon = (point.lon - camera.lon) * RAD;
+  const alongMeridian = Math.cos(lat) * Math.cos(deltaLon);
+  const depth = Math.cos(centerLat) * alongMeridian + Math.sin(centerLat) * Math.sin(lat);
+  if (depth * camera.distance <= 1) return null; // hidden by the sphere
+  const scale = Math.min(width, height) / (2 * PERSPECTIVE * (camera.distance - depth));
+  const x = width / 2 + scale * Math.cos(lat) * Math.sin(deltaLon);
+  const y = height / 2 - scale * (Math.cos(centerLat) * Math.sin(lat) - Math.sin(centerLat) * alongMeridian);
+  return { x, y };
+}
 
 const rgbBytes = (hex) => hex.slice(1).match(/../g).map((v) => parseInt(v, 16));
 const shaderColor = (hex) => `vec3(${rgbBytes(hex).map((v) => (v / 255).toFixed(5))})`;
@@ -212,6 +226,7 @@ export function createWebGLGlobe(canvas, { assetBase, meta, reducedMotion }) {
   const data = new Map();
   const frameListeners = new Set();
   const moveListeners = new Set();
+  const zoomListeners = new Set();
   let renderer, frame, flight, activeLayer = 'viking', layerRequest = 0, paused = false;
 
   const requestDraw = () => { if (!paused && frame === undefined) frame = requestAnimationFrame(update); };
@@ -281,6 +296,7 @@ export function createWebGLGlobe(canvas, { assetBase, meta, reducedMotion }) {
   function zoom(multiplier) {
     flight = undefined;
     camera.distance = Math.max(RANGE.min, Math.min(RANGE.max, 1 + (camera.distance - 1) * multiplier));
+    zoomListeners.forEach((fn) => fn(multiplier));
     requestDraw();
   }
 
@@ -378,6 +394,8 @@ export function createWebGLGlobe(canvas, { assetBase, meta, reducedMotion }) {
     reset() { flyTo(OVERVIEW); },
     onFrame(fn) { frameListeners.add(fn); },
     onUserMove(fn) { moveListeners.add(fn); },
+    onZoom(fn) { zoomListeners.add(fn); },
+    project(point) { return projectSurfacePoint(point, camera, canvas.clientWidth, canvas.clientHeight); },
     pause() { paused = true; if (frame !== undefined) { cancelAnimationFrame(frame); frame = undefined; } },
     resume() { paused = false; requestDraw(); },
 

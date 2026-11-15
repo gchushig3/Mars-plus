@@ -41,8 +41,7 @@ async function main() {
   // --- GLOBE first (state GLOBE) when WebGL2 is available; "?view=local" opens the EVA map directly ---
   const globeRoot = document.getElementById('globe-view');
   const viewToggle = document.getElementById('view-toggle');
-  let globe = null, globeView = null, store = null, pendingLocal = false;
-  const goLocal = () => { if (store) store.set({ view: 'local' }); else pendingLocal = true; };
+  let globe = null, globeView = null, store = null, openCoverage;
   const openLocal = new URLSearchParams(location.search).get('view') === 'local';
   const flatDust = new URLSearchParams(location.search).get('dust') === 'flat';
   const openDust = new URLSearchParams(location.search).get('layer') === 'dust';
@@ -59,7 +58,7 @@ async function main() {
         specOf: productSpec,
         createFlatMap: createDustFlatMap,
       });
-      globeView = createGlobeView(globeRoot, { i18n, assetBase: 'assets/globe/', dustMaps, meta, onEnterMission: goLocal, preferFlat: flatDust || !webgl });
+      globeView = createGlobeView(globeRoot, { i18n, assetBase: 'assets/globe/', dustMaps, meta, onEnterMission: () => openCoverage?.(), preferFlat: flatDust || !webgl });
       if (webgl) {
         globe = createWebGLGlobe(globeView.canvas, { assetBase: 'assets/globe/', meta, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
         globe.start().then(() => {
@@ -92,14 +91,15 @@ async function main() {
   const map = createLeafletMapView(document.getElementById('map'), { data, assetUrl: repository.assetUrl });
   const firstPlan = service.evaluate(service.defaultPlanOptions());
   store = createStore({
-    view: globeView && !pendingLocal ? 'globe' : 'local',
+    view: globeView ? 'globe' : 'local',
     officialRes: data.routes.primaryResM,
     pick: null, pointA: null, pointB: null,
     routeStatus: { kind: 'idle' }, userRoute: null,
-    paceKey: 'normal', planOptions: firstPlan.evaluation.options, dustInfo: firstPlan.dustInfo,
+    paceKey: 'normal', planOptions: firstPlan.evaluation.options, dustInfo: firstPlan.dustInfo, solarInfo: firstPlan.solarInfo, waterSites: [],
     evaluation: firstPlan.evaluation, explanation: firstPlan.explanation,
     sensitivity: { status: 'idle', rows: null }, sensitivityView: null, traverseValidation: null, routingReady: false,
-    emergency: { status: 'idle', show: false, trigger: null, alerts: { sep: true, dust: false }, minute: 0, prepared: null, rows: null, result: null, farthest: null, astronautView: false, key: null },
+    emergency: { status: 'idle', show: false, trigger: null, alerts: { sep: false, dust: false }, routeId: '', distanceM: 0,
+      prepared: null, rows: null, result: null, farthest: null, astronautView: false },
   });
 
   // Sensitivity rows (leg times per sand factor) -> view with the recommended plan under the current options
@@ -132,19 +132,16 @@ async function main() {
       computeIfReady();
     },
     setOption: (patch) => {
-      const prev = store.get().planOptions;
+      const previous = store.get();
+      const prev = previous.planOptions;
       const next = { ...prev, ...patch };
-      if (patch.dustFollowData) next.dustAlertOverride = null;
-      else if (Object.hasOwn(patch, 'dustStormAlert') && !Object.hasOwn(patch, 'dustAlertOverride')) next.dustAlertOverride = patch.dustStormAlert;
-      if (Object.hasOwn(patch, 'weatherScenario') || Object.hasOwn(patch, 'dustSol')) next.dustAlertOverride = null;
-      delete next.dustFollowData;
       const result = service.evaluate(next);
       store.set({
-        planOptions: result.evaluation.options, dustInfo: result.dustInfo,
+        planOptions: result.evaluation.options, dustInfo: result.dustInfo, solarInfo: result.solarInfo,
         evaluation: result.evaluation, explanation: result.explanation,
         sensitivityView: sensitivityView(store.get().sensitivity.rows, result.evaluation.options),
       });
-      followPlanAlerts(prev, result.evaluation.options);
+      followPlanAlerts(prev, result.evaluation.options, previous.evaluation);
     },
     runSensitivity: async () => {
       if (store.get().sensitivity.status === 'running') return;
@@ -161,54 +158,88 @@ async function main() {
       store.set({ paceKey: key });
       actions.setOption({ paceFactor: data.params.pace[key] });
     },
-    /** Emergency return: alerts on/off, minute of the EVA, astronaut view. */
-    setEmergency: async (patch) => {
+    /** Emergency return: alert conditions, itinerary and distance walked. */
+    setEmergency(patch) {
       const prev = store.get().emergency;
       const next = { ...prev, ...patch, alerts: { ...prev.alerts, ...(patch.alerts ?? {}) } };
-      store.set({ emergency: next });
-      if (!next.prepared || (!('minute' in patch) && !('alerts' in patch))) return;
-      const id = ++emergencySeq;
-      try {
-        const result = await service.emergencyReturn(next.prepared, next.minute, next.alerts);
-        if (id !== emergencySeq) return;
-        const heading = result.choice && !result.choice.noRoute ? headingDeg(result.choice.coords) : null;
-        store.set((s) => ({ emergency: { ...s.emergency, result: { ...result, heading }, farthest: service.farthestFromHabitat(next.prepared, next.alerts) } }));
-      } catch (err) {
-        console.error(err);
-        store.set((s) => ({ emergency: { ...s.emergency, status: 'error' } }));
+      if (patch.alerts && !next.alerts.sep && !next.alerts.dust) {
+        next.show = false;
+        next.astronautView = false;
       }
+      const routeChanged = next.routeId !== prev.routeId;
+      if (routeChanged && patch.trigger !== 'plan') next.distanceM = 0;
+      const recalculate = routeChanged || 'distanceM' in patch || 'alerts' in patch || next.show !== prev.show;
+      if (recalculate) {
+        next.result = null;
+        next.farthest = null;
+        ++emergencySeq;
+      }
+      store.set({ emergency: next });
+      if (recalculate && !routeChanged) refreshEmergencyReturn();
     },
   };
-  let emergencySeq = 0;
+  let emergencySeq = 0, preparationSeq = 0, preparationInput;
+  async function refreshEmergencyReturn() {
+    const e = store.get().emergency;
+    if (!e.prepared || !e.show || !(e.alerts.sep || e.alerts.dust)) return;
+    const id = ++emergencySeq;
+    try {
+      const result = await service.emergencyReturn(e.prepared, e.distanceM, e.alerts);
+      if (id !== emergencySeq) return;
+      const heading = result.choice && !result.choice.noRoute ? headingDeg(result.choice.coords) : null;
+      const farthest = service.farthestFromHabitat(e.prepared, e.alerts);
+      store.set((s) => ({ emergency: { ...s.emergency, status: 'ready', result: { ...result, heading }, farthest } }));
+    } catch (err) {
+      if (id !== emergencySeq) return;
+      console.error(err);
+      store.set((s) => ({ emergency: { ...s.emergency, status: 'error' } }));
+    }
+  }
   /**
    * A dust-storm or solar-event alert switched on in the plan proposes the way back to the habitat at once
    * (same alerts, route drawn on the map). Switching every alert off hides it again if the plan had shown it.
    */
-  function followPlanAlerts(prev, next) {
+  function followPlanAlerts(prev, next, previousEvaluation) {
     const was = { dust: Boolean(prev.dustStormAlert), sep: Boolean(prev.solarEventAlert) };
-    const now = { dust: Boolean(next.dustStormAlert), sep: Boolean(next.solarEventAlert) };
-    if (was.dust === now.dust && was.sep === now.sep) return;
-    if (now.dust || now.sep) actions.setEmergency({ show: true, trigger: 'plan', alerts: now });
-    else if (store.get().emergency.trigger === 'plan') actions.setEmergency({ show: false, trigger: null });
+    const now = { dust: Boolean(next.dustStormAlert), sep: Boolean(next.solarEventAlert), solarRateUGyH: next.solarRateUGyH };
+    if (was.dust === now.dust && was.sep === now.sep && prev.solarRateUGyH === now.solarRateUGyH) return;
+    if (now.dust || now.sep) {
+      const routeId = store.get().emergency.routeId || (previousEvaluation.recommended ?? previousEvaluation.closest)?.planId || '';
+      actions.setEmergency({ show: true, trigger: 'plan', alerts: now, routeId });
+    } else if (store.get().emergency.trigger === 'plan') actions.setEmergency({ show: false, trigger: null, alerts: now });
   }
   /** Prepares the return plan for the plan in effect (recommended, or the closest one when the EVA is postponed). */
   async function prepareEmergency() {
     const s = store.get();
-    const plan = s.evaluation.recommended ?? s.evaluation.closest;
-    if (!plan || !s.routingReady || s.routingReady === 'error') return;
-    const key = `${plan.planId}|${s.planOptions.paceFactor}`;
-    if (s.emergency.key === key) return;
-    store.set((st) => ({ emergency: { ...st.emergency, key, status: 'preparing' } }));
+    if (!s.routingReady || s.routingReady === 'error') return;
+    const routeId = s.emergency.routeId || (s.evaluation.recommended ?? s.evaluation.closest)?.planId;
+    const customCoords = routeId === 'custom' ? s.userRoute?.coords : undefined;
+    const detour = routeId === 'brac' ? s.waterSites.find((site) => site.id === 'brac' && site.reachable) : undefined;
+    const paceFactor = s.planOptions.paceFactor;
+    const resM = s.officialRes;
+    const input = [routeId, paceFactor, resM, customCoords, detour?.outboundLegs[0]];
+    if (preparationInput?.every((value, i) => value === input[i])) {
+      if (!s.emergency.result) await refreshEmergencyReturn();
+      return;
+    }
+    preparationInput = input;
+    const id = ++preparationSeq;
+    ++emergencySeq;
+    const ready = routeId && (routeId !== 'custom' || customCoords?.length > 1) && (routeId !== 'brac' || detour);
+    store.set((st) => ({ emergency: { ...st.emergency, prepared: null, result: null, farthest: null, rows: null,
+      status: ready ? 'preparing' : 'unavailable' } }));
+    if (!ready) return;
     try {
-      const prepared = await service.prepareContingency(plan.planId, s.planOptions.paceFactor);
-      if (store.get().emergency.key !== key) return;
-      const view = { planId: prepared.planId, outsideMin: prepared.timeline.outsideMin, timeline: prepared.timeline, rows: prepared.rows, paceFactor: prepared.paceFactor };
-      const minute = Math.min(store.get().emergency.minute || Math.round(prepared.timeline.outsideMin * 0.4), Math.floor(prepared.timeline.outsideMin));
-      store.set((st) => ({ emergency: { ...st.emergency, status: 'ready', prepared: view, rows: service.checkpointTable(prepared) } }));
-      await actions.setEmergency({ minute });
+      const prepared = await service.prepareContingency(routeId, paceFactor, { resM, customCoords, detour });
+      if (id !== preparationSeq) return;
+      store.set((st) => ({ emergency: { ...st.emergency, status: 'ready', prepared,
+        distanceM: Math.min(st.emergency.distanceM, Math.ceil(prepared.timeline.distanceM)), rows: service.checkpointTable(prepared) } }));
+      await refreshEmergencyReturn();
     } catch (err) {
+      if (id !== preparationSeq) return;
       console.error(err);
-      store.set((st) => ({ emergency: { ...st.emergency, status: 'error', key: null } }));
+      preparationInput = null;
+      store.set((st) => ({ emergency: { ...st.emergency, status: 'error' } }));
     }
   }
   // Elevation profile under the map, its red point shared with the map.
@@ -217,7 +248,6 @@ async function main() {
   });
   map.onRouteHover((legId, p) => profileDrawer.followMap(legId, p));
   // Optional detours to places with signs of water alteration (recomputed when the plan changes).
-  let waterSites = [];
   let waterSeq = 0;
   async function refreshWater() {
     const s = store.get();
@@ -226,7 +256,7 @@ async function main() {
     try {
       const list = await service.waterDetours(s.evaluation);
       if (id !== waterSeq) return;
-      waterSites = list; map.setWaterSites(list);
+      store.set({ waterSites: list });
     } catch (err) { console.error(err); }
   }
   map.onClick((p) => {
@@ -263,12 +293,12 @@ async function main() {
 
   const buildAll = () => {
     const { t } = i18n;
-    document.getElementById('subtitle').textContent = t('app.subtitle');
     document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === i18n.lang)));
     helpBtn.setAttribute('aria-label', t('welcome.help')); helpBtn.title = t('welcome.help');
     document.getElementById('skip').textContent = t('app.skip');
     map.setLabels(i18n.html);
-    map.setWaterSites(waterSites);
+    renderEmergency(store.get().emergency);
+    map.setWaterSites(store.get().waterSites);
     profileDrawer.build();
     foldTitles.forEach(([el, key]) => { el.textContent = t(key); });
     panels.forEach((p) => p.build(store.get()));
@@ -285,9 +315,18 @@ async function main() {
     const onGlobe = view === 'globe' && Boolean(globeView);
     globeRoot.hidden = !onGlobe;
     if (globe) (onGlobe ? globe.resume() : globe.pause());
+    document.getElementById('subtitle').textContent = i18n.t(onGlobe ? 'app.globeSubtitle' : 'app.subtitle');
     viewToggle.textContent = i18n.t(onGlobe ? 'app.toMap' : 'app.toGlobe');
     viewToggle.setAttribute('aria-pressed', String(onGlobe));
     if (!onGlobe) map.invalidate();
+  }
+
+  function renderEmergency(e) {
+    map.showEmergencyReturn(e.show && e.result && {
+      position: e.result.position, coords: e.result.choice?.coords, policy: e.result.choice?.policy, alt: e.result.alt,
+      itinerary: e.prepared.timeline.segments.filter((segment) => segment.kind === 'walk').map((segment) => segment.coords),
+      label: i18n.t('emergency.crewHere'),
+    });
   }
 
   let last = {};
@@ -298,11 +337,13 @@ async function main() {
     if (s.pointA !== last.pointA) map.setPoint('A', s.pointA);
     if (s.pointB !== last.pointB) map.setPoint('B', s.pointB);
     if (s.userRoute !== last.userRoute) map.showUserRoute(s.userRoute?.coords ?? null);
+    if (s.waterSites !== last.waterSites) map.setWaterSites(s.waterSites);
     if (s.emergency.result !== last.emergency?.result || s.emergency.show !== last.emergency?.show) {
-      const r = s.emergency.result;
-      map.showEmergencyReturn(s.emergency.show && r && { position: r.position, coords: r.choice?.coords, policy: r.choice?.policy, alt: r.alt, label: i18n.t('emergency.crewHere') });
+      renderEmergency(s.emergency);
     }
-    if (s.evaluation !== last.evaluation || s.routingReady !== last.routingReady) { prepareEmergency(); refreshWater(); }
+    if (s.evaluation !== last.evaluation || s.routingReady !== last.routingReady) refreshWater();
+    if (s.evaluation !== last.evaluation || s.routingReady !== last.routingReady || s.officialRes !== last.officialRes ||
+        s.userRoute !== last.userRoute || s.waterSites !== last.waterSites || s.emergency.routeId !== last.emergency?.routeId) queueMicrotask(prepareEmergency);
     map.setPickCursor(Boolean(s.pick));
     last = s;
   });
@@ -312,11 +353,18 @@ async function main() {
   }));
   i18n.onChange(buildAll);
 
+  openCoverage = () => {
+    if (store.get().view !== 'globe') return;
+    store.set({ view: 'local' });
+    map.showPilotCoverage();
+    document.getElementById('map').focus({ preventScroll: true });
+  };
+  globeView?.setCoverage(data.terrainMeta.bounds);
   buildAll();
   map.showOfficial(store.get().officialRes);
   last = store.get();
   loading.remove();
-  if (welcome.shouldShowOnLoad()) welcome.open();
+  if (store.get().view === 'local' && welcome.shouldShowOnLoad()) welcome.open();
   service.whenRoutingReady().then(() => store.set({ routingReady: true })).catch((err) => { console.error(err); store.set({ routingReady: 'error' }); });
   service.traverseValidation().then((v) => store.set({ traverseValidation: v })).catch((err) => console.error(err));
   window.MARSPLUS = { store, service, map, globe }; // debugging aid for the team (map.setTrekUrlForTest simulates an outage)

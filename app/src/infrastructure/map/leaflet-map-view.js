@@ -2,7 +2,6 @@
 // MapView implementation with Leaflet (global L, loaded from CDN with SRI in index.html).
 // Geographic CRS (EPSG:4326 scheme) matches the Mars Trek tiling, so lon/lat are used directly.
 import { trekTileUrl, TREK_ATTRIBUTION, TREK_MAX_NATIVE_ZOOM } from './mars-trek-layers.js';
-import { classStretch } from '../../domain/routing/route-highlights.js';
 
 // Same colours as the geology legend in the sidebar; filled, with no outline, so the units read as
 // areas and nothing competes with the route lines.
@@ -11,6 +10,18 @@ export const GEO_COLORS = [
 ];
 const GEO_FILL = Object.fromEntries(GEO_COLORS);
 const geoStyle = (f) => ({ stroke: false, fillColor: GEO_FILL[f.properties.class] ?? GEO_FILL.other, fillOpacity: 0.42 });
+const ROUTE_COLORS = { out: '#5ec8f2', back: '#cc8e37', straight: '#c2a198', rover: '#c792ea', water: '#e0a98b', user: '#f4f1ee' };
+const lineKey = (color, dashed = false) => dashed ? `repeating-linear-gradient(90deg,${color} 0 6px,transparent 6px 9px)` : color;
+const MAP_KEYS = {
+  official: [['legend.out', lineKey(ROUTE_COLORS.out)], ['legend.back', lineKey(ROUTE_COLORS.back)], ['legend.straight', lineKey(ROUTE_COLORS.straight, true)]],
+  water: [['layer.water', lineKey(ROUTE_COLORS.water, true)]],
+  cost: [['legend.costEasy', '#46be28'], ['legend.costHard', '#fa5028'], ['legend.costBlocked', '#141414']],
+  slope: [['legend.slopeClear', 'transparent'], ['5°–<10°', '#facc15'], ['10°–<15°', '#f97316'], ['15°–<20°', '#dc2626'], ['≥20°', '#7f1d1d']],
+  geology: GEO_COLORS.map(([key, color]) => [`geo.${key}`, color]),
+  rover: [['layer.rover', lineKey(ROUTE_COLORS.rover, true)]],
+  user: [['legend.user', lineKey(ROUTE_COLORS.user)]],
+};
+const EMERGENCY_COLORS = { itinerary: '#e0dee0', fast: '#f6c445', dust: '#ff8a5c', alt: '#a6a19e' };
 
 export function createLeafletMapView(container, { data, assetUrl }) {
   const L = window.L;
@@ -29,6 +40,8 @@ export function createLeafletMapView(container, { data, assetUrl }) {
   // at walking scale.
   map.createPane('ctxUnder').style.zIndex = 150;
   map.createPane('backup').style.zIndex = 160;
+  map.createPane('geology').style.zIndex = 350;
+  map.createPane('emergency').style.zIndex = 450;
   const tile = (id, maxNative, extra = {}) => L.tileLayer(trekTileUrl(site.trekLayers[id]), { maxNativeZoom: maxNative, maxZoom: 20, tileSize: 256, attribution: TREK_ATTRIBUTION, ...extra });
   tile('ctx', TREK_MAX_NATIVE_ZOOM.ctx, { pane: 'ctxUnder', attribution: '' }).addTo(map);
   const ov = (key, opts) => L.imageOverlay(assetUrl(overlays[key].file), [[overlays[key].bounds.south, overlays[key].bounds.west], [overlays[key].bounds.north, overlays[key].bounds.east]], opts);
@@ -41,9 +54,12 @@ export function createLeafletMapView(container, { data, assetUrl }) {
   const layers = {
     cost: ov('cost', { opacity: 0.55 }),
     slope: ov('slope', { opacity: 0.75 }),
-    geology: L.geoJSON(geology, { style: geoStyle, interactive: false }),
+    geology: L.geoJSON(geology, {
+      style: geoStyle, interactive: false, pane: 'geology',
+      attribution: '<a href="https://doi.org/10.1007/s11214-020-00739-x" target="_blank" rel="noopener">Stack et al. (2020)</a>',
+    }),
     official: L.layerGroup(),
-    rover: L.polyline(routes.roverPath.coords.map(([lon, lat]) => [lat, lon]), { color: '#c792ea', weight: 2, dashArray: '4 6', opacity: 0.9 }),
+    rover: L.polyline(routes.roverPath.coords.map(([lon, lat]) => [lat, lon]), { color: ROUTE_COLORS.rover, weight: 2, dashArray: '4 6', opacity: 0.9 }),
     user: L.layerGroup(),
     emergency: L.layerGroup(),
     water: L.layerGroup(),
@@ -52,16 +68,12 @@ export function createLeafletMapView(container, { data, assetUrl }) {
   layers.user.addTo(map); // empty until the crew draws an A → B route
   layers.emergency.addTo(map); // empty until an alert is simulated
 
-  // Points of the walk. Issole opens the rover photos of what the crew will see there (the sampling
-  // and observation stops are 2.8 m apart, one point for both); the dune point zooms the HiRISE
-  // view in on the sand crossing.
+  // Photo points for landing and Issole, where the sampling and observation stops share one marker.
   const pin = (cls, color, text = '') => L.divIcon({ className: '', html: `<div class="map-pin ${cls}" style="background:${color}">${text}</div>`, iconSize: cls ? [22, 22] : [14, 14], iconAnchor: cls ? [11, 11] : [7, 7] });
   // `side` moves a photo point off the route: the icon sits beside its spot (a small dot marks the exact place).
   const SIDE = { center: [16, 16], downLeft: [34, -2], upRight: [-2, 34] };
   // MARS+ palette: #a2453e terracotta · #c2a198 taupe · #7d6d6d warm grey · #cc8e37 gold · #e0a98b peach.
   const spot = (color, glyph, side = 'center', ink = '#14110f') => L.divIcon({ className: '', html: `<div class="map-spot" style="--spot:${color};color:${ink}" aria-hidden="true">${glyph}</div>`, iconSize: [32, 32], iconAnchor: SIDE[side], popupAnchor: [16 - SIDE[side][0], 2 - SIDE[side][1]] });
-  const official = routes.runs.find((r) => r.resM === routes.primaryResM && r.id === 'landing_sampling');
-  const dunes = official ? classStretch(official.coords, geology.features, 'largeDunes') : null;
   const photos = site.photos ?? [];
   const photosAt = (...stopIds) => photos.filter((p) => stopIds.includes(p.stop));
   // Photos exist only where Perseverance stopped near the route: at the landing site (sol 13) and at Issole.
@@ -71,7 +83,6 @@ export function createLeafletMapView(container, { data, assetUrl }) {
   const markers = {
     landing: L.marker([site.points.landing.lat, site.points.landing.lon], { icon: spot('#c2a198', '⌂', 'upRight'), keyboard: true }).addTo(map),
     issole: L.marker([stops.sampling.lat, stops.sampling.lon], { icon: spot('#a2453e', '◉', 'downLeft', '#f4ede8'), keyboard: true }).addTo(map),
-    dunes: dunes ? L.marker([dunes.middle[1], dunes.middle[0]], { icon: spot('#cc8e37', '≈'), keyboard: true }).addTo(map) : null,
   };
 
   /** Popup body: a heading plus a one-photo-at-a-time gallery of the rover images taken there. */
@@ -110,17 +121,6 @@ export function createLeafletMapView(container, { data, assetUrl }) {
     return root;
   }
 
-  /** Popup body for the dune crossing, with a button that zooms the HiRISE view in on it. */
-  function dunePopup(t) {
-    const root = L.DomUtil.create('div', 'popup-gallery');
-    const head = L.DomUtil.create('div', '', root);
-    head.innerHTML = t('point.dunes', { m: Math.round(dunes.lengthM) });
-    const go = L.DomUtil.create('button', 'btn', root);
-    go.type = 'button';
-    go.textContent = t('point.dunesZoom');
-    L.DomEvent.on(go, 'click', (e) => { L.DomEvent.stop(e); map.closePopup(); map.flyTo([dunes.middle[1], dunes.middle[0]], TREK_MAX_NATIVE_ZOOM.hirise, { duration: 0.8 }); });
-    return root;
-  }
   /** Popup for a water-alteration site: what is there, the source, and what the detour costs. */
   function waterPopup(t, ws) {
     const root = L.DomUtil.create('div', 'popup-gallery');
@@ -160,27 +160,44 @@ export function createLeafletMapView(container, { data, assetUrl }) {
     if (picking && e.key === 'Enter' && clickHandler) { const c = map.getCenter(); clickHandler({ lon: c.lng, lat: c.lat }); e.preventDefault(); }
   });
 
-  // Geology legend, bottom left, shown only while the geology layer is on.
   const legend = L.control({ position: 'bottomleft' });
-  legend.onAdd = () => { const d = L.DomUtil.create('div', 'map-legend'); d.hidden = true; L.DomEvent.disableClickPropagation(d); return d; };
+  legend.onAdd = () => {
+    const root = L.DomUtil.create('div', 'map-legend');
+    root.tabIndex = 0;
+    root.setAttribute('role', 'region');
+    L.DomEvent.disableClickPropagation(root);
+    L.DomEvent.disableScrollPropagation(root);
+    return root;
+  };
   legend.addTo(map);
   const legendEl = legend.getContainer();
-  const renderLegend = () => {
-    legendEl.innerHTML = '';
-    const h3 = L.DomUtil.create('h3', '', legendEl); h3.textContent = lastT('layer.geology');
-    const ul = L.DomUtil.create('ul', '', legendEl);
-    for (const [k, c] of GEO_COLORS) {
-      const li = L.DomUtil.create('li', '', ul);
-      const sw = L.DomUtil.create('i', '', li); sw.style.background = c; sw.style.opacity = '0.85'; sw.setAttribute('aria-hidden', 'true');
-      li.append(lastT(`geo.${k}`));
+  let emergencyKeys = [];
+  const renderLegends = () => {
+    legendEl.replaceChildren();
+    for (const [key, entries] of Object.entries({ emergency: emergencyKeys, ...MAP_KEYS })) {
+      if (!entries.length || !map.hasLayer(layers[key]) || (key === 'user' && !layers.user.getLayers().length)) continue;
+      const section = L.DomUtil.create('section', 'map-legend-section', legendEl);
+      section.dataset.layer = key;
+      if (entries.length > 1) L.DomUtil.create('h3', '', section).textContent = lastT(`layer.${key}`);
+      const ul = L.DomUtil.create('ul', '', section);
+      for (const [label, color] of entries) {
+        const li = L.DomUtil.create('li', '', ul);
+        const swatch = L.DomUtil.create('i', '', li);
+        swatch.style.background = color;
+        swatch.setAttribute('aria-hidden', 'true');
+        if (['official', 'water', 'rover', 'user', 'emergency'].includes(key)) swatch.classList.add('line');
+        li.append(lastT(label));
+      }
+      if (key === 'geology') L.DomUtil.create('div', 'src', section).textContent = 'Stack et al. (2020)';
     }
-    const src = L.DomUtil.create('div', 'src', legendEl); src.textContent = 'Stack et al. 2020, Space Sci. Rev.';
+    legendEl.hidden = !legendEl.childElementCount;
   };
-  map.on('overlayadd', (e) => { if (e.layer === layers.geology) legendEl.hidden = false; });
-  map.on('overlayremove', (e) => { if (e.layer === layers.geology) legendEl.hidden = true; });
+  map.on('layeradd layerremove', ({ layer }) => {
+    if (Object.keys(MAP_KEYS).some((key) => layers[key] === layer)) renderLegends();
+  });
 
   // Robustness: if Mars Trek tiles keep failing, say so; the local HiRISE backup image stays visible underneath.
-  const notice = L.control({ position: 'bottomleft' });
+  const notice = L.control({ position: 'bottomright' });
   notice.onAdd = () => { const d = L.DomUtil.create('div', 'map-notice'); d.setAttribute('role', 'status'); return d; };
   notice.addTo(map);
   const noticeEl = notice.getContainer();
@@ -197,8 +214,9 @@ export function createLeafletMapView(container, { data, assetUrl }) {
     setLabels(t) {
       lastT = t;
       container.setAttribute('aria-label', t('map.label'));
+      legendEl.setAttribute('aria-label', t('map.legend'));
       refreshNotice();
-      renderLegend();
+      renderLegends();
       const w = data.params.workspace;
       const ws = { slope: w.maxSlopeDeg, dune: w.maxLargeDuneFraction };
       const tip = (m, key) => m.unbindTooltip().bindTooltip(t(key), { direction: 'top', offset: [0, -14] });
@@ -206,10 +224,6 @@ export function createLeafletMapView(container, { data, assetUrl }) {
       tip(markers.landing, 'point.landingTip');
       markers.issole.unbindPopup().bindPopup(() => galleryPopup(t, t('point.issoleStops', ws), photosAt('sampling', 'observation')), { maxWidth: 340, minWidth: 300 });
       tip(markers.issole, 'point.issoleTip');
-      if (markers.dunes) {
-        markers.dunes.unbindPopup().bindPopup(() => dunePopup(t), { maxWidth: 300 });
-        tip(markers.dunes, 'point.dunesTip');
-      }
       if (control) control.remove();
       // Only what helps the crew decide; the A → B and emergency routes appear by themselves when used.
       control = L.control.layers(
@@ -222,9 +236,9 @@ export function createLeafletMapView(container, { data, assetUrl }) {
       layers.official.clearLayers();
       const run = (id) => routes.runs.find((r) => r.resM === resM && r.id === id);
       const line = (r, style) => r && L.polyline(r.coords.map(([lon, lat]) => [lat, lon]), style).addTo(layers.official);
-      line(run('straight_landing_sampling'), { color: '#c2a198', weight: 2, dashArray: '2 6', opacity: 0.9 });
-      const back = line(run('sampling_landing'), { color: '#cc8e37', weight: 3, opacity: 0.95 });
-      const out = line(run('landing_sampling'), { color: '#5ec8f2', weight: 3, opacity: 0.95 });
+      line(run('straight_landing_sampling'), { color: ROUTE_COLORS.straight, weight: 2, dashArray: '2 6', opacity: 0.9 });
+      const back = line(run('sampling_landing'), { color: ROUTE_COLORS.back, weight: 3, opacity: 0.95 });
+      const out = line(run('landing_sampling'), { color: ROUTE_COLORS.out, weight: 3, opacity: 0.95 });
       // Hovering the route tells the elevation profile where the pointer is (the red point follows).
       for (const [legId, pl] of [['landing_sampling', out], ['sampling_landing', back]]) {
         if (!pl) continue;
@@ -251,7 +265,7 @@ export function createLeafletMapView(container, { data, assetUrl }) {
         if (ws.reachable) {
           const ll = ws.coords.map(([lon, lat]) => [lat, lon]);
           L.polyline(ll, { color: '#14110f', weight: 6, opacity: 0.55 }).addTo(layers.water);
-          L.polyline(ll, { color: '#e0a98b', weight: 3, dashArray: '8 6' }).addTo(layers.water);
+          L.polyline(ll, { color: ROUTE_COLORS.water, weight: 3, dashArray: '8 6' }).addTo(layers.water);
         }
         return m;
       });
@@ -266,29 +280,48 @@ export function createLeafletMapView(container, { data, assetUrl }) {
     },
     showUserRoute(coords) {
       layers.user.clearLayers();
-      if (!coords) return;
-      const ll = coords.map(([lon, lat]) => [lat, lon]);
-      L.polyline(ll, { color: '#14110f', weight: 6, opacity: 0.7 }).addTo(layers.user);
-      L.polyline(ll, { color: '#f4f1ee', weight: 3 }).addTo(layers.user);
+      if (coords) {
+        const ll = coords.map(([lon, lat]) => [lat, lon]);
+        L.polyline(ll, { color: '#14110f', weight: 6, opacity: 0.7 }).addTo(layers.user);
+        L.polyline(ll, { color: ROUTE_COLORS.user, weight: 3 }).addTo(layers.user);
+      }
+      renderLegends();
     },
     /** Emergency return: the way home from the crew's estimated position (null clears it). */
     showEmergencyReturn(r) {
       layers.emergency.clearLayers();
-      if (!r || !r.position || r.position.atHome) return;
-      if (r.alt && r.alt.coords) {
-        L.polyline(r.alt.coords.map(([lon, lat]) => [lat, lon]), { color: '#f6c445', weight: 3, dashArray: '2 7', opacity: 0.95 })
-          .bindTooltip(lastT('emergency.altRoute'), { sticky: true }).addTo(layers.emergency);
+      emergencyKeys = [];
+      if (r) {
+        for (const leg of r.itinerary) {
+          L.polyline(leg.map(([lon, lat]) => [lat, lon]), { pane: 'emergency', color: EMERGENCY_COLORS.itinerary, weight: 2, opacity: .8, dashArray: '6 5', interactive: false }).addTo(layers.emergency);
+        }
+        emergencyKeys.push(['emergency.itinerary', lineKey(EMERGENCY_COLORS.itinerary, true)]);
+        if (!r.position.atHome) drawReturn(r);
       }
-      if (r.coords) {
-        const ll = r.coords.map(([lon, lat]) => [lat, lon]);
-        const color = r.policy === 'dust' ? '#ff8a5c' : '#f6c445';
-        L.polyline(ll, { color: '#14110f', weight: 7, opacity: 0.75 }).addTo(layers.emergency);
-        L.polyline(ll, { color, weight: 4, dashArray: r.policy === 'dust' ? '10 6' : null }).addTo(layers.emergency);
-      }
-      L.circleMarker([r.position.lat, r.position.lon], { radius: 8, color: '#ff5a4f', weight: 3, fillColor: '#f4f1ee', fillOpacity: 1 })
-        .bindTooltip(r.label ?? '', { direction: 'top' }).addTo(layers.emergency);
+      renderLegends();
+    },
+    showPilotCoverage() {
+      map.fitBounds(pilotBounds.pad(0.02), { animate: false });
+      layers.geology.addTo(map);
     },
     fitPilot() { map.fitBounds(pilotBounds.pad(0.02)); },
     invalidate() { map.invalidateSize(); },
   };
+
+  function drawReturn(r) {
+    if (r.alt?.coords) {
+      L.polyline(r.alt.coords.map(([lon, lat]) => [lat, lon]), { pane: 'emergency', color: EMERGENCY_COLORS.alt, weight: 3, dashArray: '2 7', opacity: 0.95 })
+        .bindTooltip(lastT('emergency.altRoute'), { sticky: true }).addTo(layers.emergency);
+      emergencyKeys.push(['emergency.altRoute', lineKey(EMERGENCY_COLORS.alt, true)]);
+    }
+    if (r.coords) {
+      const ll = r.coords.map(([lon, lat]) => [lat, lon]);
+      const color = EMERGENCY_COLORS[r.policy];
+      L.polyline(ll, { pane: 'emergency', color: '#14110f', weight: 7, opacity: 0.75 }).addTo(layers.emergency);
+      L.polyline(ll, { pane: 'emergency', color, weight: 4, dashArray: r.policy === 'dust' ? '10 6' : null }).addTo(layers.emergency);
+      emergencyKeys.push([r.policy === 'dust' ? 'emergency.routeDust' : 'emergency.routeFast', lineKey(color, r.policy === 'dust')]);
+    }
+    L.circleMarker([r.position.lat, r.position.lon], { pane: 'emergency', radius: 8, color: '#ff5a4f', weight: 3, fillColor: '#f4f1ee', fillOpacity: 1 })
+      .bindTooltip(r.label ?? '', { direction: 'top' }).addTo(layers.emergency);
+  }
 }

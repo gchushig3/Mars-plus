@@ -43,7 +43,7 @@ Comprobación: la media en latitudes medias del sur durante Ls 210–300° es ma
   - sol 314: 0,639; sol 315: 0,912; sol 316: 1,376; sol 317: 1,342 (tres muestras: 1,246, 1,342 y 1,413).
 - Por eso el umbral del planificador es **1,0**: separa ese fondo de ese pico. Está en `config/model-parameters.json`. No es una regla de vuelo.
 
-La alerta automática usa esa tabla. El escenario «días de tormenta» toma el máximo de las medianas diarias (1,376) y se enciende. El escenario típico y el peor toman la mediana de fondo y no se encienden. Un sol elegido usa la mediana de ese sol; si no hay dato, la alerta no se inventa. El checkbox sigue pudiendo forzarla o apagarla.
+La alerta usa esa tabla. El escenario «días de tormenta» toma el máximo de las medianas diarias (1,376) y se activa. El escenario típico y el peor toman la mediana de fondo. Un sol elegido usa la mediana de ese sol. Cuando falta esa medición, el visor indica que el estado del polvo es indeterminado.
 
 ## 4. Fuentes que no se usan
 

@@ -14,13 +14,20 @@ export function createSummaryBar(el, { i18n }) {
       const rec = ev.recommended;
       clear(el);
       el.className = `summary ${rec ? 'ok' : 'bad'}`;
-      const text = rec
-        ? t('summary.go', { planId: rec.planId, planName: planName(i18n, rec.planId), departure: fmtHour(rec.departure), returnTime: fmtHour(rec.returnHour), dose: fmt(rec.doseUGy, 0) })
-        : t('summary.noGo');
       el.append(
-        h('strong', {}, rec ? t('explain.go') : t('explain.noGo')),
-        h('span', {}, text),
-        h('a', { href: '#panel-plans' }, t('summary.why')));
+        h('div', { class: 'summary-heading' },
+          h('strong', {}, rec ? t('explain.go') : t('explain.noGo')),
+          h('span', {}, rec ? t('summary.plan', { planId: rec.planId, planName: planName(i18n, rec.planId) }) : t('summary.noGo')),
+          h('a', { href: '#panel-plans' }, t('summary.why'))));
+      if (rec) {
+        const metrics = [
+          ['departure', fmtHour(rec.departure)],
+          ['return', fmtHour(rec.returnHour)],
+          ['dose', `${fmt(rec.doseUGy, 0)} µGy`],
+        ];
+        el.append(h('dl', { class: 'summary-metrics' }, metrics.map(([key, value]) =>
+          h('div', {}, h('dt', {}, t(`summary.${key}`)), h('dd', { class: 'mono' }, value)))));
+      }
     },
   };
 }

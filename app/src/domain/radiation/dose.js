@@ -23,3 +23,13 @@ export function evaDoseUGy(rateUGyPerHour, minutesOnSurface) {
 export function shareOfSol(minutesOnSurface) {
   return minutesOnSurface / (24 * 60);
 }
+/** Peak RAD measurement and event classification for the selected historical UTC day. */
+export function radDay(radiation, day) {
+  if (!day) return { day: null, peakUGyH: null, event: false };
+  const rates = radiation.series.filter(([utc, rate]) => utc.split(' ')[0] === day && Number.isFinite(rate));
+  return {
+    day,
+    peakUGyH: rates.length ? Math.max(...rates.map(([, rate]) => rate)) : null,
+    event: rates.length > 0 && radiation.event.days.includes(day),
+  };
+}

@@ -10,8 +10,8 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 
 ## What it does
 
-- **3D Mars globe as the entry screen:** a WebGL2 globe built by the MARS+ team. It has four global layers (Viking colour mosaic, MOLA elevation, USGS geologic map with all 44 units, and seasonal dust: column optical depth and where storms happen) and a guided flight to Jezero that opens the local planner. Without WebGL2, or with `?view=local`, the app starts directly on the local map.
-- **Hyper-local map (≈1 km², 2 m grid), kept simple:** HiRISE 25 cm imagery and the official EVA route (out and back). Points to click: the habitat and Issole open the real Perseverance photos taken there (the rover stopped next to our route only at these two ends); the dune crossing zooms into the sand ripples. Optional layers: walking effort, slope, sand dunes and rock units (with a legend), the rover’s real drive. Coarser imagery (CTX 6 m, THEMIS 100 m) is not offered because it shows nothing at walking scale.
+- **3D Mars globe as the entry screen:** a WebGL2 globe built by the MARS+ team. It has four global layers (Viking, MOLA, USGS geology and seasonal dust). The highlighted footprint follows the bounds of the Jezero terrain dataset. Select it or zoom in near it to open the local map with geology enabled. Use `?view=local` to open the EVA map directly.
+- **Hyper-local map (≈1 km², 2 m grid):** HiRISE 25 cm imagery and the official EVA route (out and back). The habitat and Issole points open Perseverance photos. The layer control offers the Brac detour, walking effort, slope, Jezero geology and the rover traverse. The bottom-left legends follow the visible layers.
 - **Elevation profile under the map:** one button opens it; a red point marks the same place on the profile and on the route, in both directions (and with the keyboard).
 - **Detour for signs of water:** Brac (Séítah rock with alteration minerals, where Perseverance cored Salette and Coulettes) is shown with the least-effort detour on the way out and whether it fits the time budget with a photo stop.
 - **Mars gravity explained:** 0.38 g, what it changes for loads, walking speed, slopes and falls, with a weight converter. It explains the model; the cost formula is unchanged.
@@ -22,7 +22,7 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
   - **Sand sensitivity:** routes and plans are recomputed with sand ×1.5 / ×2 / ×3.
   - **Obstacle model vs. ground truth:** only 0.8% of the cells along Perseverance's real ~1 km drive inside the area are flagged as blocked.
   - **Real rover photos** of what the crew will see at Issole.
-- **Emergency return during the EVA:** switching on a dust-storm or solar-event alert in the plan proposes the way back to the habitat at once. A dust storm or a solar particle event cannot be dodged inside a 1 km² area, so MARS+ prepares the way back to the habitat before leaving. Pick the minute and the alert: solar particles → fastest route, with the extra dose at the 28 Oct 2021 event rate; dust storm → dust-safe route (gentler slopes, fewer dunes, habitat in view, slower pace); both → the dust-safe route and what it costs against the fastest. An "astronaut view" shows the minimum the crew would get on a suit display (concept).
+- **Emergency return during the EVA:** choose an itinerary (plan A, B or C, the Brac detour, or a calculated A → B route) and the metres walked. The planner activates the dust alert from Mastcam-Z opacity at Jezero and the solar alert from a selected date of the documented October 2021 event in Curiosity RAD data. It plots the estimated position and the way back to the habitat. Solar only uses the fastest route and the selected day's peak dose rate. Dust applies a slope cap, penalties for dunes and loss of line of sight, and a slower walking pace. Both alerts apply dust constraints and the solar dose rate. These are historical replays, with a combined test scenario available from the two records.
 - **Explains itself:** "Recommended: Plan C, depart 09:00, back 11:39 … Plan A is out — Time: exceeds the 180-min limit by 5 min."
 - **Bilingual:** English / Spanish.
 
@@ -60,7 +60,7 @@ pipeline/ (PowerShell + C#, offline)          app/ (static site, no build)
 - **Clean architecture:** `domain/` is pure JavaScript (no DOM). `infrastructure/` adapts Leaflet, the Web Worker and the static data; `ui/` only talks to `application/`.
 - **Parity:** the browser engine and the pipeline engine (C#) read the same parameters. `tests/` checks that their route times differ by **<1%**.
 - **Emergency return:** the Web Worker builds two "time to the habitat" fields once (fastest, and dust-safe); the way home from any point of the plan is then read in milliseconds.
-- **Tests:** 89 browser tests (domain, the six plan scenarios plus the measured dust alert, JS↔C# parity, validity, UI and layer rules, globe, dust, emergency return). An architecture test fails if `ui/` imports `domain/` or `infrastructure/`.
+- **Tests:** domain, plan scenarios, measured alerts, JS↔C# parity, validity, UI and layer rules, globe and emergency return. An architecture test fails if `ui/` imports `domain/` or `infrastructure/`.
 - See `STACK_Y_ARQUITECTURA.md` (Spanish) for the full stack and architecture.
 
 ## Run locally (Windows)
@@ -79,7 +79,7 @@ node tests/run.mjs
 ## Deploy
 
 `app/` is a static site with no build step:
-- **GitHub Pages:** on every push to `main`, `.github/workflows/pages.yml` runs the full test suite (Node 22, 89 tests) and publishes `app/` only if every test passes (Settings → Pages → Source: GitHub Actions).
+- **GitHub Pages:** on every push to `main`, `.github/workflows/pages.yml` runs the full test suite (Node 22) and publishes `app/` only if every test passes (Settings → Pages → Source: GitHub Actions).
 - **Netlify:** `netlify.toml` publishes `app/`.
 
 ## Assumptions and limits (stated in the app)
@@ -88,7 +88,7 @@ node tests/run.mjs
 - Sand doubles walking time (based on Lejeune et al. 1998, energy cost of walking on sand). About 520 m of large dunes surround Issole and cannot be avoided.
 - Rocks are detected from HiRISE shadows; rocks smaller than ~0.75 m are invisible from orbit.
 - Radiation rate comes from Gale crater (RAD). Jezero is higher, so the local dose would be somewhat larger. The nominal dose is that rate times time on the surface (walking and tasks). Airlock time is inside the habitat, and the reserve is unused margin, so neither is counted as exposure. The weather check still covers the whole budgeted window, including the reserve.
-- The dust-storm alert follows Mastcam-Z 880 nm optical depth at Jezero and turns on at τ ≥ 1.0 (see `config/model-parameters.json`). The crew can still override it. Derived MEDA files do not contain opacity. Global maps show the Montabone column-dust climatology and MDAD storm frequency; both are orbital and do not separate routes inside Jezero. Provenance is in `app/data/dust/catalog.json` and `docs/es/datos-polvo.md`.
+- The dust-storm alert follows Mastcam-Z 880 nm optical depth at Jezero and turns on at the scenario threshold τ ≥ 1.0 (see `config/model-parameters.json`). Derived MEDA files do not contain opacity. Global maps show the Montabone column-dust climatology and MDAD storm frequency; both are orbital and do not separate routes inside Jezero. Provenance is in `app/data/dust/catalog.json` and `docs/es/datos-polvo.md`.
 - Stops are the flattest rock-free workspaces near the rover positions for Robine and Malay.
 - Emergency return (scenario assumptions, `config/model-parameters.json → contingency`): the habitat is the only shelter; the crew position is estimated from progress along the planned route (no GPS on Mars); dust-safe routes keep slopes ≤ 15° and are walked 1.5× slower; a warning appears when any point of the plan is more than 45 min from the habitat. How much warning an alert gives on Mars is not modelled.
 
@@ -121,6 +121,7 @@ node tests/run.mjs
 - Montabone, L. et al. (2015). *Eight-year climatology of dust optical depth on Mars*. Icarus 251, 65–95. doi:10.1016/j.icarus.2014.12.034. Montabone, L. et al. (2020), JGR Planets, doi:10.1029/2019JE006111.
 - Battalio, M. & Wang, H. (2021). *The Mars Dust Activity Database (MDAD)*. Icarus 354, 114059. doi:10.1016/j.icarus.2020.114059.
 - Lemmon, M. T., *Mars 2020 Mastcam-Z optical depth*, Mendeley Data, doi:10.17632/gktjp9jptb.2.
+- Guo, J. et al. (2023). *The First Ground Level Enhancement Seen on Three Planetary Surfaces: Earth, Moon, and Mars*. Geophys. Res. Lett., doi:10.1029/2023GL103069.
 
 **Literature**
 - Bell, J. F. III et al. (2022). *Geological, multispectral, and meteorological imaging results from the Mars 2020 Perseverance rover in Jezero crater*. Sci. Adv. 8, eabo4856.

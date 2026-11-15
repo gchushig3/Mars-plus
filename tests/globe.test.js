@@ -1,7 +1,7 @@
 // AI-assisted (Claude). Reviewed by the MARS+ team.
 // Phase 5 (globe): published assets, geology legend in both languages, longitude wrapping and elevation ramp.
 import { test, assert, assertClose } from './harness.js';
-import { wrapLongitude, GLOBE_ELEVATION_STOPS } from '../app/src/infrastructure/globe/webgl-globe.js';
+import { projectSurfacePoint, wrapLongitude, GLOBE_ELEVATION_STOPS } from '../app/src/infrastructure/globe/webgl-globe.js';
 
 const base = '../app/assets/globe/';
 const meta = () => fetch(`${base}globe.json`).then((r) => r.json());
@@ -56,6 +56,17 @@ test('globe: longitude wraps into [-180, 180)', () => {
   assertClose(wrapLongitude(-190), 170, 1e-9);
   assertClose(wrapLongitude(77.45), 77.45, 1e-9);
   assertClose(wrapLongitude(180), -180, 1e-9);
+});
+
+test('globe: coverage follows the camera and disappears beyond the visible horizon', () => {
+  const jezero = { lat: 18.44, lon: 77.45 };
+  const size = [1200, 800];
+  const centered = projectSurfacePoint(jezero, { ...jezero, distance: 1.12 }, ...size);
+  assertClose(centered.x, 600, 1e-9);
+  assertClose(centered.y, 400, 1e-9);
+  const offCenter = projectSurfacePoint(jezero, { lat: 8, lon: 30, distance: 2.92 }, ...size);
+  assert(offCenter.x > 600 && offCenter.y < 400, 'Jezero appears to the east and north');
+  assert(projectSurfacePoint(jezero, { lat: 8, lon: -65, distance: 2.92 }, ...size) === null, 'Jezero is hidden on the far side');
 });
 
 test('globe: elevation ramp is ordered from low to high', () => {

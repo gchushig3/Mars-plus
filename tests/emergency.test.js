@@ -5,7 +5,8 @@ import { buildCostModel } from '../app/src/domain/terrain/cost.js';
 import { routeStats } from '../app/src/domain/routing/route-stats.js';
 import { returnField, pathHome } from '../app/src/domain/routing/time-field.js';
 import { TerrainGrid } from '../app/src/domain/terrain/grid.js';
-import { buildTimeline, positionAt, checkpoints, chooseReturn, headingDeg, farthestPoint } from '../app/src/domain/contingency/contingency.js';
+import { buildTimeline, positionAt, positionAtDistance, checkpoints, chooseReturn, headingDeg, farthestPoint } from '../app/src/domain/contingency/contingency.js';
+import { radDay } from '../app/src/domain/radiation/dose.js';
 import { dustPolicy, eventRateUGyH } from '../app/src/domain/contingency/return-policy.js';
 import { evaluatePlans, defaultPlanOptions } from '../app/src/domain/plans/evaluate.js';
 import { legsOfPlan } from '../app/src/domain/plans/tasks.js';
@@ -104,4 +105,44 @@ test('emergency: heading and farthest-point helpers', () => {
   assertClose(headingDeg([[0, 0], [1, 0]]), 90, 1e-6, 'east');
   const far = farthestPoint([{ minute: 10, timeMin: 20 }, { minute: 60, timeMin: 50 }, { minute: 90, timeMin: NaN }], 45);
   assertEqual(far.minute, 60); assert(far.overLimit, 'over the limit');
+});
+
+test('emergency: metres walked locate the crew on both legs of the real Jezero itinerary', async () => {
+  const { f, core } = await setup();
+  const plan = f.params.plans.find((p) => p.id === 'C');
+  const legs = core.legTimeline(legsOfPlan(f.params, plan).map((id) => ({ id, coords: f.legs[id].coords }))).legs;
+  const timeline = buildTimeline(f.params, plan, legs);
+  const outbound = positionAtDistance(timeline, 450);
+  const inbound = positionAtDistance(timeline, 1300);
+  assertEqual(outbound.legId, 'landing_sampling');
+  assertEqual(inbound.legId, 'sampling_landing');
+  assertClose(outbound.distanceM, 450, 1e-6);
+  assertClose(inbound.distanceM, 1300, 1e-6);
+  assert(positionAtDistance(timeline, 0).atHome);
+  assert(positionAtDistance(timeline, Math.ceil(timeline.distanceM)).atHome);
+  const returns = core.returnsFrom([outbound, inbound]).results;
+  assert(returns.every((r) => r.fast?.distanceM > 0));
+  assert(Math.abs(returns[0].fast.distanceM - returns[1].fast.distanceM) > 20, 'different positions produce different returns');
+});
+
+test('emergency: custom A to B endpoints retain their position away from the habitat', async () => {
+  const { f, core } = await setup();
+  const coords = f.legs.sampling_landing.coords.slice(0, 40);
+  const legs = core.legTimeline([{ id: 'custom', coords }]).legs;
+  const timeline = buildTimeline(f.params, { id: 'custom' }, legs, 1, { itinerary: [{ legId: 'custom' }], homeEndpoints: false });
+  const first = positionAtDistance(timeline, 0);
+  const last = positionAtDistance(timeline, Math.ceil(timeline.distanceM));
+  assert(!first.atHome && !last.atHome);
+  assertClose(first.lon, coords[0][0], 1e-9);
+  assertClose(last.lon, coords.at(-1)[0], 1e-9);
+  assert(core.returnsFrom([first]).results[0].fast.distanceM > 500, 'at A, the crew still has to walk back to the habitat');
+});
+
+test('emergency: the solar alert follows recorded RAD event dates and each measured daily peak', async () => {
+  const { f } = await setup();
+  const event = radDay(f.radiation, '2021-301');
+  assert(event.event && event.peakUGyH > f.radiation.backgroundUGyH);
+  assertClose(event.peakUGyH, Math.max(...f.radiation.series.filter(([utc]) => utc.startsWith('2021-301 ')).map(([, dose]) => dose)), 1e-9);
+  assert(!radDay(f.radiation, '2021-300').event);
+  assertEqual(radDay(f.radiation, '2021-001').peakUGyH, null);
 });

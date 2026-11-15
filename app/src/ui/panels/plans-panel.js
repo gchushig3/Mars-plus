@@ -14,31 +14,36 @@ export function createPlansPanel(el, { i18n, data, actions }) {
     const o = state.planOptions;
     ctl.scenario = h('select', { onchange: (e) => actions.setOption({ weatherScenario: e.target.value }) },
       ...['typical', 'worst', 'storm'].map((k) => h('option', { value: k, selected: o.weatherScenario === k }, t(`scenario.${k}`))));
-    ctl.dust = h('input', { type: 'checkbox', checked: o.dustStormAlert, onchange: (e) => actions.setOption({ dustStormAlert: e.target.checked }) });
+    ctl.dust = h('p', { class: 'note', role: 'status' });
     ctl.sol = h('input', {
       type: 'number', min: 0, max: 4000, step: 1, value: o.dustSol ?? '', inputmode: 'numeric',
       'aria-label': t('plans.dustSol'),
       onchange: (e) => { const raw = e.target.value.trim(); actions.setOption({ dustSol: raw === '' ? null : Number(raw) }); },
     });
-    ctl.solar = h('input', { type: 'checkbox', checked: o.solarEventAlert, onchange: (e) => actions.setOption({ solarEventAlert: e.target.checked }) });
+    const days = [...new Set(data.radiation.series.map(([utc]) => utc.split(' ')[0]))];
+    const dateFormat = new Intl.DateTimeFormat(i18n.lang, { dateStyle: 'medium', timeZone: 'UTC' });
+    ctl.solar = h('select', { onchange: (e) => actions.setOption({ radiationDay: e.target.value || null }) },
+      h('option', { value: '' }, t('plans.radBackground')),
+      days.map((day) => {
+        const [year, ordinal] = day.split('-').map(Number);
+        return h('option', { value: day, selected: day === o.radiationDay }, dateFormat.format(new Date(Date.UTC(year, 0, ordinal))));
+      }));
+    ctl.radNote = h('p', { class: 'note', role: 'status' });
     ctl.limit = h('input', { type: 'number', min: 60, max: 480, step: 5, value: o.limitMin, onchange: (e) => { const v = Number(e.target.value); if (v >= 60 && v <= 480) actions.setOption({ limitMin: v }); } });
     ctl.pace = h('select', { onchange: (e) => actions.setPace(e.target.value) },
       ...['slow', 'normal', 'fast'].map((k) => h('option', { value: k, selected: state.paceKey === k }, t(`pace.${k}`))));
     verdict = h('div', { class: 'verdict', role: 'status', 'aria-live': 'polite' });
     explainList = h('ul', { class: 'explain' });
     grid = h('table', { class: 'plan-grid' });
-    ctl.dustLabel = document.createTextNode('');
     ctl.note = h('p', { class: 'note' });
-    ctl.follow = h('button', { type: 'button', class: 'btn', onclick: () => actions.setOption({ dustFollowData: true }) }, t('plans.dustFollow'));
     el.append(
       h('h2', {}, t('plans.title')),
       h('p', { class: 'lead' }, t('plans.lead')),
       h('label', { class: 'field' }, t('plans.scenario'), ctl.scenario),
-      h('label', { class: 'check' }, ctl.dust, ctl.dustLabel),
-      ctl.note,
-      ctl.follow,
       h('label', { class: 'field' }, t('plans.dustSol'), ctl.sol),
-      h('label', { class: 'check' }, ctl.solar, t('plans.alertSolar')),
+      ctl.dust, ctl.note,
+      h('label', { class: 'field' }, t('plans.radDay'), ctl.solar),
+      ctl.radNote,
       (ctl.wayBack = h('a', { class: 'callout way-back', href: '#panel-emergency', hidden: true }, t('plans.wayBack'))),
       h('div', { class: 'field' }, h('label', {}, t('plans.limit'), ' ', ctl.limit), h('label', {}, t('plans.pace'), ' ', ctl.pace)),
       verdict, explainList,
@@ -81,10 +86,11 @@ export function createPlansPanel(el, { i18n, data, actions }) {
     const { t } = i18n;
     const { evaluation, explanation } = state;
     if (ctl.dust) {
-      ctl.dust.checked = Boolean(state.planOptions.dustStormAlert);
-      ctl.dustLabel.textContent = t(state.planOptions.dustAlertOverride == null ? 'plans.alertDustAuto' : 'plans.alertDustManual');
+      ctl.dust.textContent = t(state.dustInfo?.tau == null ? 'plans.dustStatusUnknown' : state.planOptions.dustStormAlert ? 'plans.dustStatusActive' : 'plans.dustStatusBelow');
       ctl.note.textContent = dustText(i18n, state.dustInfo, data.params);
-      ctl.follow.hidden = state.planOptions.dustAlertOverride == null;
+      const solar = state.solarInfo;
+      const rate = Number.isFinite(solar?.peakUGyH) ? solar.peakUGyH.toLocaleString(i18n.lang, { maximumFractionDigits: 2 }) : '';
+      ctl.radNote.textContent = t(solar?.event ? 'plans.radActive' : rate ? 'plans.radOutside' : 'plans.radReference', { rate });
       ctl.wayBack.hidden = !(state.planOptions.dustStormAlert || state.planOptions.solarEventAlert);
     }
     updateSensitivity(state);

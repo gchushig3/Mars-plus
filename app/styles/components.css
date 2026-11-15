@@ -69,12 +69,29 @@ table.data th { color: var(--muted); font-weight: 500; font-size: 12px; }
 .callout.ok { border-left-color: var(--ok); }
 
 /* Summary bar (GO / NO-GO first) */
-.summary { position: sticky; top: 0; z-index: 5; margin: 0 -16px; padding: 8px 16px; background: var(--surface); border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 13px; }
+.summary { position: sticky; top: 0; z-index: 5; margin: 0 -16px; padding: 9px 16px; background: var(--surface); border-bottom: 1px solid var(--line); display: grid; gap: 8px; font-size: 13px; }
+.sidebar { scroll-padding-top: 105px; }
+.summary-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
 .summary strong { font-size: 13px; letter-spacing: .06em; padding: 1px 8px; border-radius: 999px; color: #14110f; }
 .summary.ok strong { background: var(--ok); }
 .summary.bad strong { background: var(--bad); }
-.summary span { flex: 1 1 220px; }
+.summary-heading span { flex: 1 1 130px; }
 .summary a { font-size: 12px; white-space: nowrap; }
+.summary-metrics, .mission-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; margin: 0; }
+.summary-metrics dt, .mission-metrics dt { color: var(--muted); font-size: 11px; line-height: 1.25; }
+.summary-metrics dd, .mission-metrics dd { margin: 3px 0 0; color: var(--text); font-size: 13px; white-space: nowrap; }
+.summary-metrics > div + div { border-left: 1px solid var(--line); padding-left: 8px; }
+.mission-subhead { margin: 13px 0 4px; font-size: 14px; }
+.mission-legs { display: grid; gap: 8px; margin-top: 10px; }
+.mission-leg { padding: 9px 11px; border: 1px solid var(--line); border-left: 3px solid var(--mars-taupe); border-radius: var(--radius); background: var(--surface); }
+.mission-leg[data-leg="landing_sampling"] { border-left-color: #5ec8f2; }
+.mission-leg[data-leg="sampling_landing"] { border-left-color: #cc8e37; }
+.mission-leg h3 { font-size: 13px; margin-bottom: 7px; }
+.mission-metrics > div:nth-child(4) { grid-column: span 2; }
+.mission-details { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+.mission-details summary { color: var(--accent); cursor: pointer; font-size: 13px; }
+.mission-details .mission-leg, .mission-details h3 { margin-top: 8px; }
+.mission-details > h3 { font-size: 12px; }
 
 /* Welcome dialog */
 .welcome { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; padding: 16px; background: rgba(10, 8, 7, .72); }
@@ -108,11 +125,8 @@ table.data th { color: var(--muted); font-weight: 500; font-size: 12px; }
 .map-pin.ab { width: 22px; height: 22px; display: grid; place-items: center; font: 600 12px var(--font-sans); color: #14110f; background: var(--route-user); }
 
 /* Emergency return (alert during the EVA) */
-.emergency-alerts { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px; margin: 10px 0; display: grid; gap: 6px; }
-.emergency-alerts legend { padding: 0 4px; color: var(--muted); font-size: 12px; }
-.emergency-alerts label { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; }
-.emergency-minute { display: grid; gap: 4px; font-size: 13px; margin-top: 6px; }
-.emergency-minute input { width: 100%; accent-color: var(--accent); }
+.emergency-progress { display: grid; gap: 4px; font-size: 13px; margin-top: 6px; }
+.emergency-progress input { width: 100%; accent-color: var(--accent); }
 .emergency-result { margin-top: 8px; font-size: 13px; }
 .emergency-big { font-size: 16px; font-weight: 600; margin: 4px 0; color: var(--warn); }
 .emergency-big.bad, .note.bad { color: var(--bad); }
@@ -140,7 +154,7 @@ table.data th { color: var(--muted); font-weight: 500; font-size: 12px; }
 .fold-body { margin-top: 10px; }
 .fold-body > h2:first-child { display: none; }
 
-/* Map points: habitat, dune crossing, Issole (opens the rover photos) */
+/* Map points and rover photo gallery */
 .map-spot { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; line-height: 1; color: #14110f; background: var(--spot); border: 2px solid #14110f; box-shadow: 0 0 0 3px rgba(244, 241, 238, .55), 0 4px 10px rgba(0, 0, 0, .5); cursor: pointer; }
 .popup-gallery { display: grid; gap: 8px; }
 .popup-gallery .popup-photo { width: 100%; max-width: 320px; aspect-ratio: 4 / 3; object-fit: cover; margin-top: 2px; }
@@ -155,13 +169,15 @@ table.data th { color: var(--muted); font-weight: 500; font-size: 12px; }
 .way-back[hidden] { display: none; }
 .way-back:hover, .way-back:focus-visible { background: var(--surface-2); }
 
-/* Geology legend on the map (bottom left, only while the layer is on) */
-.map-legend { background: rgba(20, 17, 15, .92); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; font-size: 13px; line-height: 1.35; max-width: 270px; box-shadow: 0 4px 14px rgba(0, 0, 0, .45); }
+/* Legends of the visible EVA map layers */
+.map-legend { background: rgba(20, 17, 15, .95); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); padding: 9px 11px; font-size: 12px; line-height: 1.35; max-width: min(235px, 64vw); max-height: min(34vh, 315px); overflow-y: auto; box-shadow: 0 4px 14px rgba(0, 0, 0, .45); }
 .map-legend[hidden] { display: none; }
+.map-legend-section + .map-legend-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 .map-legend h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--mars-taupe); }
 .map-legend ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
 .map-legend li { display: flex; align-items: center; gap: 8px; }
-.map-legend i { width: 16px; height: 16px; border-radius: 3px; flex: none; }
+.map-legend i { width: 15px; height: 13px; border: 1px solid #ece1da55; border-radius: 3px; flex: none; }
+.map-legend i.line { width: 21px; height: 3px; border: 0; border-radius: 0; }
 .map-legend .src { margin-top: 6px; font-size: 11px; color: var(--muted); }
 
 /* Elevation profile drawer under the map */
@@ -184,5 +200,10 @@ table.data th { color: var(--muted); font-weight: 500; font-size: 12px; }
 .profile-rule { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(244, 237, 232, .45); pointer-events: none; }
 .profile-foot { display: flex; justify-content: space-between; margin-left: 58px; font: 11px var(--font-mono, monospace); color: var(--muted); }
 .profile-drawer input[type=range] { width: calc(100% - 58px); margin-left: 58px; accent-color: #a2453e; }
+
+@media (max-width: 520px) {
+  .map-legend { max-width: min(205px, 55vw); max-height: min(26vh, 210px); }
+  .profile-toggle { left: auto; right: 10px; bottom: 42px; transform: none; padding-inline: 6px; }
+}
 .profile-readout { margin: 0 0 0 58px; font-size: 13px; }
 @media (max-width: 900px) { .map-wrap.profile-open #map { height: 60vh; } }

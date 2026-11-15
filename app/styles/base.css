@@ -27,3 +27,11 @@ a { color: var(--accent); }
   #map { flex: none; height: 60vh; }
   .sidebar { border-left: 0; border-top: 1px solid var(--line); padding: 4px 16px 32px; }
 }
+
+@media (max-width: 520px) {
+  .app-header { min-height: 57px; gap: 6px; padding: 8px 10px; }
+  .brand-sub { display: none; }
+  .header-actions { gap: 5px; }
+  .header-actions .seg button, #view-toggle { padding-inline: 7px; }
+  #view-toggle { white-space: nowrap; }
+}

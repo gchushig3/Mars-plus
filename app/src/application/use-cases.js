@@ -6,8 +6,9 @@ import { applyDustAlert } from '../domain/dust/dust.js';
 import { explainEvaluation } from '../domain/explain/explain.js';
 import { withLargeDuneFactor, largeDuneFactor } from '../domain/terrain/params.js';
 import { legsOfPlan } from '../domain/plans/tasks.js';
-import { buildTimeline, positionAt, checkpoints, chooseReturn, farthestPoint } from '../domain/contingency/contingency.js';
+import { buildTimeline, positionAt, positionAtDistance, checkpoints, chooseReturn, farthestPoint } from '../domain/contingency/contingency.js';
 import { dustPolicy, eventRateUGyH } from '../domain/contingency/return-policy.js';
+import { radDay } from '../domain/radiation/dose.js';
 import { profileOf, indexAtDistance, nearestIndex, gradeAt } from '../domain/routing/profile.js';
 import { classMask } from '../domain/routing/route-highlights.js';
 import { detourCost } from '../domain/plans/detour.js';
@@ -53,9 +54,12 @@ export function createMissionService({ repository, solver }) {
 
     /** Evaluates every plan x departure through the filter chain and explains the outcome. */
     evaluate(options, legs = this.officialLegs()) {
-      const applied = applyDustAlert(site.params, site.dust?.jezeroTau, options);
-      const evaluation = evaluatePlans(planInput(legs), applied.options);
-      return { evaluation, explanation: explainEvaluation(evaluation), dustInfo: applied.dustInfo };
+      const applied = applyDustAlert(site.params, site.dust?.jezeroTau, { ...options, dustAlertOverride: null });
+      const solarInfo = radDay(site.radiation, options.radiationDay);
+      const evaluation = evaluatePlans(planInput(legs), {
+        ...applied.options, solarEventAlert: solarInfo.event, solarRateUGyH: solarInfo.event ? solarInfo.peakUGyH : null,
+      });
+      return { evaluation, explanation: explainEvaluation(evaluation), dustInfo: applied.dustInfo, solarInfo };
     },
 
     /** Least-effort route between two points of the pilot area. */
@@ -80,15 +84,31 @@ export function createMissionService({ repository, solver }) {
      * Emergency-return plan for one EVA plan, prepared before leaving: timeline of outside time and
      * the way home (fast and dust-safe) from every checkpoint. Return fields are built once in the Worker.
      */
-    async prepareContingency(planId, paceFactor) {
+    async prepareContingency(routeId, paceFactor, { resM, customCoords, detour } = {}) {
       await solverReady;
-      const plan = site.params.plans.find((p) => p.id === planId);
-      if (!plan) throw new Error(`unknown plan ${planId}`);
-      const official = this.officialLegs();
-      const ids = legsOfPlan(site.params, plan);
-      const tl = await solver.legTimeline(ids.map((id) => ({ id, coords: official[id].coords })));
+      const official = this.officialLegs(resM);
+      const plan = site.params.plans.find((p) => p.id === routeId);
+      let legs, itinerary;
+      if (detour) {
+        legs = [
+          { id: 'landing_brac', coords: detour.outboundLegs[0] },
+          { id: 'brac_sampling', coords: detour.outboundLegs[1] },
+          { id: 'sampling_landing', coords: official.sampling_landing.coords },
+        ];
+        itinerary = [
+          { legId: 'landing_brac', task: 'photo', stop: 'brac' },
+          { legId: 'brac_sampling', task: 'sample' }, { legId: 'sampling_landing' },
+        ];
+      } else if (customCoords) {
+        legs = [{ id: 'custom', coords: customCoords }];
+        itinerary = [{ legId: 'custom' }];
+      } else {
+        if (!plan) throw new Error(`unknown plan ${routeId}`);
+        legs = legsOfPlan(site.params, plan).map((id) => ({ id, coords: official[id].coords }));
+      }
+      const tl = await solver.legTimeline(legs);
       if (!tl.ok) throw new Error(`legTimeline: ${tl.code}`);
-      const timeline = buildTimeline(site.params, plan, tl.legs, paceFactor);
+      const timeline = buildTimeline(site.params, plan ?? { id: routeId }, tl.legs, paceFactor, { itinerary, homeEndpoints: !customCoords });
       if (!returnReady) {
         returnReady = solver.prepareReturn(site.site.points.landing, site.params.visibility)
           .then((r) => { if (!r.ok) throw new Error(`prepareReturn: ${r.code}`); return r; });
@@ -99,29 +119,31 @@ export function createMissionService({ repository, solver }) {
       const res = await solver.returnsFrom(positions);
       if (!res.ok) throw new Error(`returnsFrom: ${res.code}`);
       const rows = positions.map((p, i) => ({ ...p, routes: res.results[i] }));
-      return { planId, paceFactor, timeline, rows };
+      return { routeId, paceFactor, timeline, rows };
     },
 
     /** Constants used to turn a route into minutes and dose. */
-    returnConstants(paceFactor) {
+    returnConstants(paceFactor, solarRateUGyH) {
       return {
         paceFactor,
         lowVisibilityPaceFactor: dustPolicy(site.params).lowVisibilityPaceFactor,
         backgroundUGyH: site.radiation.backgroundUGyH,
-        eventUGyH: eventRateUGyH(site.params, site.radiation),
+        eventUGyH: solarRateUGyH ?? eventRateUGyH(site.params, site.radiation),
       };
     },
 
-    /** Way home if the alerts arrive at `minute` of outside time. */
-    async emergencyReturn(prepared, minute, alerts) {
-      const position = positionAt(prepared.timeline, minute);
+    /** Way home if the alerts arrive at `distanceM` along the chosen itinerary. */
+    async emergencyReturn(prepared, distanceM, alerts) {
+      const position = positionAtDistance(prepared.timeline, distanceM);
       if (position.atHome) return { position, atHome: true };
       const res = await solver.returnsFrom([position]);
       if (!res.ok) throw new Error(`returnsFrom: ${res.code}`);
       const routes = res.results[0];
-      const choice = chooseReturn(alerts, routes, this.returnConstants(prepared.paceFactor));
-      // With a dust alert the safe route is proposed; the fastest one is shown beside it for comparison.
-      const alt = choice.policy === 'dust' && routes.fast ? { coords: routes.fast.coords, policy: 'fast' } : null;
+      if (routes.fast?.distanceM === 0) return { position: { ...position, atHome: true }, atHome: true };
+      const choice = chooseReturn(alerts, routes, this.returnConstants(prepared.paceFactor, alerts.solarRateUGyH));
+      const fast = routes.fast?.coords, dust = routes.dust?.coords;
+      const same = fast && dust && fast.length === dust.length && fast.every(([lon, lat], i) => lon === dust[i][0] && lat === dust[i][1]);
+      const alt = choice.policy === 'dust' && fast && !same ? { coords: fast, policy: 'fast' } : null;
       return { position, choice, alt };
     },
 
@@ -159,7 +181,8 @@ export function createMissionService({ repository, solver }) {
           direct, toSite: a.stats, fromSite: b.stats, taskMin: taskMinutes(site.params, 'photo'),
           paceFactor: o.paceFactor, planTotalMin: plan?.totalMin ?? null, limitMin: o.limitMin,
         });
-        out.push({ ...ws, reachable: true, coords: [...a.stats.coords, ...b.stats.coords.slice(1)], planId: plan?.planId ?? null, ...cost });
+        out.push({ ...ws, reachable: true, coords: [...a.stats.coords, ...b.stats.coords.slice(1)],
+          outboundLegs: [a.stats.coords, b.stats.coords], planId: plan?.planId ?? null, ...cost });
       }
       return out;
     },
@@ -175,7 +198,7 @@ export function createMissionService({ repository, solver }) {
       const k = this.returnConstants(prepared.paceFactor);
       const seen = new Set();
       return prepared.rows.filter((r) => r.kind === 'task' && !seen.has(r.stop) && seen.add(r.stop)).map((r) => ({
-        minute: r.minute, kind: r.kind, stop: r.stop,
+        distanceM: r.distanceM, kind: r.kind, stop: r.stop,
         fastMin: r.routes.fast ? r.routes.fast.walkMin * k.paceFactor : null,
         dustMin: r.routes.dust ? r.routes.dust.walkMin * k.paceFactor * k.lowVisibilityPaceFactor : null,
       }));
@@ -183,10 +206,10 @@ export function createMissionService({ repository, solver }) {
 
     /** Farthest checkpoint from the habitat for these alerts, against the configured limit (a warning, not a filter). */
     farthestFromHabitat(prepared, alerts) {
-      const k = this.returnConstants(prepared.paceFactor);
+      const k = this.returnConstants(prepared.paceFactor, alerts.solarRateUGyH);
       const rows = prepared.rows.map((r) => {
         const c = chooseReturn(alerts, r.routes, k);
-        return { minute: r.minute, kind: r.kind, stop: r.stop, legId: r.legId, timeMin: c.noRoute ? NaN : c.timeMin };
+        return { distanceM: r.distanceM, minute: r.minute, kind: r.kind, stop: r.stop, legId: r.legId, timeMin: c.noRoute ? NaN : c.timeMin };
       });
       return farthestPoint(rows, site.params.contingency.maxMinutesFromHabitat);
     },

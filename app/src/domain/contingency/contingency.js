@@ -3,6 +3,7 @@
 // for each alert. Prepared before leaving; used by the person in the habitat during the walk.
 // Mars has no GPS: the position is estimated from progress along the planned route.
 import { legsOfPlan, stopOfTask, taskMinutes } from '../plans/tasks.js';
+import { profileOf } from '../routing/profile.js';
 
 /**
  * Outside-time timeline of a plan (airlock and reserve excluded: the crew is not on the route).
@@ -11,41 +12,59 @@ import { legsOfPlan, stopOfTask, taskMinutes } from '../plans/tasks.js';
  * @param {Record<string,{coords:number[][], cumMin:number[]}>} legs per-leg coords and cumulative walking minutes
  * @param {number} paceFactor crew pace (1 = normal)
  */
-export function buildTimeline(params, plan, legs, paceFactor = 1) {
+export function buildTimeline(params, plan, legs, paceFactor = 1, { itinerary, homeEndpoints = true } = {}) {
   const segments = [];
-  let t = 0;
-  const ids = legsOfPlan(params, plan);
-  ids.forEach((legId, i) => {
+  let t = 0, distanceM = 0;
+  const ordered = itinerary ?? legsOfPlan(params, plan).map((legId, i) => ({ legId, task: plan.tasks[i] }));
+  for (const { legId, task, stop } of ordered) {
     const leg = legs[legId];
     if (!leg || leg.coords.length < 2) throw new Error(`leg ${legId} has no route`);
     const cum = leg.cumMin.map((m) => m * paceFactor);
-    segments.push({ kind: 'walk', legId, start: t, end: t + cum[cum.length - 1], coords: leg.coords, cum });
-    t += cum[cum.length - 1];
-    const task = plan.tasks[i];
+    const { dist, totalM } = profileOf(leg.coords);
+    const end = t + cum.at(-1);
+    segments.push({ kind: 'walk', legId, start: t, end, coords: leg.coords, cum, dist, startM: distanceM, endM: distanceM + totalM });
+    t = end;
+    distanceM += totalM;
     if (task) {
-      const at = leg.coords[leg.coords.length - 1];
+      const at = leg.coords.at(-1);
       const minutes = taskMinutes(params, task);
-      segments.push({ kind: 'task', task, stop: stopOfTask(params, task), start: t, end: t + minutes, at });
+      segments.push({ kind: 'task', task, stop: stop ?? stopOfTask(params, task), start: t, end: t + minutes, at, distanceM });
       t += minutes;
     }
-  });
-  return { planId: plan.id, outsideMin: t, segments };
+  }
+  return { planId: plan.id, outsideMin: t, segments, distanceM, homeEndpoints };
 }
 
 /** Estimated position at `minute` of outside time. */
 export function positionAt(timeline, minute) {
   const m = Math.max(0, Math.min(minute, timeline.outsideMin));
-  if (m <= 0) return { minute: 0, atHome: true };
-  if (m >= timeline.outsideMin) return { minute: timeline.outsideMin, atHome: true };
+  if (timeline.homeEndpoints && m <= 0) return { minute: 0, distanceM: 0, atHome: true };
+  if (timeline.homeEndpoints && m >= timeline.outsideMin) return { minute: timeline.outsideMin, distanceM: timeline.distanceM, atHome: true };
   const seg = timeline.segments.find((s) => m >= s.start && m < s.end) ?? timeline.segments[timeline.segments.length - 1];
-  if (seg.kind === 'task') return { minute: m, atHome: false, kind: 'task', task: seg.task, stop: seg.stop, lon: seg.at[0], lat: seg.at[1] };
+  if (seg.kind === 'task') return { minute: m, distanceM: seg.distanceM, atHome: false, kind: 'task', task: seg.task, stop: seg.stop, lon: seg.at[0], lat: seg.at[1] };
   const local = m - seg.start;
   let k = 1;
   while (k < seg.cum.length - 1 && seg.cum[k] < local) k++;
   const span = seg.cum[k] - seg.cum[k - 1];
   const f = span > 0 ? (local - seg.cum[k - 1]) / span : 0;
   const [lon0, lat0] = seg.coords[k - 1], [lon1, lat1] = seg.coords[k];
-  return { minute: m, atHome: false, kind: 'walk', legId: seg.legId, lon: lon0 + (lon1 - lon0) * f, lat: lat0 + (lat1 - lat0) * f };
+  return { minute: m, distanceM: seg.startM + seg.dist[k - 1] + f * (seg.dist[k] - seg.dist[k - 1]),
+    atHome: false, kind: 'walk', legId: seg.legId, lon: lon0 + (lon1 - lon0) * f, lat: lat0 + (lat1 - lat0) * f };
+}
+
+/** Places the crew at the distance walked along the chosen itinerary, including the return leg. */
+export function positionAtDistance(timeline, distanceM) {
+  const distance = Math.max(0, Math.min(distanceM, timeline.distanceM));
+  if (distance === 0 || distance === timeline.distanceM) {
+    return positionAt(timeline, distance === 0 ? 0 : timeline.outsideMin);
+  }
+  const seg = timeline.segments.find((s) => s.kind === 'walk' && distance <= s.endM);
+  const localM = distance - seg.startM;
+  let k = 1;
+  while (k < seg.dist.length - 1 && seg.dist[k] < localM) k++;
+  const span = seg.dist[k] - seg.dist[k - 1];
+  const f = span > 0 ? (localM - seg.dist[k - 1]) / span : 0;
+  return positionAt(timeline, seg.start + seg.cum[k - 1] + f * (seg.cum[k] - seg.cum[k - 1]));
 }
 
 /** Minutes to check before leaving: every `stepMin`, each stop arrival, and the end of each task. */
@@ -53,7 +72,8 @@ export function checkpoints(timeline, stepMin) {
   const set = new Set();
   for (let m = stepMin; m < timeline.outsideMin; m += stepMin) set.add(Math.round(m * 10) / 10);
   for (const s of timeline.segments) if (s.kind === 'task') { set.add(Math.round(s.start * 10) / 10); set.add(Math.round((s.end - 0.01) * 10) / 10); }
-  return [...set].filter((m) => m > 0 && m < timeline.outsideMin).sort((a, b) => a - b);
+  const inside = [...set].filter((m) => m > 0 && m < timeline.outsideMin).sort((a, b) => a - b);
+  return timeline.homeEndpoints ? inside : [0, ...inside, timeline.outsideMin];
 }
 
 /**

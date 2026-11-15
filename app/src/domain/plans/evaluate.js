@@ -25,6 +25,7 @@ export function defaultPlanOptions(params) {
     dustStormAlert: false,
     dustAlertOverride: null,
     dustSol: null,
+    radiationDay: null,
     solarEventAlert: false,
     minGroundTempC: params.weather.minGroundTempC,
     maxMeanWindMs: params.weather.maxMeanWindMs,

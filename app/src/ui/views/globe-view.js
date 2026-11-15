@@ -3,7 +3,7 @@
 // Layout, controls and design follow the MARS+ team's globe proposal; texts come from i18n.
 // The renderer (infrastructure/globe) and the dust maps (application/dust-maps.js) are injected
 // by main.js — this view never imports domain/ or infrastructure/.
-import { h, clear } from '../../shared/dom.js';
+import { h, s, clear } from '../../shared/dom.js';
 
 const LAYER_KEYS = ['viking', 'mola', 'geology', 'dust'];
 
@@ -13,12 +13,13 @@ const PLACES = {
   hellas: { lat: -42.43, lon: 70.5, distance: 1.44 },
   jezero: { lat: 18.44, lon: 77.45, distance: 1.14 },
 };
-const JEZERO_APPROACH = { lat: 18.44, lon: 77.45, distance: 1.06 };
+const LOCAL_APPROACH_DISTANCE = 1.12;
 
 export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnterMission, preferFlat = false }) {
   const { t } = i18n;
   let globe = null, activeLayer = 'viking', layerError = null, selectedPlace = null, lastUnit;
   let dustProduct = 'climatology', dustBin = 5, flat = false, flatMap = null, paintRequest = 0;
+  let coverage = null;
   const el = {};
 
   // --- static skeleton (created once; texts refreshed by setTexts) ---
@@ -27,10 +28,15 @@ export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnter
   el.help = h('p', { id: 'g-help', class: 'sr-only' });
   el.status = h('p', { class: 'g-status', role: 'status' });
   el.center = h('span', { class: 'g-center', 'aria-hidden': 'true' });
-  el.heroTitle = h('h2', {});
-  el.heroLead = h('p', {});
-  el.cta = h('button', { type: 'button', class: 'btn btn-primary g-cta', onclick: enterMission });
-  el.hero = h('div', { class: 'g-hero' }, el.heroTitle, el.heroLead, el.cta);
+  el.coveragePolygon = s('polygon');
+  el.coverageShape = s('svg', { class: 'g-coverage-shape', 'aria-hidden': 'true' }, el.coveragePolygon);
+  el.coverageButton = h('button', { type: 'button', class: 'g-coverage', hidden: true, onclick: enterMission },
+    h('span', { class: 'g-coverage-dot', 'aria-hidden': 'true' }), h('span', { class: 'g-coverage-name' }));
+  el.coverageButton.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    if (event.deltaY < 0) enterMission();
+    else if (event.deltaY > 0) globe?.zoom(1.39);
+  }, { passive: false });
   el.placesToggle = h('button', { type: 'button', class: 'g-round', 'aria-expanded': 'false', 'aria-controls': 'g-places', onclick: () => showPlaces(el.places.hidden) }, h('span', { class: 'g-place-icon', 'aria-hidden': 'true' }));
   el.placesTitle = h('h3', { id: 'g-places-title' });
   el.placeButtons = Object.keys(PLACES).map((key) => h('button', { type: 'button', 'data-place': key, 'aria-pressed': 'false', onclick: () => goToPlace(key) }, h('span', {}), h('small', {})));
@@ -48,8 +54,9 @@ export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnter
   el.layerLabels = el.layerInputs.map((input) => h('label', {}, input, h('span', {}, h('b', {}), h('small', {}))));
   el.layersLegend = h('legend', { class: 'sr-only' });
   el.layers = h('fieldset', { id: 'g-layers', class: 'g-layers', hidden: true }, el.layersLegend, h('div', { class: 'g-layer-options' }, ...el.layerLabels));
-  el.tools = h('div', { class: 'g-tools' }, el.legend, h('div', { class: 'g-layer-switcher' }, el.layersToggle, el.layers));
-  el.stage = h('div', { class: 'g-stage', 'data-layer': 'viking' }, el.canvas, el.flat, el.help, el.status, el.center, el.hero, el.controls, el.tools);
+  el.tools = h('div', { class: 'g-tools' }, h('div', { class: 'g-layer-switcher' }, el.layersToggle, el.layers));
+  el.stage = h('div', { class: 'g-stage', 'data-layer': 'viking' }, el.canvas, el.flat, el.help, el.status, el.center,
+    el.coverageShape, el.coverageButton, el.legend, el.controls, el.tools);
   el.source = h('a', { target: '_blank', rel: 'noopener' });
   el.credit = h('span', {});
   el.sky = h('a', { class: 'g-sky-credit', href: meta.sky.source, target: '_blank', rel: 'noopener' });
@@ -84,9 +91,9 @@ export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnter
     el.canvas.setAttribute('aria-label', t('globe.canvas'));
     el.canvas.textContent = t('globe.noWebgl');
     el.help.textContent = t('globe.help');
-    el.heroTitle.textContent = t('globe.heroTitle');
-    el.heroLead.textContent = t('globe.heroLead');
-    el.cta.textContent = t('globe.cta');
+    el.coverageButton.lastChild.textContent = t('globe.coverage');
+    el.coverageButton.setAttribute('aria-label', t('globe.openCoverage'));
+    el.coverageButton.title = t('globe.openCoverage');
     el.controls.setAttribute('aria-label', t('globe.controls'));
     for (const [btn, label] of [[el.placesToggle, 'globe.places'], [el.reset, 'globe.reset'], [el.zoomOut, 'globe.zoomOut'], [el.zoomIn, 'globe.zoomIn']]) { btn.setAttribute('aria-label', t(label)); btn.title = t(label); }
     el.placesTitle.textContent = t('globe.places');
@@ -158,7 +165,36 @@ export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnter
   function showLayers(show) { if (show) showPlaces(false); el.layers.hidden = !show; el.layersToggle.setAttribute('aria-expanded', String(show)); }
   function showPlaces(show) { if (show) showLayers(false); el.places.hidden = !show; el.placesToggle.setAttribute('aria-expanded', String(show)); }
   function select(key) { selectedPlace = key; el.placeButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.place === key))); }
-  function goToPlace(key) { showPlaces(false); el.placesToggle.focus({ preventScroll: true }); select(key); globe?.flyTo(PLACES[key]); }
+  function goToPlace(key) {
+    showPlaces(false);
+    el.placesToggle.focus({ preventScroll: true });
+    select(key);
+    const target = PLACES[key];
+    globe?.flyTo(key === 'jezero' && coverage ? { ...target, ...coverage.center } : target);
+  }
+
+  function renderCoverage() {
+    const point = !flat && coverage && globe?.project(coverage.center);
+    const width = el.canvas.clientWidth, height = el.canvas.clientHeight;
+    el.coverageButton.hidden = !point || point.x < 0 || point.x > width || point.y < 0 || point.y > height;
+    if (el.coverageButton.hidden) {
+      el.coveragePolygon.removeAttribute('points');
+      return;
+    }
+    el.coverageButton.style.left = `${point.x}px`;
+    el.coverageButton.style.top = `${point.y}px`;
+    el.coverageButton.classList.toggle('label-left', point.x > width - 165);
+    const corners = coverage.corners.map((corner) => globe.project(corner));
+    if (corners.every(Boolean)) el.coveragePolygon.setAttribute('points', corners.map(({ x, y }) => `${x},${y}`).join(' '));
+    else el.coveragePolygon.removeAttribute('points');
+  }
+
+  function applyZoomToCoverage(multiplier) {
+    if (!coverage || flat || root.hidden || multiplier >= 1 || globe.camera.distance > LOCAL_APPROACH_DISTANCE) return;
+    const point = globe.project(coverage.center);
+    const width = el.canvas.clientWidth, height = el.canvas.clientHeight;
+    if (point && Math.hypot(point.x - width / 2, point.y - height / 2) <= Math.min(width, height) * 0.16) enterMission();
+  }
 
   async function paintDust(rebuildLegend = true) {
     const request = ++paintRequest;
@@ -190,6 +226,7 @@ export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnter
     el.stage.dataset.flat = '1';
     el.flat.hidden = false;
     el.canvas.hidden = true;
+    renderCoverage();
     activeLayer = 'dust';
     el.layerInputs.forEach((input) => { input.checked = input.value === 'dust'; input.disabled = input.value !== 'dust'; });
     return paintDust().catch((err) => { console.error(err); layerError = 'dust'; renderLegend(); });
@@ -233,6 +270,7 @@ export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnter
   function coordinate(value, pos, neg) { return `${Math.abs(value).toFixed(1).padStart(4, '0')}° ${value < -0.05 ? t(neg) : t(pos)}`; }
 
   function onFrame(camera) {
+    renderCoverage();
     el.coords.value = `${coordinate(camera.lat, 'dir.N', 'dir.S')} · ${coordinate(camera.lon, 'dir.E', 'dir.W')}`;
     const side = Math.min(el.canvas.clientWidth, el.canvas.clientHeight);
     if (side) {
@@ -263,12 +301,9 @@ export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnter
   }
 
   function enterMission() {
-    if (!globe) { onEnterMission(); return; }
+    if (!coverage) return;
     showPlaces(false); showLayers(false); select('jezero');
-    el.status.hidden = false;
-    el.status.textContent = t('globe.flying');
-    el.cta.disabled = true;
-    globe.flyTo(JEZERO_APPROACH, () => { el.status.hidden = true; el.cta.disabled = false; onEnterMission(); });
+    onEnterMission();
   }
 
   setTexts();
@@ -283,6 +318,7 @@ export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnter
       globe = g;
       globe.onFrame(onFrame);
       globe.onUserMove(() => select(null));
+      globe.onZoom(applyZoomToCoverage);
       el.status.hidden = true;
       [el.placesToggle, el.reset, el.zoomIn, el.zoomOut, el.layersToggle].forEach((b) => { b.disabled = false; });
       setTexts();
@@ -290,12 +326,19 @@ export function createGlobeView(root, { i18n, assetBase, dustMaps, meta, onEnter
     },
     fail(messageKey) { el.status.hidden = false; el.status.textContent = t(messageKey); },
     useFlat,
+    setCoverage({ west, east, south, north }) {
+      coverage = {
+        center: { lat: (south + north) / 2, lon: (west + east) / 2 },
+        corners: [{ lat: north, lon: west }, { lat: north, lon: east }, { lat: south, lon: east }, { lat: south, lon: west }],
+      };
+      renderCoverage();
+    },
     showDustLayer() {
       const input = el.layerInputs.find((item) => item.value === 'dust');
       if (input) input.checked = true;
       return selectLayer('dust');
     },
     setTexts,
-    focus() { el.cta.focus(); },
+    focus() { (flat ? el.flat : el.canvas).focus({ preventScroll: true }); },
   };
 }
