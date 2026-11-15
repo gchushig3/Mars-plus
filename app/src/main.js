@@ -27,6 +27,8 @@ import { createDustFlatMap } from './infrastructure/map/dust-flat-map.js';
 const SITE_ID = 'jezero-issole';
 
 function initialLang() {
+  const requested = new URLSearchParams(location.search).get('lang');
+  if (requested === 'en' || requested === 'es') return requested;
   try { const saved = localStorage.getItem('marsplus.lang'); if (saved === 'en' || saved === 'es') return saved; } catch { /* storage unavailable */ }
   return (navigator.language || 'en').toLowerCase().startsWith('es') ? 'es' : 'en';
 }

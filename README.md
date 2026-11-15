@@ -2,16 +2,16 @@
 
 **NASA Space Apps Challenge 2026 · Interplanetary Survival Guide: Martian Map**
 
-MARS+ helps a crew inside the habitat decide **whether, when and how** to walk from **Octavia E. Butler Landing** to the **Issole outcrop** in Jezero crater (≈886 m away). The goal is to document signs of past water alteration, collect a sample and come back safely. MARS+ layers NASA orbital and surface data into a hyper-local map, computes **least-effort walking routes**, and runs every candidate plan through a transparent **chain of safety filters** that explains *why* a plan is GO or NO-GO.
+MARS+ is a decision-support prototype for a round-trip traverse from **Octavia E. Butler Landing** to the **Issole outcrop** in Jezero crater. A hypothetical habitat is placed at Perseverance’s real landing site. The modeled 2 m route to the sampling stop is 948 m. MARS+ combines NASA orbital and surface data to plan where to walk, when to leave and what fieldwork fits the selected scenario.
 
-> **Live site:** https://gchushig3.github.io/Mars-plus/ · **Code:** https://github.com/gchushig3/Mars-plus · **Demo:** _slides link coming soon_
+> [Interactive project in English](https://gchushig3.github.io/Mars-plus/?view=local&lang=en) · [Six-slide demo](https://gchushig3.github.io/Mars-plus/demo/) · [Source code](https://github.com/gchushig3/Mars-plus)
 
 ---
 
 ## What it does
 
 - **3D Mars globe as the entry screen:** a WebGL2 globe built by the MARS+ team. It has four global layers (Viking, MOLA, USGS geology and seasonal dust). The highlighted footprint follows the bounds of the Jezero terrain dataset. Select it or zoom in near it to open the local map with geology enabled. Use `?view=local` to open the EVA map directly.
-- **Hyper-local map (≈1 km², 2 m grid):** HiRISE 25 cm imagery and the official EVA route (out and back). The habitat and Issole points open Perseverance photos. The layer control offers the Brac detour, walking effort, slope, Jezero geology and the rover traverse. The bottom-left legends follow the visible layers.
+- **Local EVA map (≈1 km², 2 m grid):** HiRISE 25 cm imagery and modeled outbound and return routes. The landing and Issole points open Perseverance photos. The layer control offers routes to scientific sites, walking effort, slope, Jezero geology, CRISM and the rover traverse.
 - **Elevation profile under the map:** choose any displayed route. The probe is shared with the map. The Perseverance line uses elevations sampled from HiRISE, with gaps outside the pilot terrain.
 - **Science stops:** Issole links the annotated Quartier workspace, its mineral measurements and NASA's sample records. Other documented sites have routes and separate results for photography and photography plus sampling, as a detour on the Issole EVA or a dedicated round trip. The planner rechecks the workspace, time, weather and radiation for each option.
 - **Mars gravity explained:** 0.38 g, what it changes for loads, walking speed, slopes and falls, with a weight converter. It explains the model; the cost formula is unchanged.
@@ -20,7 +20,7 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 - **Real conditions:** Perseverance MEDA weather at Issole (sols 286–339, including the January 2022 regional dust storm) and Curiosity RAD dosimetry around the **28 Oct 2021 solar particle event**.
 - **Validity checks built in:**
   - **Sand sensitivity:** routes and plans are recomputed with sand ×1.5 / ×2 / ×3.
-  - **Obstacle model vs. ground truth:** only 0.8% of the cells along Perseverance's real ~1 km drive inside the area are flagged as blocked.
+  - **Obstacle-model check:** 8 of 1,059 cells sampled along Perseverance's drive inside the area were flagged as blocked. This check covers the observed traverse and does not validate human walking or off-route hazards.
   - **Real rover photos** of what the crew will see at Issole.
 - **Emergency return during the EVA:** select an itinerary and show estimated minutes to the habitat along it. Select a section or enter the metres walked to compare normal, dust and solar-event returns from the same point. Solar uses the fastest route and the selected historical RAD day's peak rate. Dust applies a slope cap, penalties for dunes and loss of line of sight, and a slower walking pace. The plans panel compares measured Mastcam-Z opacity during the 2022 and 2024 dust episodes at Jezero. Combining a Jezero dust observation with the Gale RAD event is a prototype scenario.
 - **Explains itself:** "Recommended: Plan C, depart 09:00, back 11:39 … Plan A is out — Time: exceeds the 180-min limit by 5 min."
@@ -89,9 +89,9 @@ node tests/run.mjs
 ## Assumptions and limits (stated in the app)
 
 - Walking speed: Tobler hiking function scaled ×0.5 (~2.5 km/h on flat ground) for a pressurized suit. This is a scenario assumption, not a measured value.
-- Sand doubles walking time (based on Lejeune et al. 1998, energy cost of walking on sand). About 520 m of large dunes surround Issole and cannot be avoided.
-- Rocks are detected from HiRISE shadows; rocks smaller than ~0.75 m are invisible from orbit.
-- Radiation rate comes from Gale crater (RAD). Jezero is higher, so the local dose would be somewhat larger. The nominal dose is that rate times time on the surface (walking and tasks). Airlock time is inside the habitat, and the reserve is unused margin, so neither is counted as exposure. The weather check still covers the whole budgeted window, including the reserve.
+- The model doubles walking time on large dunes as a scenario assumption informed by terrestrial sand-walking studies. The baseline route crosses roughly 520 m mapped as large bedforms.
+- Shadows in HiRISE imagery provide a rough proxy for obstacles. The grid cannot reliably resolve individual small hazards.
+- The model uses the RAD Detector E absorbed-dose rate measured in Gale crater as a scenario input. Dose in µGy is the modeled rate times surface time (walking and tasks). Airlock time and unused reserve are excluded from dose. The weather check covers the full budgeted window, including reserve.
 - The dust-storm alert follows Mastcam-Z 880 nm optical depth at Jezero and turns on at the scenario threshold τ ≥ 1.0 (see `config/model-parameters.json`). Derived MEDA files do not contain opacity. Global maps show the Montabone column-dust climatology and MDAD storm frequency; both are orbital and do not separate routes inside Jezero. Provenance is in `app/data/dust/catalog.json` and `docs/es/datos-polvo.md`.
 - Stops are the flattest rock-free workspaces near the rover positions for Robine and Malay.
 - Emergency return (scenario assumptions, `config/model-parameters.json → contingency`): the habitat is the only shelter; the crew position is estimated from progress along the planned route (no GPS on Mars); dust-safe routes keep slopes ≤ 15° and are walked 1.5× slower; a warning appears when any point of the plan is more than 45 min from the habitat. How much warning an alert gives on Mars is not modelled.
@@ -107,8 +107,9 @@ node tests/run.mjs
   - build the emergency return during the EVA;
   - draft documentation.
 - **Cursor:** a team member (Henry) used the **Cursor** agent to add the CI test run before publishing, the corrected surface dose (walking + tasks only), configurable workspace limits, route-calculation robustness, the measured dust alert, the globe dust maps (with their Python builder, `tools/dust/`), and the time-field and line-of-sight prototypes the emergency return builds on. Those commits keep Cursor as author in the git history.
+- **OpenAI Codex:** supported source verification, route and map features, automated and browser testing, documentation and the six-slide demo. The archived instrument data are measured observations. Derived outputs use documented deterministic calculations.
 - **AI-generated image:** the MARS+ logo was generated with AI. It is shown with a visible "AI-generated image" label, and `app/assets/globe/globe.json` declares it (`logo.aiGenerated`). No other AI-generated images, audio or video are used.
-- **Marking:** every AI-assisted source file carries a header naming the tool, e.g. `AI-assisted (Claude). Reviewed by the MARS+ team.` or `AI-assisted (Cursor, used by Henry). Reviewed by the MARS+ team.`
+- **Marking:** the project-level disclosure supplements source-file headers, data provenance metadata and the visible AI-image credit.
 
 ## References
 

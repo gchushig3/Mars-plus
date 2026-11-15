@@ -1,5 +1,5 @@
 {
-  "app.subtitle": "EVA planner for Mars · Jezero crater pilot",
+  "app.subtitle": "Mars EVA planning prototype · Jezero crater",
   "app.globeSubtitle": "Mars explorer",
   "app.loading": "Loading mission data…",
   "app.loadError": "Could not load mission data. Please reload the page.",
@@ -87,7 +87,7 @@
 
   "welcome.help": "How to use MARS+",
   "welcome.title": "MARS+ · plan a Mars EVA",
-  "welcome.what": "You are in the habitat at Octavia E. Butler Landing (Jezero crater). Your crew wants to walk ~900 m to the Issole outcrop to document signs of ancient water and take a sample — safely.",
+  "welcome.what": "In this scenario, the crew starts from a hypothetical habitat at Perseverance’s real landing site. Plan a walk to the Issole outcrop to document signs of water–rock interaction and collect a sample.",
   "welcome.step1": "Read the verdict at the top: GO or NO-GO, which plan and when to leave.",
   "welcome.step2": "Change the conditions — weather scenario, dust or solar alerts, time limit, pace — and see why each plan passes or fails.",
   "welcome.step3": "Plan your own route: press “Set A” and “Set B” and click the map. The least-effort path is computed in your browser.",
@@ -98,7 +98,7 @@
   "summary.departure": "Departure",
   "summary.return": "Return",
   "summary.dose": "Estimated dose",
-  "summary.noGo": "No plan is safe under the current conditions — postpone the EVA.",
+  "summary.noGo": "No plan meets the selected scenario criteria. Postpone the EVA.",
   "summary.why": "See criteria ↓",
 
   "layer.hirise": "HiRISE 25 cm (Mars Trek)",
@@ -116,7 +116,7 @@
   "stop.brac": "Brac stop",
   "leg.landing_brac": "Landing → Brac",
   "leg.brac_sampling": "Brac → Issole",
-  "layer.official": "Official EVA route",
+  "layer.official": "Modeled EVA route",
   "layer.rover": "Perseverance’s real drive",
   "layer.user": "Your A → B route",
 
@@ -126,7 +126,7 @@
   "point.observation": "<b>Observation stop</b><br>Flat workspace (slope ≤ {slope}°, large-dune fraction ≤ {dune}) next to the Malay core site",
 
   "mission.title": "Mission",
-  "mission.lead": "Walk from Octavia E. Butler Landing to the Issole outcrop, document signs of water alteration, collect a sample and return safely.",
+  "mission.lead": "Plan a round trip from Octavia E. Butler Landing to Issole to document signs of water–rock interaction and collect a sample. The model places a hypothetical habitat at Perseverance’s real landing site.",
   "mission.routeTitle": "Outbound and return route",
   "mission.res": "Grid cell size",
   "mission.stable": "Similar outbound times at 1–5 m",
@@ -170,7 +170,7 @@
   "route.computing": "Computing least-effort route…",
   "route.outside": "That point is outside the pilot area (≈1 km² around the route).",
   "route.blocked": "That point is on blocked terrain (too steep or rocky).",
-  "route.noRoute": "No safe route connects these two points.",
+  "route.noRoute": "The terrain model found no passable route between these points.",
   "route.error": "The route calculation failed. Try again.",
   "route.unknownMessage": "The route calculation received a message it does not understand.",
   "route.done": "Route ready in {ms} ms.",
@@ -381,7 +381,7 @@
   "emergency.tableTitle": "Return time from each stop, prepared before leaving",
   "emergency.colWhere": "Where",
   "emergency.colFast": "Fastest (particles)",
-  "emergency.colDust": "Dust-safe (storm)",
+  "emergency.colDust": "With dust constraints",
   "emergency.assumption": "The map samples the itinerary at intervals of up to 1 m and reads times from the 2 m return grid. The time threshold is a prototype warning. Mastcam-Z supplies historical Jezero observations and RAD supplies Gale observations. Combining both alerts is a test scenario.",
   "emergency.astronautOpen": "Astronaut view",
   "emergency.astronautClose": "Close",

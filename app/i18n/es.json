@@ -1,5 +1,5 @@
 {
-  "app.subtitle": "Planificador de EVA para Marte · piloto en el cráter Jezero",
+  "app.subtitle": "Prototipo de planificación de EVA · cráter Jezero",
   "app.globeSubtitle": "Explorador de Marte",
   "app.loading": "Cargando datos de la misión…",
   "app.loadError": "No se pudieron cargar los datos de la misión. Recarga la página.",
@@ -87,7 +87,7 @@
 
   "welcome.help": "Cómo usar MARS+",
   "welcome.title": "MARS+ · planifica una EVA en Marte",
-  "welcome.what": "Estás en el hábitat de Octavia E. Butler Landing (cráter Jezero). Tu tripulación quiere caminar ~900 m hasta el afloramiento Issole para documentar indicios de agua antigua y tomar una muestra, con seguridad.",
+  "welcome.what": "En este escenario, la tripulación parte de un refugio hipotético en el sitio real de aterrizaje de Perseverance. Planifica una caminata a Issole para documentar señales de interacción entre el agua y la roca y tomar una muestra.",
   "welcome.step1": "Lee el veredicto arriba: SALIR o NO SALIR, qué plan y a qué hora.",
   "welcome.step2": "Cambia las condiciones (escenario de clima, alertas de polvo o solares, límite de tiempo, ritmo) y mira por qué cada plan pasa o falla.",
   "welcome.step3": "Planifica tu propia ruta: pulsa «Fijar A» y «Fijar B» y haz clic en el mapa. El camino de menor esfuerzo se calcula en tu navegador.",
@@ -98,7 +98,7 @@
   "summary.departure": "Salida",
   "summary.return": "Regreso",
   "summary.dose": "Dosis estimada",
-  "summary.noGo": "Ningún plan es seguro con las condiciones actuales: posponer la EVA.",
+  "summary.noGo": "Ningún plan cumple los criterios del escenario seleccionado. Posponer la EVA.",
   "summary.why": "Ver criterios ↓",
 
   "layer.hirise": "HiRISE 25 cm (Mars Trek)",
@@ -116,7 +116,7 @@
   "stop.brac": "parada en Brac",
   "leg.landing_brac": "Aterrizaje → Brac",
   "leg.brac_sampling": "Brac → Issole",
-  "layer.official": "Ruta oficial de la EVA",
+  "layer.official": "Ruta de EVA calculada",
   "layer.rover": "Recorrido real de Perseverance",
   "layer.user": "Tu ruta A → B",
 
@@ -126,7 +126,7 @@
   "point.observation": "<b>Parada de observación</b><br>Espacio de trabajo plano (pendiente ≤ {slope}°, fracción de duna grande ≤ {dune}) junto al sitio de Malay",
 
   "mission.title": "Misión",
-  "mission.lead": "Caminar desde Octavia E. Butler Landing hasta el afloramiento Issole, documentar indicios de alteración por agua, tomar una muestra y volver con seguridad.",
+  "mission.lead": "Planifica la ida y vuelta desde Octavia E. Butler Landing hasta Issole para documentar señales de interacción entre el agua y la roca y tomar una muestra. El modelo ubica un refugio hipotético en el sitio real de aterrizaje de Perseverance.",
   "mission.routeTitle": "Ruta de ida y vuelta",
   "mission.res": "Tamaño de celda",
   "mission.stable": "Tiempo de ida similar entre 1 y 5 m",
@@ -170,7 +170,7 @@
   "route.computing": "Calculando la ruta de menor esfuerzo…",
   "route.outside": "Ese punto está fuera de la zona piloto (≈1 km² alrededor de la ruta).",
   "route.blocked": "Ese punto está en terreno bloqueado (demasiado empinado o rocoso).",
-  "route.noRoute": "No hay una ruta segura entre estos dos puntos.",
+  "route.noRoute": "El modelo de terreno no encontró una ruta transitable entre esos dos puntos.",
   "route.error": "El cálculo de la ruta falló. Inténtalo de nuevo.",
   "route.unknownMessage": "El cálculo de la ruta recibió un mensaje que no entiende.",
   "route.done": "Ruta lista en {ms} ms.",
@@ -381,7 +381,7 @@
   "emergency.tableTitle": "Tiempo de regreso desde cada parada, preparado antes de salir",
   "emergency.colWhere": "Dónde",
   "emergency.colFast": "Más rápida (partículas)",
-  "emergency.colDust": "Segura con polvo (tormenta)",
+  "emergency.colDust": "Con restricciones por polvo",
   "emergency.assumption": "El mapa muestrea el itinerario a intervalos de hasta 1 m y lee los tiempos en la cuadrícula de regreso de 2 m. El umbral de tiempo es un aviso del prototipo. Mastcam-Z aporta datos históricos de Jezero y RAD datos de Gale. La combinación de alertas es un escenario de prueba.",
   "emergency.astronautOpen": "Vista del astronauta",
   "emergency.astronautClose": "Cerrar",
