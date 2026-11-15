@@ -42,9 +42,11 @@ test('i18n: every literal text key used by the code exists', async () => {
 
 test('performance: index.html preloads every module of the import graph', async () => {
   const html = await text('index.html');
+  const entry = html.match(/<script type="module" src="(src\/main\.js(?:\?[^"]+)?)"/)?.[1];
+  assert(entry, 'main.js entry script missing');
   const preloaded = new Set([...html.matchAll(/rel="modulepreload" href="([^"]+)"/g)].map((m) => m[1]));
   const graph = await moduleGraph();
-  const missing = graph.filter((m) => !preloaded.has(m));
+  const missing = graph.map((path) => path === 'src/main.js' ? entry : path).filter((path) => !preloaded.has(path));
   assert(!missing.length, `not preloaded: ${missing.join(', ')}`);
 });
 
