@@ -12,8 +12,8 @@
 | Fase | Nombre | Prioridad | Tiempo | Quién | Estado |
 |---|---|---|---|---|---|
 | 0 | MVP funcional en local | Must | — | Claude | ✅ Hecha |
-| 1 | Versionado y publicación v0.1 | **Must · bloqueante** | 1 h | Equipo (cuentas) + Claude | ⏳ Siguiente |
-| 2 | Limpieza y migración del legado | Must | 1 h | Claude (+ equipo confirma borrados) | ⏳ |
+| 1 | Versionado y publicación v0.1 | **Must · bloqueante** | 1 h | Equipo (cuentas) + Claude | ✅ Hecha · https://gchushig3.github.io/Mars-plus/ |
+| 2 | Limpieza y migración del legado | Must | 1 h | Claude (+ equipo confirma borrados) | ⏳ Siguiente |
 | 3 | Validez científica | Should | 3 h | Claude + equipo de ciencia | ⏳ |
 | 4 | Pulido de UX, accesibilidad y robustez | Should | 2 h | Claude | ⏳ |
 | 5 | Globo 3D y transición | Could | 2 h | Claude | ⏳ Solo si se llega a tiempo |
