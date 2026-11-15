@@ -8,5 +8,5 @@
 | [`auditoria-proyecto.md`](auditoria-proyecto.md) | Auditoría: cumplimiento del reto, riesgos y hallazgos |
 | [`informe-datos-y-decisiones.md`](informe-datos-y-decisiones.md) | Qué datos NASA se usan y por qué (decisiones D1–D13) |
 | [`catalogo-datos.md`](catalogo-datos.md) | Catálogo de fuentes de datos NASA con enlaces |
-| [`adr/`](adr/) | Decisiones de arquitectura (ADR-001 a ADR-010) |
+| [`adr/`](adr/) | Decisiones de arquitectura (ADR-001 a ADR-011) |
 | [`historico/`](historico/) | Documentos superados y el prototipo v1 (`web/`, `scripts/`), solo como referencia |

@@ -1,0 +1,304 @@
+﻿{
+    "viking":  {
+                   "fast":  "viking-mdim21-2048.jpg",
+                   "full":  "viking-mdim21-full.jpg",
+                   "fullSize":  [
+                                    4096,
+                                    2048
+                                ],
+                   "source":  "https://astrogeology.usgs.gov/search/map/mars_viking_colorized_global_mosaic_232m",
+                   "credit":  "NASA/JPL/USGS · Viking MDIM 2.1 via Mars Trek"
+               },
+    "mola":  {
+                 "file":  "mola-megdr-8ppd.i16.gz",
+                 "width":  2880,
+                 "height":  1440,
+                 "pixelsPerDegree":  8,
+                 "source":  "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/",
+                 "credit":  "NASA Mars Global Surveyor · MOLA MEGDR (PDS)"
+             },
+    "geology":  {
+                    "file":  "geology-tanaka2014.u8.gz",
+                    "width":  4096,
+                    "height":  2048,
+                    "source":  "https://doi.org/10.3133/sim3292",
+                    "credit":  "Tanaka et al. 2014 · USGS SIM 3292 for NASA",
+                    "units":  [
+                                  {
+                                      "code":  "lApd",
+                                      "color":  "#ffe3b3",
+                                      "es":  "Dunas polares del Amazónico tardío",
+                                      "en":  "Late Amazonian polar dune unit"
+                                  },
+                                  {
+                                      "code":  "Ap",
+                                      "color":  "#00e8f0",
+                                      "es":  "Unidad polar del Amazónico",
+                                      "en":  "Amazonian polar unit"
+                                  },
+                                  {
+                                      "code":  "lApc",
+                                      "color":  "#f5f5f5",
+                                      "es":  "Casquete polar del Amazónico tardío",
+                                      "en":  "Late Amazonian polar cap unit"
+                                  },
+                                  {
+                                      "code":  "Hpe",
+                                      "color":  "#6ba5cc",
+                                      "es":  "Edificio polar del Hespérico",
+                                      "en":  "Hesperian polar edifice unit"
+                                  },
+                                  {
+                                      "code":  "Hpu",
+                                      "color":  "#9ab2e6",
+                                      "es":  "Unidad polar indiferenciada del Hespérico",
+                                      "en":  "Hesperian polar undivided unit"
+                                  },
+                                  {
+                                      "code":  "Hp",
+                                      "color":  "#00858a",
+                                      "es":  "Unidad polar del Hespérico",
+                                      "en":  "Hesperian polar unit"
+                                  },
+                                  {
+                                      "code":  "Apu",
+                                      "color":  "#0000cc",
+                                      "es":  "Unidad polar indiferenciada del Amazónico",
+                                      "en":  "Amazonian polar undivided unit"
+                                  },
+                                  {
+                                      "code":  "lHvf",
+                                      "color":  "#ccb3b3",
+                                      "es":  "Campo volcánico del Hespérico tardío",
+                                      "en":  "Late Hesperian volcanic field unit"
+                                  },
+                                  {
+                                      "code":  "Ave",
+                                      "color":  "#cc3600",
+                                      "es":  "Edificio volcánico del Amazónico",
+                                      "en":  "Amazonian volcanic edifice unit"
+                                  },
+                                  {
+                                      "code":  "lNv",
+                                      "color":  "#531a89",
+                                      "es":  "Unidad volcánica del Noeico tardío",
+                                      "en":  "Late Noachian volcanic unit"
+                                  },
+                                  {
+                                      "code":  "eHv",
+                                      "color":  "#8a668a",
+                                      "es":  "Unidad volcánica del Hespérico temprano",
+                                      "en":  "Early Hesperian volcanic unit"
+                                  },
+                                  {
+                                      "code":  "Nve",
+                                      "color":  "#cc0000",
+                                      "es":  "Edificio volcánico del Noeico",
+                                      "en":  "Noachian volcanic edifice unit"
+                                  },
+                                  {
+                                      "code":  "AHv",
+                                      "color":  "#cd4e37",
+                                      "es":  "Unidad volcánica del Amazónico y el Hespérico",
+                                      "en":  "Amazonian and Hesperian volcanic unit"
+                                  },
+                                  {
+                                      "code":  "lAvf",
+                                      "color":  "#b39999",
+                                      "es":  "Campo volcánico del Amazónico tardío",
+                                      "en":  "Late Amazonian volcanic field unit"
+                                  },
+                                  {
+                                      "code":  "lAv",
+                                      "color":  "#ffb8c1",
+                                      "es":  "Unidad volcánica del Amazónico tardío",
+                                      "en":  "Late Amazonian volcanic unit"
+                                  },
+                                  {
+                                      "code":  "Hve",
+                                      "color":  "#ff0000",
+                                      "es":  "Edificio volcánico del Hespérico",
+                                      "en":  "Hesperian volcanic edifice unit"
+                                  },
+                                  {
+                                      "code":  "Av",
+                                      "color":  "#ff6347",
+                                      "es":  "Unidad volcánica del Amazónico",
+                                      "en":  "Amazonian volcanic unit"
+                                  },
+                                  {
+                                      "code":  "lHv",
+                                      "color":  "#cd6aca",
+                                      "es":  "Unidad volcánica del Hespérico tardío",
+                                      "en":  "Late Hesperian volcanic unit"
+                                  },
+                                  {
+                                      "code":  "eNhm",
+                                      "color":  "#848b8b",
+                                      "es":  "Macizo de tierras altas del Noeico temprano",
+                                      "en":  "Early Noachian highland massif unit"
+                                  },
+                                  {
+                                      "code":  "mNhm",
+                                      "color":  "#c1cdcd",
+                                      "es":  "Macizo de tierras altas del Noeico medio",
+                                      "en":  "Middle Noachian highland massif unit"
+                                  },
+                                  {
+                                      "code":  "eAb",
+                                      "color":  "#99ffff",
+                                      "es":  "Unidad de cuenca del Amazónico temprano",
+                                      "en":  "Early Amazonian basin unit"
+                                  },
+                                  {
+                                      "code":  "lHb",
+                                      "color":  "#518a8a",
+                                      "es":  "Unidad de cuenca del Hespérico tardío",
+                                      "en":  "Late Hesperian basin unit"
+                                  },
+                                  {
+                                      "code":  "eHb",
+                                      "color":  "#9dcd9d",
+                                      "es":  "Unidad de cuenca del Hespérico temprano",
+                                      "en":  "Early Hesperian basin unit"
+                                  },
+                                  {
+                                      "code":  "HNb",
+                                      "color":  "#698c69",
+                                      "es":  "Unidad de cuenca del Hespérico y el Noeico",
+                                      "en":  "Hesperian and Noachian basin unit"
+                                  },
+                                  {
+                                      "code":  "mAl",
+                                      "color":  "#6a8c22",
+                                      "es":  "Tierras bajas del Amazónico medio",
+                                      "en":  "Middle Amazonian lowland unit"
+                                  },
+                                  {
+                                      "code":  "lHl",
+                                      "color":  "#228c22",
+                                      "es":  "Tierras bajas del Hespérico tardío",
+                                      "en":  "Late Hesperian lowland unit"
+                                  },
+                                  {
+                                      "code":  "lHt",
+                                      "color":  "#ffc124",
+                                      "es":  "Unidad de transición del Hespérico tardío",
+                                      "en":  "Late Hesperian transition unit"
+                                  },
+                                  {
+                                      "code":  "Hto",
+                                      "color":  "#bdffff",
+                                      "es":  "Unidad de transición por desbordamiento del Hespérico",
+                                      "en":  "Hesperian transition outflow unit"
+                                  },
+                                  {
+                                      "code":  "Ht",
+                                      "color":  "#ffeb8a",
+                                      "es":  "Unidad de transición del Hespérico",
+                                      "en":  "Hesperian transition unit"
+                                  },
+                                  {
+                                      "code":  "eHt",
+                                      "color":  "#cf980c",
+                                      "es":  "Unidad de transición del Hespérico temprano",
+                                      "en":  "Early Hesperian transition unit"
+                                  },
+                                  {
+                                      "code":  "AHtu",
+                                      "color":  "#faead6",
+                                      "es":  "Unidad de transición indiferenciada del Amazónico y el Hespérico",
+                                      "en":  "Amazonian and Hesperian transition undivided unit"
+                                  },
+                                  {
+                                      "code":  "HNt",
+                                      "color":  "#cdbd70",
+                                      "es":  "Unidad de transición del Hespérico y el Noeico",
+                                      "en":  "Hesperian and Noachian transition unit"
+                                  },
+                                  {
+                                      "code":  "Htu",
+                                      "color":  "#cccccc",
+                                      "es":  "Unidad de transición indiferenciada del Hespérico",
+                                      "en":  "Hesperian transition undivided unit"
+                                  },
+                                  {
+                                      "code":  "mNh",
+                                      "color":  "#8b7355",
+                                      "es":  "Tierras altas del Noeico medio",
+                                      "en":  "Middle Noachian highland unit"
+                                  },
+                                  {
+                                      "code":  "lNh",
+                                      "color":  "#cdab7e",
+                                      "es":  "Tierras altas del Noeico tardío",
+                                      "en":  "Late Noachian highland unit"
+                                  },
+                                  {
+                                      "code":  "eHh",
+                                      "color":  "#efd5b8",
+                                      "es":  "Tierras altas del Hespérico temprano",
+                                      "en":  "Early Hesperian highland unit"
+                                  },
+                                  {
+                                      "code":  "eNh",
+                                      "color":  "#8b4513",
+                                      "es":  "Tierras altas del Noeico temprano",
+                                      "en":  "Early Noachian highland unit"
+                                  },
+                                  {
+                                      "code":  "Nhe",
+                                      "color":  "#730000",
+                                      "es":  "Edificio de tierras altas del Noeico",
+                                      "en":  "Noachian highland edifice unit"
+                                  },
+                                  {
+                                      "code":  "Nhu",
+                                      "color":  "#686868",
+                                      "es":  "Tierras altas indiferenciadas del Noeico",
+                                      "en":  "Noachian highland undivided unit"
+                                  },
+                                  {
+                                      "code":  "HNhu",
+                                      "color":  "#b2b2b2",
+                                      "es":  "Tierras altas indiferenciadas del Hespérico y el Noeico",
+                                      "en":  "Hesperian and Noachian highland undivided unit"
+                                  },
+                                  {
+                                      "code":  "Aa",
+                                      "color":  "#ffd900",
+                                      "es":  "Depósitos de ladera del Amazónico",
+                                      "en":  "Amazonian apron unit"
+                                  },
+                                  {
+                                      "code":  "ANa",
+                                      "color":  "#ccad00",
+                                      "es":  "Depósitos de ladera del Amazónico y el Noeico",
+                                      "en":  "Amazonian and Noachian apron unit"
+                                  },
+                                  {
+                                      "code":  "lAa",
+                                      "color":  "#8a7500",
+                                      "es":  "Depósitos de ladera del Amazónico tardío",
+                                      "en":  "Late Amazonian apron unit"
+                                  },
+                                  {
+                                      "code":  "AHi",
+                                      "color":  "#ffff00",
+                                      "es":  "Unidad de impacto del Amazónico y el Hespérico",
+                                      "en":  "Amazonian and Hesperian impact unit"
+                                  }
+                              ]
+                },
+    "sky":  {
+                "file":  "sky-nasa-svs.jpg",
+                "source":  "https://svs.gsfc.nasa.gov/4851/",
+                "credit":  "NASA Goddard SVS · ESA/Gaia/DPAC"
+            },
+    "logo":  {
+                 "file":  "mars-plus-logo-ai.png",
+                 "aiGenerated":  true,
+                 "note":  "AI-generated image (watermarked)"
+             },
+    "author":  "Globe renderer and data preparation: MARS+ team (AI-assisted); integrated into the app by Claude"
+}

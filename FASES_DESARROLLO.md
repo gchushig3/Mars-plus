@@ -16,12 +16,12 @@
 | 2 | Limpieza y migración del legado | Must | 1 h | Claude (+ equipo confirma borrados) | ✅ Hecha · pipeline verificado byte a byte |
 | 3 | Validez científica | Should | 3 h | Claude + equipo de ciencia | ✅ Hecha · falta que el equipo de ciencia confirme fotos y paradas (3.1–3.2) |
 | 4 | Pulido de UX, accesibilidad y robustez | Should | 2 h | Claude | ✅ Hecha · falta la prueba con una persona nueva del equipo (4.1) |
-| 5 | Globo 3D y transición | Could | 2 h | Claude | ⏳ Solo si se llega a tiempo |
+| 5 | Globo 3D y transición | Could | 2 h | Equipo (globo) + Claude (integración) | ✅ Hecha · globo WebGL2 del equipo ([ADR-011](docs/es/adr/011-globo-webgl2-del-equipo.md)) |
 | 6 | Demo (7 diapositivas en inglés) | **Must** | 3 h | Equipo de pitch + Claude | ⏳ |
 | 7 | Formulario de envío y entrega | **Must** | 1,5 h | Equipo + Claude | ⏳ |
 | 8 | Congelamiento y respaldo | Must | 0,5 h | Equipo + Claude | ⏳ |
 
-**Total pendiente:** ~14 h (12 h sin la Fase 5).
+**Total pendiente:** ~5 h (fases 6–8).
 
 ### Calendario sugerido y puntos de decisión
 | Cuándo | Fases | Punto de decisión |
@@ -145,20 +145,21 @@
 
 ---
 
-## Fase 5 — Globo 3D y transición (opcional)
-**Puerta:** solo si a las **13:00 del domingo** las fases 1–4 están ✅. Si no, **se salta sin culpa**.
+## Fase 5 — Globo 3D y transición ✅ (hecha)
+**Cambio de plan:** el equipo entregó su propio globo WebGL2 (`MARS-plus.zip`). Se usó en lugar de CesiumJS; ver [ADR-011](docs/es/adr/011-globo-webgl2-del-equipo.md), que reemplaza a ADR-003.
 
-**Pasos**
-1. Fijar la versión de CesiumJS (CDN + SRI). Configurar Marte como elipsoide propio, sin Cesium ion.
-2. Imagen global de Marte (Viking, Mars Trek) + marcador de Jezero.
-3. Clic en Jezero → vuelo de cámara → transición al mapa local (estados GLOBE → TRANSITION → LOCAL).
-4. **Respaldo:** si Cesium falla o el dispositivo es lento, la app arranca directo en LOCAL.
-5. Botón "Ver Marte" para volver al globo.
+**Qué se hizo**
+1. `pipeline/04-export/export-globe-assets.ps1` convierte los datos del equipo en archivos web (`app/assets/globe/`). La primera pantalla pasa de ~12 MB en base64 a ~650 KB; MOLA y geología se descargan solo al elegir esa capa.
+2. Globo con tres capas (Viking, MOLA, geología de Tanaka 2014 con 44 unidades ES/EN), lugares (Olympus, Valles, Hellas, Jezero), zoom y teclado.
+3. Botón "Planificar la EVA en Jezero" → vuelo de cámara → mapa local. El botón de la cabecera alterna globo ↔ mapa.
+4. **Respaldo:** sin WebGL2, si el globo falla o con `?view=local`, la app arranca directo en LOCAL. Si el navegador no pinta cuadros, un temporizador termina el vuelo igual.
+5. Logo MARS+ generado con IA, con la marca visible "AI-generated image" (regla de Space Apps).
 
 **✅ Se considera terminada cuando**
-- [ ] La transición es fluida en escritorio.
-- [ ] El respaldo funciona (se prueba bloqueando Cesium).
-- [ ] La consola está limpia.
+- [x] Globo → Jezero → mapa local en ~1,6 s, y de vuelta al globo con el botón de la cabecera.
+- [x] El respaldo funciona (`?view=local`: no se crea el globo y el plan recomendado sigue siendo C).
+- [x] 33/33 pruebas en verde, incluidas 7 del globo.
+- [x] La consola no tiene errores de la app. Los únicos errores son teselas de Mars Trek que no resuelven en el navegador de pruebas; la ortoimagen de respaldo las reemplaza.
 
 **Commit:** `feat: 3D globe intro with Leaflet fallback`
 

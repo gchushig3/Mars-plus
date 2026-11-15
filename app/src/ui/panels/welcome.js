@@ -20,6 +20,7 @@ export function createWelcome(root, { i18n }) {
     clear(root);
     const start = h('button', { type: 'button', class: 'btn btn-primary', onclick: close }, t('welcome.start'));
     root.append(h('div', { class: 'welcome-card', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'welcome-title' },
+      h('img', { class: 'welcome-logo', src: 'assets/globe/mars-plus-logo-ai.png', alt: t('welcome.logoAlt'), width: 120, height: 120 }),
       h('h2', { id: 'welcome-title' }, t('welcome.title')),
       h('p', {}, t('welcome.what')),
       h('ol', { class: 'welcome-steps' }, h('li', {}, t('welcome.step1')), h('li', {}, t('welcome.step2')), h('li', {}, t('welcome.step3'))),

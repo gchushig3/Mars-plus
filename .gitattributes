@@ -6,3 +6,4 @@
 *.jpg binary
 *.tif binary
 *.zip binary
+*.gz binary

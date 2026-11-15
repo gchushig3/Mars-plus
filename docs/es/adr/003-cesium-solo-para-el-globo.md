@@ -1,6 +1,6 @@
 # ADR-003 · CesiumJS solo para el globo de entrada (opcional), con respaldo 2D
 
-**Estado:** aceptada, implementación opcional (Fase 5) · 14-nov-2026
+**Estado:** reemplazada por [ADR-011](011-globo-webgl2-del-equipo.md) (globo WebGL2 propio del equipo) · 14-nov-2026
 
 **Contexto:** la propuesta MARS+ pide un globo 3D con vuelo hacia la zona. Solo hay datos del sitio Jezero–Issole.
 

@@ -14,6 +14,8 @@ import { createGeologyPanel, createAssumptionsPanel, createSourcesPanel } from '
 import { createPhotosPanel } from './ui/panels/photos-panel.js';
 import { createSummaryBar } from './ui/panels/summary-bar.js';
 import { createWelcome } from './ui/panels/welcome.js';
+import { createWebGLGlobe, isWebGL2Supported } from './infrastructure/globe/webgl-globe.js';
+import { createGlobeView } from './ui/views/globe-view.js';
 
 const SITE_ID = 'jezero-issole';
 
@@ -29,6 +31,29 @@ async function main() {
   document.documentElement.lang = i18n.lang;
   loading.textContent = i18n.t('app.loading');
 
+  // --- GLOBE first (state GLOBE) when WebGL2 is available; "?view=local" opens the EVA map directly ---
+  const globeRoot = document.getElementById('globe-view');
+  const viewToggle = document.getElementById('view-toggle');
+  let globe = null, globeView = null, store = null, pendingLocal = false;
+  const goLocal = () => { if (store) store.set({ view: 'local' }); else pendingLocal = true; };
+  if (new URLSearchParams(location.search).get('view') !== 'local' && isWebGL2Supported()) {
+    try {
+      const meta = await fetch('assets/globe/globe.json').then((r) => { if (!r.ok) throw new Error(`globe.json: HTTP ${r.status}`); return r.json(); });
+      globeRoot.hidden = false;
+      loading.hidden = true; // the globe shows its own progress while the EVA data loads underneath
+      globeView = createGlobeView(globeRoot, { i18n, assetBase: 'assets/globe/', meta, onEnterMission: goLocal });
+      globe = createWebGLGlobe(globeView.canvas, { assetBase: 'assets/globe/', meta, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
+      globe.start().then(() => globeView.attach(globe)).catch((err) => {
+        console.error(err);
+        globeView.fail('globe.error');
+        setTimeout(goLocal, 1500); // fallback: the EVA map always works without the globe
+      });
+    } catch (err) {
+      console.error(err);
+      globeRoot.hidden = true; globe = null; globeView = null; loading.hidden = false;
+    }
+  }
+
   const repository = createStaticSiteRepository('data/', SITE_ID);
   const service = createMissionService({ repository, solver: createWorkerRouteSolver() });
   let data;
@@ -36,13 +61,16 @@ async function main() {
     data = await service.loadSite();
   } catch (err) {
     console.error(err);
+    globeRoot.hidden = true;
+    loading.hidden = false;
     loading.textContent = i18n.t('app.loadError');
     return;
   }
 
   const map = createLeafletMapView(document.getElementById('map'), { data, assetUrl: repository.assetUrl });
   const planOptions = service.defaultPlanOptions();
-  const store = createStore({
+  store = createStore({
+    view: globeView && !pendingLocal ? 'globe' : 'local',
     officialRes: data.routes.primaryResM,
     pick: null, pointA: null, pointB: null,
     routeStatus: { kind: 'idle' }, userRoute: null,
@@ -125,9 +153,25 @@ async function main() {
     panels.forEach((p) => p.build(store.get()));
     panels.forEach((p) => p.update(store.get()));
     welcome.rerender();
+    globeView?.setTexts();
+    applyView(store.get().view);
   };
+
+  // --- view switching: GLOBE <-> LOCAL (EVA map) ---
+  viewToggle.hidden = !globeView;
+  viewToggle.addEventListener('click', () => store.set((s) => ({ view: s.view === 'globe' ? 'local' : 'globe' })));
+  function applyView(view) {
+    const onGlobe = view === 'globe' && Boolean(globeView);
+    globeRoot.hidden = !onGlobe;
+    if (globe) (onGlobe ? globe.resume() : globe.pause());
+    viewToggle.textContent = i18n.t(onGlobe ? 'app.toMap' : 'app.toGlobe');
+    viewToggle.setAttribute('aria-pressed', String(onGlobe));
+    if (!onGlobe) map.invalidate();
+  }
+
   let last = {};
   store.subscribe((s) => {
+    if (s.view !== last.view) { applyView(s.view); if (s.view === 'globe') globeView?.focus(); }
     panels.forEach((p) => p.update(s));
     if (s.officialRes !== last.officialRes) map.showOfficial(s.officialRes);
     if (s.pointA !== last.pointA) map.setPoint('A', s.pointA);
@@ -149,7 +193,7 @@ async function main() {
   if (welcome.shouldShowOnLoad()) welcome.open();
   service.whenRoutingReady().then(() => store.set({ routingReady: true })).catch((err) => { console.error(err); store.set({ routingReady: 'error' }); });
   service.traverseValidation().then((v) => store.set({ traverseValidation: v })).catch((err) => console.error(err));
-  window.MARSPLUS = { store, service, map }; // debugging aid for the team (map.setTrekUrlForTest simulates an outage)
+  window.MARSPLUS = { store, service, map, globe }; // debugging aid for the team (map.setTrekUrlForTest simulates an outage)
 }
 
 main();

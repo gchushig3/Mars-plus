@@ -5,6 +5,8 @@
 **Plazo:** domingo 15-nov-2026, 23:59 hora local · ~20 h de trabajo
 **Basado en:** la auditoría del proyecto, la propuesta frontend de MARS+ (filtrada) y el stack aprobado
 
+> **Actualización (14-nov):** donde este documento dice **Cesium**, ahora rige el globo WebGL2 propio del equipo. Ver [ADR-011](adr/011-globo-webgl2-del-equipo.md) y [`STACK_Y_ARQUITECTURA.md`](../../STACK_Y_ARQUITECTURA.md).
+
 ---
 
 ## 1. Principios

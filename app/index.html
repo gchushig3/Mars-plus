@@ -14,6 +14,8 @@
 <link rel="stylesheet" href="styles/tokens.css">
 <link rel="stylesheet" href="styles/base.css">
 <link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/globe.css">
+<link rel="preload" as="image" href="assets/globe/viking-mdim21-2048.jpg">
 <!-- Preload every ES module so the browser fetches them in parallel instead of a chain (checked by tests/ui.test.js) -->
 <link rel="modulepreload" href="src/main.js">
 <link rel="modulepreload" href="src/application/ports.js">
@@ -52,6 +54,8 @@
 <link rel="modulepreload" href="src/ui/panels/route-panel.js">
 <link rel="modulepreload" href="src/ui/panels/summary-bar.js">
 <link rel="modulepreload" href="src/ui/panels/welcome.js">
+<link rel="modulepreload" href="src/infrastructure/globe/webgl-globe.js">
+<link rel="modulepreload" href="src/ui/views/globe-view.js">
 </head>
 <body>
 <a class="skip-link" id="skip" href="#sidebar">Skip to the mission panel</a>
@@ -64,6 +68,7 @@
     </div>
   </div>
   <div class="header-actions">
+    <button type="button" class="btn" id="view-toggle" aria-pressed="false" hidden>Mars globe</button>
     <button type="button" class="icon-btn" id="help" aria-label="How to use MARS+">?</button>
     <div class="seg" role="group" aria-label="Language">
       <button type="button" data-lang="en" aria-pressed="true">EN</button>
@@ -75,6 +80,7 @@
   <div id="map" role="region" aria-label="Map of the EVA area in Jezero crater"></div>
   <aside class="sidebar" id="sidebar" tabindex="-1"></aside>
 </main>
+<section class="globe-view" id="globe-view" hidden></section>
 <div class="welcome" id="welcome" hidden></div>
 <div class="loading" id="loading">Loading mission data…</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>

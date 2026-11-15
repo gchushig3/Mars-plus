@@ -10,6 +10,7 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 
 ## What it does
 
+- **3D Mars globe as the entry screen:** a WebGL2 globe built by the MARS+ team. It has three global layers (Viking colour mosaic, MOLA elevation, USGS geologic map with all 44 units) and a guided flight to Jezero that opens the local planner. Without WebGL2, or with `?view=local`, the app starts directly on the local map.
 - **Hyper-local map (≈1 km², 2 m grid):** HiRISE 25 cm imagery, slope, walking-cost layer, geology units, the official EVA route (out and back), the real Perseverance traverse, and the sampling and observation stops.
 - **Least-effort route A → B:** click two points and an A* search runs in your browser (Web Worker) over the 2 m terrain grid. Cost = time to cross each cell, from directional slope, roughness, sand (aeolian bedforms) and rocks detected in HiRISE.
 - **EVA plan chain:** plans **A** (photo + sample), **C** (sample only) and **B** (documentation only) × every departure hour → **terrain → science → time → weather → radiation**. A plan that fails one filter is rejected with its reason; nothing compensates for a safety failure.
@@ -33,6 +34,10 @@ MARS+ helps a crew inside the habitat decide **whether, when and how** to walk f
 | Perseverance waypoints (MMGIS M20) | Rover traverse, Issole position | NASA/JPL |
 | Mars Perseverance raw images | Context for the stops | NASA/JPL-Caltech (challenge resource) |
 | Mars rock samples catalog | Robine and Malay samples | NASA |
+| Viking MDIM 2.1 colour mosaic | Globe base layer | NASA/JPL/USGS, via Mars Trek |
+| MOLA MEGDR (8 px/deg) | Globe elevation layer | NASA MGS, PDS Geosciences |
+| Geologic Map of Mars (SIM 3292) | Globe geology layer (44 units) | USGS for NASA |
+| Star field (Deep Star Maps) | Globe background | NASA Goddard SVS, ESA/Gaia/DPAC |
 
 ## How it works
 
@@ -42,6 +47,7 @@ pipeline/ (PowerShell + C#, offline)          app/ (static site, no build)
   RouteEngine.cs (official routes)             (2.4 MB + manifest)            application: use cases, store
   config/model-parameters.json  ─────────── single source of truth ───────→   infrastructure: Leaflet, Worker
                                                                               ui: panels, SVG charts, i18n
+  Viking, MOLA, Tanaka 2014 geology         →   assets/globe/* (on demand)  →  infrastructure: WebGL2 globe
 ```
 
 - **Clean architecture:** `domain/` is pure JavaScript (no DOM). `infrastructure/` adapts Leaflet, the Web Worker and the static data; `ui/` only talks to `application/`.
@@ -56,7 +62,7 @@ powershell -ExecutionPolicy Bypass -File pipeline\run-pipeline.ps1
 # serve the repo
 powershell -ExecutionPolicy Bypass -File tools\dev-server.ps1
 # app:   http://localhost:8770/app/
-# tests: http://localhost:8770/tests/   (18 tests: domain, 6 plan scenarios, JS↔C# parity, performance)
+# tests: http://localhost:8770/tests/   (33 tests: domain, 6 plan scenarios, JS↔C# parity, validity, UI, globe)
 ```
 
 ## Deploy
@@ -77,11 +83,14 @@ powershell -ExecutionPolicy Bypass -File tools\dev-server.ps1
 ## AI assistance (Space Apps "Super Intelligence" disclosure)
 
 - **What the team defined:** the mission concept, the route objective (least-effort, least-exposure EVA from Octavia E. Butler Landing to Issole), the science target (signs of water alteration) and the product direction (MARS+).
+- **What the team built:** the 3D globe (WebGL2 renderer, layers and design), made with AI assistance.
 - **What the AI did:** this project used **Claude (Anthropic)** as a development assistant to:
   - research and locate NASA datasets;
   - write the data-processing pipeline (PowerShell/C#), the route engine, the web application code and the tests;
+  - integrate the team's globe into the app;
   - draft documentation.
-- **Marking:** every AI-assisted source file carries the header `AI-assisted (Claude). Reviewed by the MARS+ team.` No AI-generated images, audio or video are used in the app.
+- **AI-generated image:** the MARS+ logo was generated with AI. It is shown with a visible "AI-generated image" label, and `app/assets/globe/globe.json` declares it (`logo.aiGenerated`). No other AI-generated images, audio or video are used.
+- **Marking:** every AI-assisted source file carries the header `AI-assisted (Claude). Reviewed by the MARS+ team.`
 
 ## References
 
@@ -91,6 +100,10 @@ powershell -ExecutionPolicy Bypass -File tools\dev-server.ps1
 - MEDA bundle, NASA PDS Atmospheres, DOI 10.17189/1522849.
 - MSL RAD RDR, NASA PDS PPI, MSL-M-RAD-3-RDR-V1.0.
 - Stack, K. M. et al. (2020). *Photogeologic Map of the Perseverance Rover Field Site in Jezero Crater*. Space Sci. Rev. 216, 127. doi:10.1007/s11214-020-00739-x (CC BY 4.0).
+- Tanaka, K. L. et al. (2014). *Geologic Map of Mars*. USGS Scientific Investigations Map 3292. doi:10.3133/sim3292.
+- USGS Astrogeology, *Mars Viking Colorized Global Mosaic (MDIM 2.1)*.
+- Smith, D. E. et al., *MGS MOLA Mission Experiment Gridded Data Records (MEGDR)*, NASA PDS Geosciences, MGS-M-MOLA-5-MEGDR-L3-V1.0.
+- NASA Goddard Scientific Visualization Studio, *Deep Star Maps 2020* (ESA/Gaia/DPAC).
 
 **Literature**
 - Bell, J. F. III et al. (2022). *Geological, multispectral, and meteorological imaging results from the Mars 2020 Perseverance rover in Jezero crater*. Sci. Adv. 8, eabo4856.
